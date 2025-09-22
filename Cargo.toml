@@ -1,0 +1,13 @@
+[package]
+name = "gfx-boxes"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sdl3 = "0.14.41"
+image = { version = "0.25.1", features = ["png"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.9.5"
+
+
+

@@ -1,0 +1,3 @@
+/target
+\n# Ignore generated output files\n/output/
+output/
