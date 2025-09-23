@@ -1,7 +1,7 @@
-File version: 1.02
+File version: 1.03
 
 **TLDR:**
-This document defines the coding conventions and design principles for the `gfx-boxes` project:
+This document defines the coding conventions and design principles for the `GfX-Engine` project:
 * Modular design
 * Data-driven design
 * Self-documenting code
@@ -10,7 +10,7 @@ This document defines the coding conventions and design principles for the `gfx-
 
 # Coding Conventions
 
-This document outlines the agreed-upon coding conventions and design principles for the `gfx-boxes` project.
+This document outlines the agreed-upon coding conventions and design principles for the `GfX-Engine` project.
 
 ## Design Principles
 

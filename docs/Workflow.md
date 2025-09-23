@@ -6,7 +6,7 @@
 * Pull requests merge new changes into `main`.
 * Pre-commit checks: `cargo check`, `cargo clippy`, `cargo test`
 
-This document outlines the development workflow for the `gfx-boxes` project. Following
+This document outlines the development workflow for the `GfX-Engine` project. Following
 this workflow helps maintain a clean and consistent codebase.
 
 ## Document Structure

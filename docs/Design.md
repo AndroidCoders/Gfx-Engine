@@ -1,35 +1,49 @@
-File version: 1.02
+File version: 2.00
 
 **TLDR:**
-This document outlines the architecture and components of the `gfx-boxes` project:
-* Simple game loop architecture
-* Key components: `app`, `renderer`, `game_state`, `frame_capture`
-* Configurable VSync and fixed-timestep
+This document outlines the architecture and components of the `GfX-Engine`:
+*   Simple, data-driven game loop architecture.
+*   Key components are modular files in `src/` (e.g., `renderer`, `audio`, `physics`).
+*   Configurable VSync and fixed-timestep loop.
 
 ## Architecture
 
-A simple game loop architecture will be used.
+A simple, data-driven game loop architecture will be used. The engine's logic is separated from the game's data. The engine reads `config.toml` and loads assets from the `assets/` directory to run the game.
 
 ## Components
 
-- `main.rs`: Entry point
-- `app.rs`: Initializes SDL, creates the window, and runs the main loop.
-- `renderer.rs`: A module responsible for drawing on the canvas.
-- `game_state.rs`: A module to hold the state of the application (e.g., a list of game objects with positions and velocities).
-- `frame_capture.rs`: A module for capturing and saving frames for debugging, configurable via `config.toml`.
+The engine is composed of several modules within the `src/` directory:
+
+-   `main.rs`: Entry point.
+-   `app.rs`: Initializes SDL, creates the window, and runs the main game loop.
+-   `renderer.rs`: Responsible for all drawing operations, including sprites.
+-   `game_state.rs`: Holds the overall state of the game.
+-   `level.rs`: Manages loading and interaction with game levels.
+-   `audio.rs`: Handles loading and playing sounds and music.
+-   `input.rs`: Manages user input.
+-   `physics.rs`: Handles the physics simulation.
+-   `config.rs`: Loads and parses all configuration files.
 
 ## Game Loop
 
-To ensure a stable and smooth visual experience, we use a **fixed-timestep game loop** with **VSync enabled**. These parameters are now configurable via `config.toml`. This approach decouples the game logic from the rendering rate, providing a consistent animation speed on all hardware.
+To ensure a stable and smooth visual experience, we use a **fixed-timestep game loop** with **VSync enabled**. These parameters are configurable via `config.toml`. This approach decouples the game logic from the rendering rate, providing a consistent animation speed on all hardware.
 
-### VSync (Vertical Synchronization)
+## Rendering Pipeline
 
-VSync synchronizes our application's rendering with the monitor's refresh rate. This prevents screen tearing and results in a smooth animation that automatically adapts to the user's display (e.g., 60 FPS on a 60Hz monitor, 144 FPS on a 144Hz monitor). This can be enabled or disabled in `config.toml`.
+The rendering pipeline in `Gfx-Engine` is designed for modularity and clear separation of concerns.
 
-### Fixed-Timestep
+*   **Centralized `Renderer`:** The `renderer.rs` module encapsulates all drawing logic. It receives the necessary game data (`GameState`, `GameConfig`, `TextureManager`) and is solely responsible for determining what to draw and how to draw it.
+*   **Simplified `App` Loop:** The main application loop (`app.rs`) is streamlined. Its role is to orchestrate the game loop phases (input, update, render) and trigger the `Renderer` each frame, without containing rendering-specific logic.
+*   **Clear Ownership:** The `App` struct directly owns the `TextureCreator` and the `virtual_canvas_texture`. The `TextureManager` is dedicated to loading and managing game asset textures. This explicit ownership model prevents Rust's borrow checker conflicts and ensures resource lifetimes are correctly handled.
 
-The game logic (e.g., animation, physics) is updated at a fixed rate, configurable via `updates_per_second` in `config.toml`. This ensures that the animation is deterministic and behaves consistently on all computers.
+## Gameplay Mechanics
 
-## Version Control
+To create a robust and engaging platformer experience, the following gameplay mechanics, inspired by classics like "Super Mario World," are planned for implementation:
 
-This project uses Git, with development done on `feature/` branches that are merged into `main` upon completion.
+*   **Variable Jump Height:** The player will be able to control the height of their jump by holding down the jump button. This allows for more nuanced platforming challenges.
+
+*   **Momentum-Based Movement:** The player character will have acceleration and deceleration, giving the movement a sense of weight and making the controls feel smoother and more natural.
+
+*   **Stomping on Enemies:** As a primary form of interaction, the player will be able to defeat enemies by jumping on top of them.
+
+*   **Interactive Blocks:** The game levels will include simple interactive elements, such as breakable blocks that the player can hit from below.

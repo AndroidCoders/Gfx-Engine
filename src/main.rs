@@ -1,11 +1,12 @@
 mod app;
-mod game_state;
-mod renderer;
 mod config;
-mod texture_manager;
-mod physics;
-
-mod frame_capture;
+mod renderer;
+// mod audio;
+// mod game_state;
+// mod input;
+// mod level;
+// mod physics;
+// mod texture_manager;
 
 use app::App;
 use config::load_config;
@@ -20,6 +21,6 @@ use config::load_config;
 /// A `Result` indicating success (`()`) or an error (`String`).
 fn main() -> Result<(), String> {
     let config = load_config().map_err(|e| e.to_string())?;
-    let mut app = App::new(&config).map_err(|e| e.to_string())?;
+    let mut app = App::new().map_err(|e| e.to_string())?;
     app.run()
 }

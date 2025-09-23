@@ -1,14 +1,18 @@
+// src/config.rs
+
+//! Loads and manages the engine's configuration from external files.
+
 use serde::Deserialize;
 use std::fs;
+use std::path::PathBuf;
 
+/// Represents the top-level configuration for the entire application.
 #[derive(Deserialize, Clone)]
 pub struct Config {
     pub window: WindowConfig,
-    pub renderer: RendererConfig,
-        pub physics: PhysicsConfig,
-        pub debug: DebugConfig,    pub objects: Vec<ObjectConfig>,
 }
 
+/// Holds all window-related configuration.
 #[derive(Deserialize, Clone)]
 pub struct WindowConfig {
     pub title: String,
@@ -16,46 +20,29 @@ pub struct WindowConfig {
     pub height: u32,
     pub virtual_width: u32,
     pub virtual_height: u32,
+    pub background_color: [u8; 3],
     pub fullscreen: bool,
     pub vsync: bool,
     pub scaling_quality: String,
 }
 
+/// Represents the game-specific configuration (minimal for POC).
 #[derive(Deserialize, Clone)]
-pub struct RendererConfig {
-    pub background_color: [u8; 3],
-    pub object_color: [u8; 3],
+pub struct GameConfig {
+    // No fields for minimal POC
 }
 
-#[derive(Deserialize, Clone)]
-pub struct PhysicsConfig {
-    pub updates_per_second: u32,
-    pub damping_factor: f32,
-    pub max_speed: f32,
-    pub min_speed: f32,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct DebugConfig {
-    pub enable_frame_capture: bool,
-    pub output_directory: String,
-    pub max_captured_frames: usize,
-    pub frame_capture_interval: u32,
-}
-
-/// Configuration for an individual game object.
-#[derive(Deserialize, Clone)]
-pub struct ObjectConfig {
-    pub x: f32,
-    pub y: f32,
-    pub width: u32,
-    pub height: u32,
-    pub vx: f32,
-    pub vy: f32,
-}
-
-pub fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
-    let config_str = fs::read_to_string("config.toml")?;
-    let config: Config = toml::from_str(&config_str)?;
+/// Loads the main application configuration from the "config.toml" file.
+pub fn load_config() -> Result<Config, String> {
+    let config_str = fs::read_to_string("config.toml").map_err(|e| e.to_string())?;
+    let config: Config = toml::from_str(&config_str).map_err(|e| e.to_string())?;
     Ok(config)
+}
+
+/// Loads the game-specific configuration from the specified path.
+pub fn load_game_config(path: &str) -> Result<GameConfig, String> {
+    let full_path = PathBuf::from("assets").join(path);
+    let config_str = fs::read_to_string(&full_path).map_err(|e| e.to_string())?;
+    let game_config: GameConfig = toml::from_str(&config_str).map_err(|e| e.to_string())?;
+    Ok(game_config)
 }
