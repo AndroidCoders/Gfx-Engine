@@ -6,6 +6,7 @@ use sdl3::pixels::Color;
 use sdl3::render::Canvas;
 use sdl3::video::Window;
 use sdl3::rect::Rect;
+// use crate::config::GameConfig;
 
 /// The main rendering structure.
 pub struct Renderer {
@@ -24,6 +25,7 @@ impl Renderer {
     pub fn draw(
         &self,
         canvas: &mut Canvas<Window>,
+        // game_config: &GameConfig,
     ) -> Result<(), String> {
         canvas.set_draw_color(self.background_color);
         canvas.clear();

@@ -9,6 +9,7 @@ use std::path::PathBuf;
 /// Represents the top-level configuration for the entire application.
 #[derive(Deserialize, Clone)]
 pub struct Config {
+    #[allow(dead_code)]
     pub window: WindowConfig,
 }
 
@@ -18,9 +19,12 @@ pub struct WindowConfig {
     pub title: String,
     pub width: u32,
     pub height: u32,
+    #[allow(dead_code)]
     pub virtual_width: u32,
+    #[allow(dead_code)]
     pub virtual_height: u32,
     pub background_color: [u8; 3],
+    #[allow(dead_code)]
     pub fullscreen: bool,
     pub vsync: bool,
     pub scaling_quality: String,
@@ -40,6 +44,7 @@ pub fn load_config() -> Result<Config, String> {
 }
 
 /// Loads the game-specific configuration from the specified path.
+#[allow(dead_code)]
 pub fn load_game_config(path: &str) -> Result<GameConfig, String> {
     let full_path = PathBuf::from("assets").join(path);
     let config_str = fs::read_to_string(&full_path).map_err(|e| e.to_string())?;

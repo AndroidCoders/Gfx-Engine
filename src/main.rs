@@ -20,7 +20,7 @@ use config::load_config;
 ///
 /// A `Result` indicating success (`()`) or an error (`String`).
 fn main() -> Result<(), String> {
-    let config = load_config().map_err(|e| e.to_string())?;
+    let _config = load_config().map_err(|e| e.to_string())?;
     let mut app = App::new().map_err(|e| e.to_string())?;
     app.run()
 }

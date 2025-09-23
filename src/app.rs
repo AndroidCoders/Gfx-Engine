@@ -6,13 +6,14 @@ use sdl3::EventPump;
 use sdl3::video::Window;
 use sdl3::render::Canvas;
 use sdl3::event::Event;
-use sdl3::keyboard::Keycode;
+// use sdl3::keyboard::Keycode;
 
 use crate::config::{Config, load_config};
 use crate::renderer::Renderer;
 
 /// The main application struct.
 pub struct App {
+    #[allow(dead_code)]
     config: Config,
     canvas: Canvas<Window>,
     event_pump: EventPump,
@@ -39,7 +40,7 @@ impl App {
             config.window.height,
         );
         if config.window.fullscreen {
-            window_builder.fullscreen(); // Reverted to fullscreen()
+            window_builder.fullscreen();
         }
         let window = window_builder.build().map_err(|e| e.to_string())?;
 
@@ -64,9 +65,11 @@ impl App {
         'running: loop {
             for event in self.event_pump.poll_iter() {
                 match event {
-                    Event::Quit {..} |
-                    Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                        break 'running
+                    Event::Quit {..} => break 'running,
+                    Event::KeyDown { keycode: Some(_keycode), .. } => {
+                        // if _keycode.name() == self.config.input.quit_key {
+                            break 'running
+                        // }
                     },
                     _ => {}
                 }
