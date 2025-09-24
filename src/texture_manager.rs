@@ -1,13 +1,17 @@
 use sdl3::render::{Texture, TextureCreator};
 use sdl3::video::WindowContext;
 
+/// Manages textures, including the virtual canvas texture.
 pub struct TextureManager<'a> {
+    /// The SDL texture creator.
     #[allow(dead_code)]
     texture_creator: TextureCreator<WindowContext>,
+    /// The texture used as a virtual canvas for rendering.
     virtual_canvas_texture: Option<Texture<'a>>,
 }
 
 impl<'a> TextureManager<'a> {
+    /// Creates a new `TextureManager`.
     pub fn new(texture_creator: TextureCreator<WindowContext>, virtual_width: u32, virtual_height: u32) -> Result<Self, String> {
         // This is an unsafe workaround for the self-referential struct problem.
         // The `Texture` type in `sdl3` borrows from `TextureCreator`.
@@ -31,10 +35,12 @@ impl<'a> TextureManager<'a> {
         })
     }
 
+    /// Returns an immutable reference to the virtual canvas texture.
     pub fn virtual_canvas_texture(&self) -> &Texture<'a> {
         self.virtual_canvas_texture.as_ref().expect("Virtual canvas texture should be initialized")
     }
 
+    /// Returns a mutable reference to the virtual canvas texture.
     pub fn virtual_canvas_texture_mut(&mut self) -> &mut Texture<'a> {
         self.virtual_canvas_texture.as_mut().expect("Virtual canvas texture should be initialized")
     }

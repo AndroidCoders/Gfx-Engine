@@ -9,6 +9,7 @@ use std::path::PathBuf;
 /// Represents the top-level configuration for the entire application.
 #[derive(Deserialize, Clone)]
 pub struct Config {
+    /// Window-related configuration.
     #[allow(dead_code)]
     pub window: WindowConfig,
 }
@@ -16,17 +17,26 @@ pub struct Config {
 /// Holds all window-related configuration.
 #[derive(Deserialize, Clone)]
 pub struct WindowConfig {
+    /// The title of the window.
     pub title: String,
+    /// The width of the window in pixels.
     pub width: u32,
+    /// The height of the window in pixels.
     pub height: u32,
+    /// The virtual width of the game canvas.
     #[allow(dead_code)]
     pub virtual_width: u32,
+    /// The virtual height of the game canvas.
     #[allow(dead_code)]
     pub virtual_height: u32,
+    /// The background color of the window.
     pub background_color: [u8; 3],
+    /// Whether the window should be fullscreen.
     #[allow(dead_code)]
     pub fullscreen: bool,
+    /// Whether VSync is enabled.
     pub vsync: bool,
+    /// The scaling quality for the renderer.
     pub scaling_quality: String,
 }
 

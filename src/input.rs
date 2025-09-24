@@ -11,14 +11,18 @@ use crate::config::InputConfig;
 /// Represents the abstract actions a player can take.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PlayerAction {
+    /// Move the player to the left.
     MoveLeft,
+    /// Move the player to the right.
     MoveRight,
+    /// Make the player jump.
     Jump,
 }
 
 /// Holds the current state of all player actions.
 #[derive(Debug, Default)]
 pub struct InputState {
+    /// A set of all actions that are currently active.
     active_actions: HashSet<PlayerAction>,
 }
 

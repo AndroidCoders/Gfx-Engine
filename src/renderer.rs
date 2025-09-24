@@ -10,6 +10,7 @@ use sdl3::rect::Rect;
 
 /// The main rendering structure.
 pub struct Renderer {
+    /// The background color for the renderer.
     background_color: Color,
 }
 

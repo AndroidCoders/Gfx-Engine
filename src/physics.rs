@@ -1,5 +1,7 @@
 // src/physics.rs
 
+//! Handles all physics-related calculations for the engine.
+
 use crate::game_state::GameObject;
 
 /// Updates the state of all game objects, including movement and wall collisions.
@@ -45,7 +47,7 @@ pub fn update_objects(objects: &mut [GameObject], width: u32, height: u32, dampi
     }
 }
 
-/// Detects and resolves collisions between objects.
+/// Detects and resolves collisions between objects using AABB and elastic collision response.
 ///
 /// # Arguments
 ///
@@ -60,15 +62,15 @@ pub fn resolve_object_collisions(objects: &mut [GameObject]) {
             };
 
             if obj1.to_rect().has_intersection(obj2.to_rect()) {
-                // Optional: Separate overlapping objects to prevent sticking
-                // This is a simplified approach and can be improved for more realistic physics
+                // Separate overlapping objects to prevent sticking.
+                // This is a simplified approach and can be improved for more realistic physics.
                 let intersection = obj1.to_rect().intersection(obj2.to_rect()).unwrap();
 
                 let overlap_x = intersection.width() as i32;
                 let overlap_y = intersection.height() as i32;
 
                 if overlap_x < overlap_y {
-                    // Collision is more horizontal
+                    // Collision is more horizontal, so resolve horizontally.
                     let v1 = obj1.velocity.0;
                     let v2 = obj2.velocity.0;
                     let m1 = obj1.mass;
@@ -86,7 +88,7 @@ pub fn resolve_object_collisions(objects: &mut [GameObject]) {
                         obj2.x -= overlap_x as f32 / 2.0;
                     }
                 } else {
-                    // Collision is more vertical
+                    // Collision is more vertical, so resolve vertically.
                     let v1 = obj1.velocity.1;
                     let v2 = obj2.velocity.1;
                     let m1 = obj1.mass;
