@@ -24,10 +24,8 @@ pub struct WindowConfig {
     /// The height of the window in pixels.
     pub height: u32,
     /// The virtual width of the game canvas.
-    #[allow(dead_code)]
     pub virtual_width: u32,
     /// The virtual height of the game canvas.
-    #[allow(dead_code)]
     pub virtual_height: u32,
     /// The background color of the window.
     pub background_color: [u8; 3],
@@ -44,6 +42,34 @@ pub struct WindowConfig {
 #[derive(Deserialize, Clone)]
 pub struct GameConfig {
     // No fields for minimal POC
+}
+
+/// Configuration for individual game objects.
+#[derive(Deserialize, Clone)]
+pub struct ObjectConfig {
+    pub x: f32,
+    pub y: f32,
+    pub width: u32,
+    pub height: u32,
+    pub vx: f32,
+    pub vy: f32,
+}
+
+/// Configuration for physics parameters.
+#[derive(Deserialize, Clone)]
+pub struct PhysicsConfig {
+    pub damping_factor: f32,
+    pub max_speed: f32,
+    pub min_speed: f32,
+}
+
+/// Configuration for input key bindings.
+#[derive(Deserialize, Clone)]
+pub struct InputConfig {
+    pub left: String,
+    pub right: String,
+    pub jump: String,
+    pub quit: String,
 }
 
 /// Loads the main application configuration from the "config.toml" file.

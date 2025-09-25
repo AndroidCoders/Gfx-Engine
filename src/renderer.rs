@@ -3,37 +3,47 @@
 //! Handles all drawing operations for the engine.
 
 use sdl3::pixels::Color;
-use sdl3::render::Canvas;
+use sdl3::render::{Canvas, Texture};
 use sdl3::video::Window;
 use sdl3::rect::Rect;
-// use crate::config::GameConfig;
+
+
 
 /// The main rendering structure.
 pub struct Renderer {
-    /// The background color for the renderer.
-    background_color: Color,
 }
 
 impl Renderer {
-    /// Creates a new `Renderer`.
-    pub fn new(background_color: [u8; 3]) -> Self {
-        Self {
-            background_color: Color::RGB(background_color[0], background_color[1], background_color[2]),
-        }
+    /// Creates a new stateless `Renderer` instance.
+    pub fn new() -> Self {
+        Self {}
     }
 
     /// Draws a white rectangle on a black background.
     pub fn draw(
-        &self,
         canvas: &mut Canvas<Window>,
-        // game_config: &GameConfig,
-    ) -> Result<(), String> {
-        canvas.set_draw_color(self.background_color);
-        canvas.clear();
 
-        // Draw a white rectangle
-        canvas.set_draw_color(Color::RGB(255, 255, 255));
-        canvas.fill_rect(Rect::new(100, 100, 50, 50)).map_err(|e| e.to_string())?;
+        virtual_canvas_texture: &mut Texture,
+        background_color: [u8; 3],
+    ) -> Result<(), String> {
+        // Set render target to virtual canvas
+        canvas.with_texture_canvas(virtual_canvas_texture, |texture_canvas| {
+            texture_canvas.set_draw_color(Color::RGB(background_color[0], background_color[1], background_color[2]));
+            texture_canvas.clear();
+
+            // Draw a white rectangle to the virtual canvas
+            texture_canvas.set_draw_color(Color::RGB(255, 255, 255));
+            texture_canvas.fill_rect(Rect::new(100, 100, 50, 50)).map_err(|e| e.to_string()).unwrap();
+        }).map_err(|e| e.to_string())?;
+
+        // Copy virtual canvas to main canvas
+        canvas.set_draw_color(Color::RGB(0, 0, 0)); // Clear main canvas
+        canvas.clear();
+        canvas.copy(
+            virtual_canvas_texture,
+            None,
+            None,
+        ).map_err(|e| e.to_string())?;
 
         Ok(())
     }

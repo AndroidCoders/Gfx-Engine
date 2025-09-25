@@ -4,9 +4,8 @@
 
 use sdl3::EventPump;
 use sdl3::video::Window;
-use sdl3::render::Canvas;
+use sdl3::render::{Canvas, Texture};
 use sdl3::event::Event;
-// use sdl3::keyboard::Keycode;
 
 use crate::config::{Config, load_config};
 use crate::renderer::Renderer;
@@ -20,8 +19,12 @@ pub struct App {
     canvas: Canvas<Window>,
     /// The SDL event pump for handling user input.
     event_pump: EventPump,
-    /// The renderer for drawing to the canvas.
-    renderer: Renderer,
+    /// The virtual canvas texture.
+    virtual_canvas_texture: Option<Texture>,
+    /// The virtual width of the game canvas.
+    virtual_width: u32,
+    /// The virtual height of the game canvas.
+    virtual_height: u32,
 }
 
 impl App {
@@ -54,6 +57,12 @@ impl App {
 
         // Create the canvas
         let canvas = window.into_canvas();
+        let texture_creator = canvas.texture_creator();
+
+        // Create the virtual canvas texture
+        let virtual_canvas_texture = texture_creator
+            .create_texture_target(None, config.window.virtual_width, config.window.virtual_height)
+            .map_err(|e| e.to_string())?;
 
         // Set scaling quality hint
         sdl3::hint::set("SDL_HINT_RENDER_SCALE_QUALITY", &config.window.scaling_quality);
@@ -61,15 +70,14 @@ impl App {
         // Create the event pump
         let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
 
-        // Create the renderer
-        let renderer = Renderer::new(config.window.background_color);
-
         // Return the new App instance
         Ok(Self {
             config: config.clone(),
             canvas,
             event_pump,
-            renderer,
+            virtual_canvas_texture: Some(virtual_canvas_texture),
+            virtual_width: config.window.virtual_width,
+            virtual_height: config.window.virtual_height,
         })
     }
 
@@ -90,7 +98,12 @@ impl App {
             }
 
             // Draw the scene
-            self.renderer.draw(&mut self.canvas)?;
+            Renderer::draw(
+                &mut self.canvas,
+
+                self.virtual_canvas_texture.as_mut().expect("Virtual canvas texture should be initialized"),
+                self.config.window.background_color,
+            )?;
             self.canvas.present();
         }
         Ok(())

@@ -1,17 +1,19 @@
-# Gemini Assistant Guidelines for `gfx-boxes`
+# Gemini Assistant Guidelines for `Gfx-Engine`
 
-This document provides guidelines for the Gemini assistant to effectively contribute to the `gfx-boxes` project.
+This document provides guidelines for the Gemini assistant to effectively contribute to the `Gfx-Engine` project.
 
 ## Project Overview
 
-`gfx-boxes` is a Rust application that uses the SDL3 library to create graphical effects. It displays multiple animated white boxes on a black background in a fullscreen window. The application is highly configurable via `config.toml`.
+`Gfx-Engine` is a Rust application that uses the SDL3 library to create graphical effects. It displays multiple animated white boxes on a black background in a fullscreen window. The application is highly configurable via `config.toml`.
 
 ## My Role
 
 As the Gemini assistant, my primary role is to assist with development tasks, including:
 
+-   Read through all Guiding Documents for the project, located at `docs/*.md`.
+-   Read through all source code for the project.
 -   Implementing new features as described in `docs/Tasks.md`.
--   Refactoring existing code to improve clarity and maintainability.
+-   Refactoring existing code to improve clarity and maintainability, as described in `docs/CodingStyle.md`.
 -   Fixing bugs.
 -   Writing and updating documentation.
 -   Assisting with testing and verification.
@@ -26,6 +28,7 @@ As the Gemini assistant, my primary role is to assist with development tasks, in
 
 ### Workflow
 
+-   Follow the workflow guide outlined in `docs/Workflow.md`.
 -   All work should be done on feature branches (e.g., `feature/my-new-feature`).
 -   Commit messages should follow the Conventional Commits specification.
 -   Pull requests are used to merge changes into the `main` branch.
