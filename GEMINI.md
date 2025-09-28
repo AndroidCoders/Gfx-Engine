@@ -4,15 +4,19 @@ This document provides guidelines for the Gemini assistant to effectively contri
 
 ## Project Overview
 
-`Gfx-Engine` is a Rust application that uses the SDL3 library to create graphical effects. It displays multiple animated white boxes on a black background in a fullscreen window. The application is highly configurable via `config.toml`.
+`Gfx-Engine` is a 2D pixel art game engine written in Rust.
+
+The project implements a state-of-the art platform game engine, including a complete demo game.
 
 ## My Role
 
-As the Gemini assistant, my primary role is to assist with development tasks, including:
+As the Gemini expert coding assistant, my primary role is to assist with development tasks, including:
 
 -   Read through all Guiding Documents for the project, located at `docs/*.md`.
 -   Read through all source code for the project.
 -   Implementing new features as described in `docs/Tasks.md`.
+-   Help develop architecture and design for the project
+-   Suggest improvements to the existing code
 -   Refactoring existing code to improve clarity and maintainability, as described in `docs/CodingStyle.md`.
 -   Fixing bugs.
 -   Writing and updating documentation.
