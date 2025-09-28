@@ -1,8 +1,19 @@
-# Minimal game configuration for POC
+# assets/game_config.toml
 
 [player]
-x = 100
-y = 100
-width = 50
-height = 50
-color = [255, 255, 255]
+start_x = 100.0
+start_y = 100.0
+width = 64
+height = 128
+respawn_x = 100.0
+respawn_y = 100.0
+
+[world]
+width = 2000.0
+death_plane_y = 500.0
+
+[assets]
+level = "assets/levels/level1.toml"
+player_front = "assets/graphics/Captain_Cat_Image_Front_Side_64x128.png"
+player_left = "assets/graphics/Captain_Cat_Image_Left_Side_64x128.png"
+player_right = "assets/graphics/Captain_Cat_Image_Right_Side_64x128.png"

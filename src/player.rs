@@ -2,6 +2,7 @@
 
 //! Defines the player character's state and behavior.
 
+use crate::config::PlayerConfig;
 use crate::math::Vector2D;
 
 pub enum PlayerDirection {
@@ -20,12 +21,12 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(x: f32, y: f32) -> Self {
+    pub fn new(config: &PlayerConfig) -> Self {
         Self {
-            position: Vector2D::new(x, y),
+            position: Vector2D::new(config.start_x, config.start_y),
             velocity: Vector2D::default(),
-            width: 64,
-            height: 128,
+            width: config.width,
+            height: config.height,
             direction: PlayerDirection::Front,
             is_on_ground: false,
         }

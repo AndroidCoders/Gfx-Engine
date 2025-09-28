@@ -13,6 +13,8 @@ pub struct Config {
     pub window: WindowConfig,
     /// Input configuration.
     pub input: InputConfig,
+    /// Physics configuration.
+    pub physics: PhysicsConfig,
 }
 
 /// Holds all window-related configuration.
@@ -39,18 +41,44 @@ pub struct WindowConfig {
     pub scaling_quality: String,
 }
 
-#[derive(Deserialize, Clone)]
-pub struct PlayerConfig {
-    pub x: i32,
-    pub y: i32,
-    pub width: u32,
-    pub height: u32,
-}
-
-/// Represents the game-specific configuration (minimal for POC).
+/// Represents the game-specific configuration.
 #[derive(Deserialize, Clone)]
 pub struct GameConfig {
     pub player: PlayerConfig,
+    pub world: WorldConfig,
+    pub assets: AssetsConfig,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct PlayerConfig {
+    pub start_x: f32,
+    pub start_y: f32,
+    pub width: u32,
+    pub height: u32,
+    pub respawn_x: f32,
+    pub respawn_y: f32,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct WorldConfig {
+    pub width: f32,
+    pub death_plane_y: f32,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct AssetsConfig {
+    pub level: String,
+    pub player_front: String,
+    pub player_left: String,
+    pub player_right: String,
+}
+
+/// Configuration for physics parameters.
+#[derive(Deserialize, Clone)]
+pub struct PhysicsConfig {
+    pub gravity: f32,
+    pub move_speed: f32,
+    pub jump_strength: f32,
 }
 
 /// Configuration for input key bindings.

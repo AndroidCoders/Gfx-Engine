@@ -14,3 +14,8 @@ left = "Left"
 right = "Right"
 jump = "Space"
 quit = "Escape"
+
+[physics]
+gravity = 1.0
+move_speed = 5.0
+jump_strength = -20.0

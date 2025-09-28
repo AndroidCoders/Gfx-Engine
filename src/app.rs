@@ -74,9 +74,9 @@ impl App {
 
         // Create the texture manager and load textures
         let mut texture_manager = TextureManager::new();
-        texture_manager.load("assets/graphics/Captain_Cat_Image_Front_Side_64x128.png", "player_front", &texture_creator)?;
-        texture_manager.load("assets/graphics/Captain_Cat_Image_Left_Side_64x128.png", "player_left", &texture_creator)?;
-        texture_manager.load("assets/graphics/Captain_Cat_Image_Right_Side_64x128.png", "player_right", &texture_creator)?;
+        texture_manager.load(&game_config.assets.player_front, "player_front", &texture_creator)?;
+        texture_manager.load(&game_config.assets.player_left, "player_left", &texture_creator)?;
+        texture_manager.load(&game_config.assets.player_right, "player_right", &texture_creator)?;
 
         // Create the virtual canvas texture
         let virtual_canvas_texture = texture_creator
@@ -90,14 +90,14 @@ impl App {
         let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
 
         // Create the player
-        let player = Player::new(100.0, 100.0);
+        let player = Player::new(&game_config.player);
 
         // Create input handler and state
         let input_handler = InputHandler::new(config.input.clone());
         let input_state = InputState::default();
 
         // Load level data
-        let level = load_level("assets/levels/level1.toml")?;
+        let level = load_level(&game_config.assets.level)?;
 
         // Create the camera
         let camera = Camera::new(0, 0);
@@ -122,10 +122,6 @@ impl App {
 
     /// Runs the main game loop until the user quits.
     pub fn run(&mut self) -> Result<(), String> {
-        const GRAVITY: f32 = 1.0;
-        const MOVE_SPEED: f32 = 5.0;
-        const JUMP_STRENGTH: f32 = -20.0;
-
         'running: loop {
             // Process events
             if !self.input_handler.process_events(&mut self.event_pump, &mut self.input_state) {
@@ -139,22 +135,22 @@ impl App {
             // --- Horizontal Movement ---
             let mut desired_velocity_x = 0.0;
             if self.input_state.is_action_active(PlayerAction::MoveLeft) {
-                desired_velocity_x -= MOVE_SPEED;
+                desired_velocity_x -= self.config.physics.move_speed;
                 self.player.direction = PlayerDirection::Left;
             }
             if self.input_state.is_action_active(PlayerAction::MoveRight) {
-                desired_velocity_x += MOVE_SPEED;
+                desired_velocity_x += self.config.physics.move_speed;
                 self.player.direction = PlayerDirection::Right;
             }
             self.player.velocity.x = desired_velocity_x;
 
             // --- Vertical Movement (Jumping) ---
             if self.input_state.is_action_active(PlayerAction::Jump) && self.player.is_on_ground {
-                self.player.velocity.y = JUMP_STRENGTH;
+                self.player.velocity.y = self.config.physics.jump_strength;
             }
 
             // --- Apply Gravity ---
-            self.player.velocity.y += GRAVITY;
+            self.player.velocity.y += self.config.physics.gravity;
 
             // --- Collision Detection (Separate Axes) ---
 
@@ -199,7 +195,7 @@ impl App {
             // --- World Boundary and Camera ---
 
             // Clamp player position to world boundaries
-            let world_width = 2000.0;
+            let world_width = self.game_config.world.width;
             if self.player.position.x < 0.0 {
                 self.player.position.x = 0.0;
             }
@@ -207,8 +203,8 @@ impl App {
                 self.player.position.x = world_width - self.player.width as f32;
             }
             // Add a death plane
-            if self.player.position.y > 500.0 {
-                self.player.position = crate::math::Vector2D::new(100.0, 100.0);
+            if self.player.position.y > self.game_config.world.death_plane_y {
+                self.player.position = crate::math::Vector2D::new(self.game_config.player.respawn_x, self.game_config.player.respawn_y);
             }
 
 
