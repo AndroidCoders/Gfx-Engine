@@ -2,6 +2,10 @@ mod app;
 mod config;
 mod renderer;
 // mod audio;
+mod input;
+mod math;
+mod camera;
+mod level;
 mod texture_manager;
 mod player;
 
