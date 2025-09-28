@@ -18,6 +18,7 @@ pub struct Player {
     pub height: u32,
     pub direction: PlayerDirection,
     pub is_on_ground: bool,
+    pub jump_time: u32,
 }
 
 impl Player {
@@ -29,6 +30,7 @@ impl Player {
             height: config.height,
             direction: PlayerDirection::Front,
             is_on_ground: false,
+            jump_time: 0,
         }
     }
 }

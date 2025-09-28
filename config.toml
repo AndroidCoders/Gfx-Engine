@@ -19,3 +19,5 @@ quit = "Escape"
 gravity = 1.0
 move_speed = 5.0
 jump_strength = -20.0
+jump_hold_force = 0.5
+max_jump_time = 15

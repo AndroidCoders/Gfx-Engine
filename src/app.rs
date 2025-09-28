@@ -147,6 +147,18 @@ impl App {
             // --- Vertical Movement (Jumping) ---
             if self.input_state.is_action_just_pressed(PlayerAction::Jump) && self.player.is_on_ground {
                 self.player.velocity.y = self.config.physics.jump_strength;
+                self.player.jump_time = 0;
+            }
+
+            // Apply jump hold force
+            if self.input_state.is_action_active(PlayerAction::Jump) && self.player.velocity.y < 0.0 && self.player.jump_time < self.config.physics.max_jump_time {
+                self.player.velocity.y -= self.config.physics.jump_hold_force;
+                self.player.jump_time += 1;
+            }
+
+            // Release jump button
+            if !self.input_state.is_action_active(PlayerAction::Jump) {
+                self.player.jump_time = self.config.physics.max_jump_time;
             }
 
             // --- Apply Gravity ---
@@ -185,6 +197,7 @@ impl App {
                     if self.player.velocity.y > 0.0 { // Moving down
                         self.player.position.y = (object.y - self.player.height as i32) as f32;
                         self.player.is_on_ground = true;
+                        self.player.jump_time = 0;
                     } else if self.player.velocity.y < 0.0 { // Moving up
                         self.player.position.y = (object.y + object.height as i32) as f32;
                     }

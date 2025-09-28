@@ -79,6 +79,8 @@ pub struct PhysicsConfig {
     pub gravity: f32,
     pub move_speed: f32,
     pub jump_strength: f32,
+    pub jump_hold_force: f32,
+    pub max_jump_time: u32,
 }
 
 /// Configuration for input key bindings.
