@@ -145,7 +145,7 @@ impl App {
             self.player.velocity.x = desired_velocity_x;
 
             // --- Vertical Movement (Jumping) ---
-            if self.input_state.is_action_active(PlayerAction::Jump) && self.player.is_on_ground {
+            if self.input_state.is_action_just_pressed(PlayerAction::Jump) && self.player.is_on_ground {
                 self.player.velocity.y = self.config.physics.jump_strength;
             }
 

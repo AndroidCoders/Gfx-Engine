@@ -1,6 +1,6 @@
 // src/input.rs
 
-//! Handles user input and translates it into abstract game actions.
+////! Handles user input and translates it into abstract game actions.
 
 use sdl3::EventPump;
 use sdl3::event::Event;
@@ -22,14 +22,21 @@ pub enum PlayerAction {
 /// Holds the current state of all player actions.
 #[derive(Debug, Default)]
 pub struct InputState {
-    /// A set of all actions that are currently active.
+    /// A set of all actions that are currently active (held down).
     active_actions: HashSet<PlayerAction>,
+    /// A set of all actions that were just pressed in the current frame.
+    just_pressed_actions: HashSet<PlayerAction>,
 }
 
 impl InputState {
-    /// Checks if a specific action is currently active.
+    /// Checks if a specific action is currently active (held down).
     pub fn is_action_active(&self, action: PlayerAction) -> bool {
         self.active_actions.contains(&action)
+    }
+
+    /// Checks if a specific action was just pressed in the current frame.
+    pub fn is_action_just_pressed(&self, action: PlayerAction) -> bool {
+        self.just_pressed_actions.contains(&action)
     }
 }
 
@@ -46,6 +53,9 @@ impl InputHandler {
 
     /// Processes SDL events and updates the `InputState`.
     pub fn process_events(&self, event_pump: &mut EventPump, input_state: &mut InputState) -> bool {
+        // Clear the just-pressed actions at the beginning of the frame.
+        input_state.just_pressed_actions.clear();
+
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. } => return false,
@@ -79,6 +89,10 @@ impl InputHandler {
 
         if let Some(action) = action {
             if is_down {
+                // If the action is not already active, it's a "just pressed" event.
+                if !input_state.active_actions.contains(&action) {
+                    input_state.just_pressed_actions.insert(action);
+                }
                 input_state.active_actions.insert(action);
             } else {
                 input_state.active_actions.remove(&action);
