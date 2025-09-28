@@ -5,11 +5,9 @@
 use sdl3::EventPump;
 use sdl3::video::Window;
 use sdl3::render::{Canvas, Texture};
-use sdl3::event::Event;
-use sdl3::keyboard::Keycode;
 use sdl3::rect::Rect;
 
-use crate::config::{Config, GameConfig, load_config, load_game_config, InputConfig};
+use crate::config::{Config, GameConfig, load_config, load_game_config};
 use crate::renderer::Renderer;
 use crate::texture_manager::TextureManager;
 use crate::player::{Player, PlayerDirection};
@@ -71,7 +69,7 @@ impl App {
         let window = window_builder.build().map_err(|e| e.to_string())?;
 
         // Create the canvas and texture creator
-        let mut canvas = window.into_canvas();
+        let canvas = window.into_canvas();
         let texture_creator = canvas.texture_creator();
 
         // Create the texture manager and load textures
