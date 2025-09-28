@@ -8,3 +8,9 @@ scaling_quality = "nearest"
 virtual_width = 640
 virtual_height = 360
 background_color = [0, 0, 0]
+
+[input]
+left = "Left"
+right = "Right"
+jump = "Space"
+quit = "Escape"

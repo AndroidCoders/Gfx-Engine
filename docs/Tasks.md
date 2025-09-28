@@ -16,11 +16,21 @@ This document lists the Development Tasks for the `GfX-Engine` project.
 
 ### Phase 2: "Captain Cat" Demo - Core Gameplay
 
-- [ ] Create a data-driven demo game called "Captain Cat".
-- [ ] Implement Platform Feature - Variable Jump Height.
-- [ ] Implement Platform Feature - Momentum-Based Movement.
-- [ ] Implement Platform Feature - Stomping on Enemies.
-- [ ] Implement Platform Feature - Interactive Blocks.
+-   **Initial Setup:**
+    -   [ ] Create a new `feature/captain-cat-demo` branch for the demo implementation.
+-   **Asset Loading and Rendering:**
+    -   [ ] Load and display the Captain Cat character sprite instead of the white box.
+    -   [ ] Implement sprite flipping for left/right movement.
+-   **Player Control:**
+    -   [ ] Implement basic player movement (left/right) based on input.
+    -   [ ] Implement Platform Feature - Variable Jump Height.
+    -   [ ] Implement Platform Feature - Momentum-Based Movement.
+-   **Game World & Gameplay:**
+    -   [ ] Create a simple level layout in a config file and render it.
+    -   [ ] Add collectible items (e.g., treasure chests) and a score display.
+    -   [ ] Add simple enemies (e.g., crocodiles) and the ability to stomp on them.
+-   **UI:**
+    -   [ ] Create a basic title screen with "Start Game" and "Exit" options.
 
 ### Phase 3: Polish & Expansion
 

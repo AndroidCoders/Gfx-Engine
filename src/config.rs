@@ -10,8 +10,9 @@ use std::path::PathBuf;
 #[derive(Deserialize, Clone)]
 pub struct Config {
     /// Window-related configuration.
-    #[allow(dead_code)]
     pub window: WindowConfig,
+    /// Input configuration.
+    pub input: InputConfig,
 }
 
 /// Holds all window-related configuration.
@@ -38,29 +39,18 @@ pub struct WindowConfig {
     pub scaling_quality: String,
 }
 
+#[derive(Deserialize, Clone)]
+pub struct PlayerConfig {
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+}
+
 /// Represents the game-specific configuration (minimal for POC).
 #[derive(Deserialize, Clone)]
 pub struct GameConfig {
-    // No fields for minimal POC
-}
-
-/// Configuration for individual game objects.
-#[derive(Deserialize, Clone)]
-pub struct ObjectConfig {
-    pub x: f32,
-    pub y: f32,
-    pub width: u32,
-    pub height: u32,
-    pub vx: f32,
-    pub vy: f32,
-}
-
-/// Configuration for physics parameters.
-#[derive(Deserialize, Clone)]
-pub struct PhysicsConfig {
-    pub damping_factor: f32,
-    pub max_speed: f32,
-    pub min_speed: f32,
+    pub player: PlayerConfig,
 }
 
 /// Configuration for input key bindings.

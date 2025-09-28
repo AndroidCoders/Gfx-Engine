@@ -64,6 +64,12 @@ All new work should be done on a separate branch. Branch names should be descrip
    git commit -m "feat: Add new feature" -m "Detailed description of the new feature."
    ```
 
+   **Safeguarding Documentation:**
+
+   To safeguard your `docs` directory, the best practice is to **commit documentation changes separately from source code changes**.
+
+   By creating dedicated commits for documentation, you can safely revert code changes in `src/` without affecting your documents.
+
 ## Pull Requests
 
 - **Push Your Branch:**

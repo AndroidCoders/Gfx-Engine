@@ -2,11 +2,8 @@ mod app;
 mod config;
 mod renderer;
 // mod audio;
-mod game_state;
-mod input;
-// mod level;
-mod physics;
 mod texture_manager;
+mod player;
 
 use app::App;
 use config::load_config;

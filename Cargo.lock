@@ -3,6 +3,16 @@
 version = 4
 
 [[package]]
+name = "Gfx-Engine"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "sdl3",
+ "serde",
+ "toml 0.9.7",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -283,16 +293,6 @@ dependencies = [
  "libc",
  "r-efi",
  "wasi 0.14.3+wasi-0.2.4",
-]
-
-[[package]]
-name = "gfx-boxes"
-version = "0.1.0"
-dependencies = [
- "image",
- "sdl3",
- "serde",
- "toml 0.9.7",
 ]
 
 [[package]]

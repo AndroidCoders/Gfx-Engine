@@ -46,12 +46,13 @@ impl InputHandler {
 
     /// Processes SDL events and updates the `InputState`.
     pub fn process_events(&self, event_pump: &mut EventPump, input_state: &mut InputState) -> bool {
-        input_state.active_actions.clear();
-
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. } => return false,
                 Event::KeyDown { keycode: Some(keycode), .. } => {
+                    if keycode.name() == self.input_config.quit {
+                        return false;
+                    }
                     self.handle_key_event(keycode, input_state, true);
                 }
                 Event::KeyUp { keycode: Some(keycode), .. } => {
