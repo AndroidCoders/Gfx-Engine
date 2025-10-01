@@ -1,13 +1,11 @@
-File version: 1.04
+File version: 1.05
 
 **TLDR:**
 This document describes the `GfX-Engine` project:
-* Rust application for a minimal graphical POC using SDL3
-* Displays a white box on a black background
-* Configurable via `config.toml`
+* A 2D pixel art game engine built in Rust.
+* The engine is being developed with a "Captain Cat" demo game.
+* The project has a well-defined vision, goals, and thorough documentation.
 
-`GfX-Engine` is a Rust application that uses the SDL3 library to create a minimal graphical Proof of Concept. It displays a single white box on a black background in a window. The application exits when the 'Escape' key is pressed.
+`GfX-Engine` is a 2D pixel art game engine built with Rust. The project's primary goal is to create a reusable and modular engine, with the development of a "Captain Cat" demo game to showcase its capabilities.
 
-The codebase is modular, with `app.rs` for the main application, and `renderer.rs` as a drawing module.
-
-The project follows a clear structure, coding style, and requirements, and is built with Cargo.
+The project is well-defined with a clear vision and goals, and is supported by thorough documentation that is updated as the project evolves.

@@ -17,25 +17,30 @@ This document lists the Development Tasks for the `GfX-Engine` project.
 ### Phase 2: "Captain Cat" Demo - Core Gameplay
 
 -   **Initial Setup:**
-    -   [ ] Create a new `feature/captain-cat-demo` branch for the demo implementation.
+    -   [x] Create a new `feature/captain-cat-demo` branch for the demo implementation.
 -   **Asset Loading and Rendering:**
-    -   [ ] Load and display the Captain Cat character sprite instead of the white box.
-    -   [ ] Implement sprite flipping for left/right movement.
+    -   [x] Load and display the Captain Cat character sprite instead of the white box.
+    -   [x] Implement sprite flipping for left/right movement.
 -   **Player Control:**
-    -   [ ] Implement basic player movement (left/right) based on input.
-    -   [ ] Implement Platform Feature - Variable Jump Height.
-    -   [ ] Implement Platform Feature - Momentum-Based Movement.
+    -   [x] Implement basic player movement (left/right) based on input.
+    -   [x] Implement Platform Feature - Variable Jump Height.
 -   **Game World & Gameplay:**
-    -   [ ] Create a simple level layout in a config file and render it.
-    -   [ ] Add collectible items (e.g., treasure chests) and a score display.
+    -   [x] Create a simple level layout in a config file and render it.
+
+### Phase 3: Next Steps
+
+-   **Core Gameplay Features:**
+    -   [ ] Implement Platform Feature - Momentum-Based Movement.
+    -   [ ] Load and use textures for the world and platform graphics.
     -   [ ] Add simple enemies (e.g., crocodiles) and the ability to stomp on them.
 -   **UI:**
-    -   [ ] Create a basic title screen with "Start Game" and "Exit" options.
-
-### Phase 3: Polish & Expansion
-
-- [ ] Implement `level.rs` to load level data from Tiled map files.
-- [ ] Implement `audio.rs` to load and play sounds.
-- [ ] Add text rendering support.
-- [ ] Develop a simple UI system.
-- [ ] Write comprehensive tests for the engine.
+    -   [ ] Develop a very basic UI system with a title screen and menus.
+-   **Graphics:**
+    -   [ ] Implement a sprite animation system.
+-   **Polish & Expansion:**
+    -   [ ] Implement a debugging and profiling system.
+    -   [ ] Add collectible items (e.g., treasure chests) and a score display.
+    -   [ ] Implement `level.rs` to load level data from Tiled map files.
+    -   [ ] Implement `audio.rs` to load and play sounds.
+    -   [ ] Add text rendering support.
+    -   [ ] Write comprehensive tests for the engine.

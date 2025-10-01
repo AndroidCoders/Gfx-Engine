@@ -46,8 +46,7 @@ impl Renderer {
             }
 
             // Draw player
-            let query = player_texture.query();
-            texture_canvas.copy(player_texture, None, Rect::new((player.position.x - camera.x as f32) as i32, (player.position.y - camera.y as f32) as i32, query.width, query.height)).map_err(|e| e.to_string()).unwrap();
+            texture_canvas.copy(player_texture, None, Rect::new((player.position.x - camera.x as f32) as i32, (player.position.y - camera.y as f32) as i32, player.width, player.height)).map_err(|e| e.to_string()).unwrap();
         }).map_err(|e| e.to_string())?;
 
         // Copy virtual canvas to main canvas

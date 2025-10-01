@@ -1,11 +1,12 @@
-File version: 1.03
+File version: 1.04
 
 **TLDR:**
-This document lists the core application requirements for `GfX-Engine`:
-* Core application features for a minimal POC
+This document lists the core application requirements for the `GfX-Engine`'s "Captain Cat" demo:
+* Core application features for the demo game.
 
 # Core Application Requirements
 
 - The application SHALL display a window (configurable via `config.toml`).
-- The application SHALL render a static white box on a black background.
+- The application SHALL render the "Captain Cat" player character.
+- The application SHALL render a level based on data from a configuration file.
 - The application SHALL close when the 'Escape' key is pressed.

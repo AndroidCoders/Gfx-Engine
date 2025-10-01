@@ -1,7 +1,7 @@
-File version: 1.03
+File version: 1.04
 
 **TLDR:**
-This document provides an overview of the `GfX-Engine` project's file structure for the minimal POC:
+This document provides an overview of the `GfX-Engine` project's file structure:
 * Main directories
 * Key source code and documentation files
 
@@ -19,5 +19,13 @@ docs/Workflow.md: Development Workflow with GitHub.
 
 src/main.rs: Main application source code.
 src/app.rs: Initializes SDL (graphics), creates the window, and runs the main application loop.
+src/audio.rs: Handles audio loading and playback.
+src/camera.rs: Defines the camera for viewing the game world.
 src/config.rs: Defines the application's configuration structures and handles loading from `config.toml`.
-src/renderer.rs: Handles all drawing operations on the SDL Canvas.
+src/frame_capture.rs: Handles capturing frames for debugging or video output.
+src/input.rs: Handles user input and translates it into abstract game actions.
+src/level.rs: Manages loading and representing game levels.
+src/math.rs: Defines common mathematical structures.
+src/player.rs: Defines the player character's state and behavior.
+src/renderer.rs: Handles all drawing operations for the engine.
+src/texture_manager.rs: Manages loading and storing textures.

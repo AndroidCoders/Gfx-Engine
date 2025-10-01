@@ -14,7 +14,7 @@ This document outlines the agreed-upon coding conventions and design principles 
 
 ## Design Principles
 
-- **Modular Design**: The codebase should be split into logical modules with clear responsibilities (e.g., `renderer`, `game_state`).
+- **Modular Design**: The codebase should be split into logical modules with clear responsibilities (e.g., `renderer`, `player`).
 - **Data-Driven Design**: Logic (functions) should be separated from the data it operates on (structs). Data is read from configuration files, not hardcoded in the source code.
 - **Encapsulation**: All logic should be encapsulated within functions or methods.
 
