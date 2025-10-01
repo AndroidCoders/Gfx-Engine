@@ -19,6 +19,7 @@ pub struct Player {
     pub direction: PlayerDirection,
     pub is_on_ground: bool,
     pub jump_time: u32,
+    pub ground_friction: f32,
 }
 
 impl Player {
@@ -31,6 +32,7 @@ impl Player {
             direction: PlayerDirection::Front,
             is_on_ground: false,
             jump_time: 0,
+            ground_friction: 0.9,
         }
     }
 }

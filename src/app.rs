@@ -147,7 +147,12 @@ impl App {
 
             // Apply friction
             if !is_moving {
-                self.player.velocity.x *= self.config.physics.friction;
+                let friction = if self.player.is_on_ground {
+                    self.player.ground_friction
+                } else {
+                    self.config.physics.friction // Air friction
+                };
+                self.player.velocity.x *= friction;
                 // If velocity is very small, stop the player completely
                 if self.player.velocity.x.abs() < 0.1 {
                     self.player.velocity.x = 0.0;
@@ -211,6 +216,7 @@ impl App {
                         self.player.position.y = (object.y - self.player.height as i32) as f32;
                         self.player.is_on_ground = true;
                         self.player.jump_time = 0;
+                        self.player.ground_friction = object.friction.unwrap_or(self.config.physics.friction);
                     } else if self.player.velocity.y < 0.0 { // Moving up
                         self.player.position.y = (object.y + object.height as i32) as f32;
                     }

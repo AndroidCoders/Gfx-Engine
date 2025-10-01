@@ -3,21 +3,25 @@ x = 0
 y = 900
 width = 3600
 height = 180
+friction = 0.1
 
 [[objects]]
 x = 900
 y = 720
 width = 300
 height = 60
+friction = 0.1
 
 [[objects]]
 x = 1500
 y = 540
 width = 300
 height = 60
+friction = 0.1
 
 [[objects]]
 x = 3900
 y = 750
 width = 600
 height = 150
+friction = 0.1

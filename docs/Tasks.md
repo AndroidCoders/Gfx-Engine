@@ -38,6 +38,8 @@ This document lists the Development Tasks for the `GfX-Engine` project.
 -   **Graphics:**
     -   [ ] Implement a sprite animation system.
 -   **Polish & Expansion:**
+    -   [ ] Improve player control in mid-air to prevent instant turning and acceleration.
+    -   [ ] Implement a damped/soft camera follow system for more realistic camera movement.
     -   [ ] Implement a debugging and profiling system.
     -   [ ] Add collectible items (e.g., treasure chests) and a score display.
     -   [ ] Implement `level.rs` to load level data from Tiled map files.

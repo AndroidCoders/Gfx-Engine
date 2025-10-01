@@ -73,3 +73,9 @@ To facilitate robust testing and optimization, the following systems are planned
 *   **On-Screen Display and Logging:** A comprehensive debug system (`debug.rs`) will be implemented. It will render key data (e.g., player coordinates, state) on-screen for video analysis and simultaneously record verbose, high-resolution data to a log file. A shared timestamp or frame number will link the video frames to the log entries.
 
 *   **Programmatic Video Capture:** To enable automated analysis and capture hard-to-reproduce bugs, the engine will integrate programmatic video recording. This will be achieved by using a Rust wrapper for the `ffmpeg` library (such as `ffmpeg-next`), allowing the engine to start and stop video capture from within the code.
+
+## Future Improvements
+
+*   **Mid-Air Control:** The player's control while in the air will be adjusted to prevent instant turning and acceleration, providing a more realistic feel.
+
+*   **Damped Camera:** The camera system will be improved to implement a "damped" or "soft" follow, giving it a sense of weight and creating a smoother, more cinematic feel.

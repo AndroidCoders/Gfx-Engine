@@ -11,6 +11,7 @@ pub struct LevelObject {
     pub y: i32,
     pub width: u32,
     pub height: u32,
+    pub friction: Option<f32>,
 }
 
 #[derive(Deserialize, Clone)]
