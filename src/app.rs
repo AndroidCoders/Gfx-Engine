@@ -132,17 +132,30 @@ impl App {
             //  Update State
             // *****************************************************************
 
-            // --- Horizontal Movement ---
-            let mut desired_velocity_x = 0.0;
+            // --- Horizontal Movement (with momentum) ---
+            let mut is_moving = false;
             if self.input_state.is_action_active(PlayerAction::MoveLeft) {
-                desired_velocity_x -= self.config.physics.move_speed;
+                self.player.velocity.x -= self.config.physics.acceleration;
                 self.player.direction = PlayerDirection::Left;
+                is_moving = true;
             }
             if self.input_state.is_action_active(PlayerAction::MoveRight) {
-                desired_velocity_x += self.config.physics.move_speed;
+                self.player.velocity.x += self.config.physics.acceleration;
                 self.player.direction = PlayerDirection::Right;
+                is_moving = true;
             }
-            self.player.velocity.x = desired_velocity_x;
+
+            // Apply friction
+            if !is_moving {
+                self.player.velocity.x *= self.config.physics.friction;
+                // If velocity is very small, stop the player completely
+                if self.player.velocity.x.abs() < 0.1 {
+                    self.player.velocity.x = 0.0;
+                }
+            }
+
+            // Clamp velocity to max_speed
+            self.player.velocity.x = self.player.velocity.x.clamp(-self.config.physics.max_speed, self.config.physics.max_speed);
 
             // --- Vertical Movement (Jumping) ---
             if self.input_state.is_action_just_pressed(PlayerAction::Jump) && self.player.is_on_ground {

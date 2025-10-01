@@ -77,7 +77,9 @@ pub struct AssetsConfig {
 #[derive(Deserialize, Clone)]
 pub struct PhysicsConfig {
     pub gravity: f32,
-    pub move_speed: f32,
+    pub max_speed: f32,
+    pub acceleration: f32,
+    pub friction: f32,
     pub jump_strength: f32,
     pub jump_hold_force: f32,
     pub max_jump_time: u32,
