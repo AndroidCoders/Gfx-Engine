@@ -3,6 +3,7 @@
 //! Loads and manages the engine's configuration from external files.
 
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -29,6 +30,7 @@ pub struct WindowConfig {
     /// The virtual width of the game canvas.
     pub virtual_width: u32,
     /// The virtual height of the game canvas.
+    #[allow(dead_code)]
     pub virtual_height: u32,
     /// The background color of the window.
     pub background_color: [u8; 3],
@@ -47,6 +49,8 @@ pub struct GameConfig {
     pub player: PlayerConfig,
     pub world: WorldConfig,
     pub assets: AssetsConfig,
+    #[serde(default)]
+    pub animation: HashMap<String, AnimationConfig>,
 }
 
 #[derive(Deserialize, Clone)]
@@ -71,6 +75,18 @@ pub struct AssetsConfig {
     pub player_front: String,
     pub player_left: String,
     pub player_right: String,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct AnimationConfig {
+    pub texture: String,
+    pub start_x: i32,
+    pub start_y: i32,
+    pub frame_width: u32,
+    pub frame_height: u32,
+    pub frame_count: u32,
+    pub frame_duration: u32,
+    pub loops: bool,
 }
 
 /// Configuration for physics parameters.
@@ -104,6 +120,7 @@ pub fn load_config() -> Result<Config, String> {
 /// Loads the game-specific configuration from the specified path.
 #[allow(dead_code)]
 pub fn load_game_config(path: &str) -> Result<GameConfig, String> {
+    // TODO: Move "assets" to a config file (e.g., assets.base_path)
     let full_path = PathBuf::from("assets").join(path);
     let config_str = fs::read_to_string(&full_path).map_err(|e| e.to_string())?;
     let game_config: GameConfig = toml::from_str(&config_str).map_err(|e| e.to_string())?;

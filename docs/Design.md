@@ -50,6 +50,10 @@ To create a robust and engaging platformer experience, the following gameplay me
 
 *   **Interactive Blocks:** The game levels will include simple interactive elements, such as breakable blocks that the player can hit from below.
 
+## Entity State Management
+
+To manage the behavior of all dynamic entities (including the player and AI enemies), we will implement a **Hierarchical State Machine (HSM)**. This unified pattern provides a robust and scalable foundation for both player control and AI logic. It organizes behavior into distinct states (e.g., `Idle`, `Patrolling`, `Jumping`) and manages the transitions between them. This prevents bugs by ensuring an entity is only in one state at a time, simplifies adding new abilities, and serves as the core driver for the animation system by linking each state directly to its corresponding animation. Our implementation will be a hybrid, supporting both continuous actions within states and instantaneous actions on transitions.
+
 ## Implemented Core Features
 
 The engine currently has the following core features implemented:

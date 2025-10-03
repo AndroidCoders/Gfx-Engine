@@ -1,9 +1,13 @@
-// src/player.rs
+// src/player/mod.rs
 
 //! Defines the player character's state and behavior.
 
+pub mod state;
+
+use crate::animation::AnimationController;
 use crate::config::PlayerConfig;
 use crate::math::Vector2D;
+use state::PlayerState;
 
 pub enum PlayerDirection {
     Front,
@@ -20,6 +24,8 @@ pub struct Player {
     pub is_on_ground: bool,
     pub jump_time: u32,
     pub ground_friction: f32,
+    pub state: PlayerState,
+    pub animation_controller: AnimationController,
 }
 
 impl Player {
@@ -32,7 +38,10 @@ impl Player {
             direction: PlayerDirection::Front,
             is_on_ground: false,
             jump_time: 0,
+            // TODO: Initialize this from config.physics.friction (air friction)
             ground_friction: 0.9,
+            state: PlayerState::Idle,
+            animation_controller: AnimationController::new(),
         }
     }
 }

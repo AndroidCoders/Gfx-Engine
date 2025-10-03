@@ -38,6 +38,7 @@ This document lists the Development Tasks for the `GfX-Engine` project.
 -   **Graphics:**
     -   [ ] Implement a sprite animation system.
 -   **Polish & Expansion:**
+    -   [ ] Refactor hard-coded data out of the source code.
     -   [ ] Improve player control in mid-air to prevent instant turning and acceleration.
     -   [ ] Implement a damped/soft camera follow system for more realistic camera movement.
     -   [ ] Implement a debugging and profiling system.

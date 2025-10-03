@@ -1,6 +1,8 @@
 mod app;
+mod animation;
 mod config;
 mod renderer;
+mod state_machine;
 // mod audio;
 mod input;
 mod math;

@@ -5,13 +5,12 @@
 use sdl3::EventPump;
 use sdl3::video::Window;
 use sdl3::render::{Canvas, Texture};
-use sdl3::rect::Rect;
 
 use crate::config::{Config, GameConfig, load_config, load_game_config};
 use crate::renderer::Renderer;
 use crate::texture_manager::TextureManager;
-use crate::player::{Player, PlayerDirection};
-use crate::input::{InputHandler, InputState, PlayerAction};
+use crate::player::Player;
+use crate::input::{InputHandler, InputState};
 use crate::level::{Level, load_level};
 use crate::camera::Camera;
 
@@ -36,6 +35,7 @@ pub struct App {
     /// The virtual width of the game canvas.
     virtual_width: u32,
     /// The virtual height of the game canvas.
+    #[allow(dead_code)]
     virtual_height: u32,
 }
 
@@ -48,6 +48,7 @@ impl App {
 
         // Load configuration
         let config = load_config().map_err(|e| e.to_string())?;
+        // TODO: Move this to a config file
         let game_config = load_game_config("game_config.toml").map_err(|e| e.to_string())?;
 
         // Set VSync hint
@@ -90,7 +91,27 @@ impl App {
         let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
 
         // Create the player
-        let player = Player::new(&game_config.player);
+        let mut player = Player::new(&game_config.player);
+
+        // Load animations
+        for (name, anim_config) in &game_config.animation {
+            let mut frames = Vec::new();
+            for i in 0..anim_config.frame_count {
+                frames.push(sdl3::rect::Rect::new(
+                    anim_config.start_x + (i * anim_config.frame_width) as i32,
+                    anim_config.start_y,
+                    anim_config.frame_width,
+                    anim_config.frame_height,
+                ));
+            }
+            let animation = crate::animation::Animation {
+                texture_name: anim_config.texture.clone(),
+                frames,
+                frame_duration: anim_config.frame_duration,
+                loops: anim_config.loops,
+            };
+            player.animation_controller.add_animation(name.clone(), animation);
+        }
 
         // Create input handler and state
         let input_handler = InputHandler::new(config.input.clone());
@@ -131,98 +152,12 @@ impl App {
             // *****************************************************************
             //  Update State
             // *****************************************************************
-
-            // --- Horizontal Movement (with momentum) ---
-            let mut is_moving = false;
-            if self.input_state.is_action_active(PlayerAction::MoveLeft) {
-                self.player.velocity.x -= self.config.physics.acceleration;
-                self.player.direction = PlayerDirection::Left;
-                is_moving = true;
-            }
-            if self.input_state.is_action_active(PlayerAction::MoveRight) {
-                self.player.velocity.x += self.config.physics.acceleration;
-                self.player.direction = PlayerDirection::Right;
-                is_moving = true;
-            }
-
-            // Apply friction
-            if !is_moving {
-                let friction = if self.player.is_on_ground {
-                    self.player.ground_friction
-                } else {
-                    self.config.physics.friction // Air friction
-                };
-                self.player.velocity.x *= friction;
-                // If velocity is very small, stop the player completely
-                if self.player.velocity.x.abs() < 0.1 {
-                    self.player.velocity.x = 0.0;
-                }
-            }
-
-            // Clamp velocity to max_speed
-            self.player.velocity.x = self.player.velocity.x.clamp(-self.config.physics.max_speed, self.config.physics.max_speed);
-
-            // --- Vertical Movement (Jumping) ---
-            if self.input_state.is_action_just_pressed(PlayerAction::Jump) && self.player.is_on_ground {
-                self.player.velocity.y = self.config.physics.jump_strength;
-                self.player.jump_time = 0;
-            }
-
-            // Apply jump hold force
-            if self.input_state.is_action_active(PlayerAction::Jump) && self.player.velocity.y < 0.0 && self.player.jump_time < self.config.physics.max_jump_time {
-                self.player.velocity.y -= self.config.physics.jump_hold_force;
-                self.player.jump_time += 1;
-            }
-
-            // Release jump button
-            if !self.input_state.is_action_active(PlayerAction::Jump) {
-                self.player.jump_time = self.config.physics.max_jump_time;
-            }
-
-            // --- Apply Gravity ---
-            self.player.velocity.y += self.config.physics.gravity;
-
-            // --- Collision Detection (Separate Axes) ---
-
-            // Reset on_ground flag, it will be set to true if a vertical collision occurs
-            self.player.is_on_ground = false;
-
-            // Move horizontally
-            self.player.position.x += self.player.velocity.x;
-
-            // Check for horizontal collisions
-            for object in &self.level.objects {
-                let player_rect = Rect::new(self.player.position.x as i32, self.player.position.y as i32, self.player.width, self.player.height);
-                let object_rect = Rect::new(object.x, object.y, object.width, object.height);
-                if player_rect.has_intersection(object_rect) {
-                    if self.player.velocity.x > 0.0 { // Moving right
-                        self.player.position.x = (object.x - self.player.width as i32) as f32;
-                    } else if self.player.velocity.x < 0.0 { // Moving left
-                        self.player.position.x = (object.x + object.width as i32) as f32;
-                    }
-                    self.player.velocity.x = 0.0;
-                }
-            }
-
-            // Move vertically
-            self.player.position.y += self.player.velocity.y;
-
-            // Check for vertical collisions
-            for object in &self.level.objects {
-                let player_rect = Rect::new(self.player.position.x as i32, self.player.position.y as i32, self.player.width, self.player.height);
-                let object_rect = Rect::new(object.x, object.y, object.width, object.height);
-                if player_rect.has_intersection(object_rect) {
-                    if self.player.velocity.y > 0.0 { // Moving down
-                        self.player.position.y = (object.y - self.player.height as i32) as f32;
-                        self.player.is_on_ground = true;
-                        self.player.jump_time = 0;
-                        self.player.ground_friction = object.friction.unwrap_or(self.config.physics.friction);
-                    } else if self.player.velocity.y < 0.0 { // Moving up
-                        self.player.position.y = (object.y + object.height as i32) as f32;
-                    }
-                    self.player.velocity.y = 0.0;
-                }
-            }
+            crate::player::state::update_player_state(
+                &mut self.player,
+                &self.input_state,
+                &self.config,
+                &self.level,
+            );
 
             // --- World Boundary and Camera ---
 

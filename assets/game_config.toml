@@ -17,3 +17,53 @@ level = "assets/levels/level1.toml"
 player_front = "assets/graphics/Captain_Cat_Image_Front_Side_64x128.png"
 player_left = "assets/graphics/Captain_Cat_Image_Left_Side_64x128.png"
 player_right = "assets/graphics/Captain_Cat_Image_Right_Side_64x128.png"
+
+[animation.idle]
+texture = "player_front"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 128
+frame_count = 1
+frame_duration = 10
+loops = true
+
+[animation.walk_left]
+texture = "player_left"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 128
+frame_count = 1
+frame_duration = 10
+loops = true
+
+[animation.walk_right]
+texture = "player_right"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 128
+frame_count = 1
+frame_duration = 10
+loops = true
+
+[animation.jump_left]
+texture = "player_left"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 128
+frame_count = 1
+frame_duration = 10
+loops = false
+
+[animation.jump_right]
+texture = "player_right"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 128
+frame_count = 1
+frame_duration = 10
+loops = false
