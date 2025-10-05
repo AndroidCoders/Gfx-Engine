@@ -43,6 +43,20 @@ pub struct WindowConfig {
     pub scaling_quality: String,
 }
 
+#[derive(Deserialize, Clone)]
+pub struct GraphicsConfig {
+    pub platform_tileset: String,
+    pub platform_tile: TileConfig,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct TileConfig {
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+}
+
 /// Represents the game-specific configuration.
 #[derive(Deserialize, Clone)]
 pub struct GameConfig {
@@ -51,6 +65,7 @@ pub struct GameConfig {
     pub assets: AssetsConfig,
     #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
+    pub graphics: GraphicsConfig,
 }
 
 #[derive(Deserialize, Clone)]

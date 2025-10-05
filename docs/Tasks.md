@@ -27,12 +27,23 @@ This document lists the Development Tasks for the `GfX-Engine` project.
 -   **Game World & Gameplay:**
     -   [x] Create a simple level layout in a config file and render it.
 
-### Phase 3: Next Sprint
+### Phase 3: Gameplay Polish Sprint
 
--   [ ] **1. Implement Multi-Frame Animations:** Extend the animation system to support sprite sheets with multiple frames to create fluid walking cycles.
+-   [x] **1. Implement Multi-Frame Animations:** Extend the animation system to support sprite sheets with multiple frames to create fluid walking cycles.
 -   [ ] **2. Add Textured World Graphics:** Replace the placeholder level blocks with textured graphics loaded from files.
--   [ ] **3. Implement a Simple Enemy:** Add an enemy with basic patrol AI and stomp mechanics, using our new state machine pattern.
--   [ ] **4. Implement Damped Camera Movement:** Improve the camera to follow the player smoothly, enhancing the game's professional feel.
+    -   Create or locate a suitable tileset/texture for platforms.
+    -   Update `game_config.toml` to reference the new texture.
+    -   Modify the `Renderer` to draw textured platforms instead of solid rectangles.
+-   [ ] **3. Implement Basic Sound Effects:** Integrate an audio system for key gameplay events.
+    -   Add the `sdl3_mixer` dependency.
+    -   Create an `AudioManager` in `src/audio.rs` to load and play sounds.
+    -   Trigger a jump sound effect in the player's state logic.
+-   [ ] **4. Implement a Simple Enemy:** Add an enemy with basic patrol AI and stomp mechanics.
+    -   Define an `Enemy` struct and state machine.
+    -   Add enemy data to level configuration files.
+    -   Implement basic patrol AI.
+    -   Update the physics and game loop to handle enemy collision and "stomp" logic.
+-   [ ] **5. Implement Damped Camera Movement:** Improve the camera to follow the player smoothly, enhancing the game's professional feel.
 
 ### Future Goals (Backlog)
 

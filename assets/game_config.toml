@@ -16,6 +16,15 @@ respawn_y = 300.0
 width = 6000.0
 death_plane_y = 1500.0
 
+[graphics]
+platform_tileset = "assets/graphics/tileset_1_outside.png"
+
+[graphics.platform_tile]
+x = 32
+y = 0
+width = 32
+height = 32
+
 [assets]
 level = "assets/levels/level1.toml"
 

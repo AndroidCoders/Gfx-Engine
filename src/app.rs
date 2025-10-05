@@ -82,6 +82,10 @@ impl App {
         for texture_path in unique_textures {
             texture_manager.load(&texture_path, &texture_path, &texture_creator)?;
         }
+
+        // Load world graphics
+        let platform_tileset_path = &game_config.graphics.platform_tileset;
+        texture_manager.load(platform_tileset_path, platform_tileset_path, &texture_creator)?;
         // Create the virtual canvas texture
         let virtual_canvas_texture = texture_creator
             .create_texture_target(None, config.window.virtual_width, config.window.virtual_height)
@@ -192,14 +196,18 @@ impl App {
             // *****************************************************************
             //  Draw
             // *****************************************************************
+            let context = crate::renderer::RenderContext {
+                texture_manager: &self.texture_manager,
+                game_config: &self.game_config,
+                camera: &self.camera,
+                background_color: self.config.window.background_color,
+            };
             Renderer::draw(
                 &mut self.canvas,
                 self.virtual_canvas_texture.as_mut().expect("Virtual canvas texture should be initialized"),
-                &self.texture_manager,
+                &context,
                 &self.player,
                 &self.level,
-                &self.camera,
-                self.config.window.background_color,
             )?;
             self.canvas.present();
         }

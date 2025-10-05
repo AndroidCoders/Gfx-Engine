@@ -41,20 +41,19 @@ impl AnimationController {
     /// Sets the currently playing animation.
     /// If the new animation is different from the current one, it resets the frame index and timer.
     pub fn set_animation(&mut self, name: &str) {
-        if self.current_animation.as_deref() != Some(name) {
-            if self.animations.contains_key(name) {
+        if self.current_animation.as_deref() != Some(name)
+            && self.animations.contains_key(name) {
                 self.current_animation = Some(name.to_string());
                 self.current_frame_index = 0;
                 self.frame_timer = 0;
             }
-        }
     }
 
     /// Updates the animation timer and advances the frame if necessary.
     /// This should be called once per game loop update.
     pub fn update(&mut self) {
-        if let Some(current_anim_name) = &self.current_animation {
-            if let Some(animation) = self.animations.get(current_anim_name) {
+        if let Some(current_anim_name) = &self.current_animation
+            && let Some(animation) = self.animations.get(current_anim_name) {
                 self.frame_timer += 1;
                 if self.frame_timer >= animation.frame_duration {
                     self.frame_timer = 0;
@@ -68,7 +67,6 @@ impl AnimationController {
                     }
                 }
             }
-        }
     }
 
     /// Returns the rectangle of the current animation frame.

@@ -67,6 +67,7 @@ The engine currently has the following core features implemented:
 *   **Camera:** A camera that follows the player.
 *   **Physics:** Basic physics, including gravity, jumping, and collision detection.
 *   **Player Movement:** Player movement (left/right) and sprite flipping.
+*   **Animation:** A state-driven, multi-frame sprite animation system.
 
 ## Debugging and Profiling
 
