@@ -1,29 +1,36 @@
-File version: 1.02
+```
+ █████  ██████ ██   ██      ██████ ███   ██  █████  ██ ███   ██ ██████
+██      ██      ██ ██       ██     ██ █  ██ ██      ██ ██ █  ██ ██
+██  ███ ████     ███  █████ ████   ██  █ ██ ██  ███ ██ ██  █ ██ ████
+██   ██ ██      ██ ██       ██     ██  █ ██ ██   ██ ██ ██  █ ██ ██
+ █████  ██     ██   ██      ██████ ██   ███  █████  ██ ██   ███ ██████
+                                                                              
+```
+
+# Gfx-Engine
 
 **TLDR:**
-* This project is a Rust application for creating graphical effects.
-* It displays multiple animated white boxes on a fullscreen background.
-* The application's behavior, including debug features, is configured via `config.toml`.
+*   Gfx-Engine is a 2D pixel-art game engine built with Rust and SDL3.
+*   It features a data-driven architecture and includes a complete demo game.
+*   The demo, "Captain Cat," is a platformer inspired by classic 16-bit era games.
 
-A project for learning the the Rust programming language by creating graphical effects. This application displays multiple white boxes that animate across a black fullscreen background.
+Gfx-Engine is a modular 2D game engine written in Rust, designed for creating pixel-art platformers.
+
+The project includes a playable "Captain Cat" demo game that showcases the engine's capabilities, which include:
+*   A robust physics engine for platforming.
+*   A state machine-driven animation system.
+*   A data-driven design where levels, assets, and game properties are loaded from TOML configuration files.
 
 ## How to Run
 
-This project uses Cargo, the Rust package manager.
-
-To build and run the application:
-
+This project uses Cargo, the Rust package manager. To build and run the demo game:
 ```bash
 cargo run
 ```
 
 ## Configuration
 
-The application's behavior is controlled by the `config.toml` file at the project root. This includes window settings, renderer colors, physics parameters, and debug features.
-
-## Debug Features
-
-### Video Debug Output
-
-To enable saving PNG screenshots for debugging, set `enable_frame_capture = true` in the `[debug]` section of `config.toml`. The output directory, maximum captured frames, and capture interval are also configured in this section.
-
+The engine's behavior is controlled by several TOML files:
+*   `config.toml`: Core engine settings (window size, global physics).
+*   `assets/game_config.toml`: Game-specific settings (player properties, asset paths, animations).
+*   `assets/levels/`: Contains individual level layout files.
