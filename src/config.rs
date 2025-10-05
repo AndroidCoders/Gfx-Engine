@@ -59,6 +59,10 @@ pub struct PlayerConfig {
     pub start_y: f32,
     pub width: u32,
     pub height: u32,
+    pub draw_width: u32,
+    pub draw_height: u32,
+    pub horizontal_draw_offset: i32,
+    pub vertical_draw_offset: i32,
     pub respawn_x: f32,
     pub respawn_y: f32,
 }
@@ -72,9 +76,6 @@ pub struct WorldConfig {
 #[derive(Deserialize, Clone)]
 pub struct AssetsConfig {
     pub level: String,
-    pub player_front: String,
-    pub player_left: String,
-    pub player_right: String,
 }
 
 #[derive(Deserialize, Clone)]

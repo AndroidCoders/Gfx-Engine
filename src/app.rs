@@ -73,12 +73,15 @@ impl App {
         let canvas = window.into_canvas();
         let texture_creator = canvas.texture_creator();
 
-        // Create the texture manager and load textures
+        // Create the texture manager and load all animation textures
         let mut texture_manager = TextureManager::new();
-        texture_manager.load(&game_config.assets.player_front, "player_front", &texture_creator)?;
-        texture_manager.load(&game_config.assets.player_left, "player_left", &texture_creator)?;
-        texture_manager.load(&game_config.assets.player_right, "player_right", &texture_creator)?;
-
+        let mut unique_textures = std::collections::HashSet::new();
+        for anim_config in game_config.animation.values() {
+            unique_textures.insert(anim_config.texture.clone());
+        }
+        for texture_path in unique_textures {
+            texture_manager.load(&texture_path, &texture_path, &texture_creator)?;
+        }
         // Create the virtual canvas texture
         let virtual_canvas_texture = texture_creator
             .create_texture_target(None, config.window.virtual_width, config.window.virtual_height)

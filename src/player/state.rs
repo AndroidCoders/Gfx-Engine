@@ -33,8 +33,6 @@ pub fn update_player_state(
         player.direction = PlayerDirection::Right;
     } else if player.velocity.x < -0.1 {
         player.direction = PlayerDirection::Left;
-    } else if player.is_on_ground {
-        player.direction = PlayerDirection::Front;
     }
 
     // Determine the next state based on the current state and input.
@@ -48,20 +46,19 @@ pub fn update_player_state(
 
     // Update animation based on the new state
     match player.state {
-        PlayerState::Idle => {
-            player.animation_controller.set_animation("idle");
-        }
+        PlayerState::Idle => match player.direction {
+            PlayerDirection::Left => player.animation_controller.set_animation("idle_left"),
+            PlayerDirection::Right => player.animation_controller.set_animation("idle_right"),
+        },
         PlayerState::Walking => match player.direction {
             PlayerDirection::Left => player.animation_controller.set_animation("walk_left"),
             PlayerDirection::Right => player.animation_controller.set_animation("walk_right"),
-            PlayerDirection::Front => player.animation_controller.set_animation("idle"),
         },
         PlayerState::Jumping | PlayerState::Falling => {
             // While airborne, use a static directional pose.
             match player.direction {
                 PlayerDirection::Left => player.animation_controller.set_animation("jump_left"),
                 PlayerDirection::Right => player.animation_controller.set_animation("jump_right"),
-                PlayerDirection::Front => player.animation_controller.set_animation("idle"), // Fallback for vertical jumps
             }
         }
     }

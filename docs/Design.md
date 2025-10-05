@@ -78,6 +78,32 @@ To facilitate robust testing and optimization, the following systems are planned
 
 *   **Programmatic Video Capture:** To enable automated analysis and capture hard-to-reproduce bugs, the engine will integrate programmatic video recording. This will be achieved by using a Rust wrapper for the `ffmpeg` library (such as `ffmpeg-next`), allowing the engine to start and stop video capture from within the code.
 
+## Future Implementations
+
+### Menu System Implementation
+
+A menu system is required to manage different application states, such as the main menu, options screen, and the game itself. This involves creating a game state manager and a UI rendering system.
+
+1.  **Add Dependencies:** Add the `sdl3_ttf` crate to `Cargo.toml` to enable text rendering.
+2.  **Create Game State Manager:** In `app.rs`, define a `GameState` enum (e.g., `MainMenu`, `Options`, `InGame`). Add a field `game_state: GameState` to the `App` struct to track the current state.
+3.  **Refactor Main Loop:** Modify the `run()` method in `app.rs` to delegate logic based on the current `game_state`. Use a `match` statement to call state-specific update and render functions (e.g., `update_game()`, `render_game()`, `update_menu()`, `render_menu()`).
+4.  **Implement UI Module:** Create a new `ui.rs` module. This module will define the structure for menus, including buttons, text labels, and logic for handling navigation (e.g., tracking the currently selected button).
+5.  **Implement Text Rendering:** Create a `FontManager` to load and manage font files, similar to the `TextureManager`. Extend the `Renderer` to include a method for drawing text to the screen using the loaded fonts.
+6.  **Handle Menu Input:** In the main loop, when the `game_state` is `MainMenu` or `Options`, process input differently. Instead of player actions, listen for `Up`, `Down`, and `Enter` keys to navigate the menu. An `Enter` press will trigger a change in the `GameState` (e.g., from `MainMenu` to `InGame`).
+
+### Audio System Implementation
+
+An audio system is needed to handle sound effects and background music. This will be managed by a central `AudioManager`.
+
+1.  **Add Dependencies:** Add the `sdl3_mixer` crate to `Cargo.toml` to handle audio decoding and playback.
+2.  **Create Audio Manager:** In the existing `audio.rs` file, create an `AudioManager` struct. This struct will hold two `HashMaps`: one for short sound effects (`sdl3_mixer::Chunk`) and one for music tracks (`sdl3_mixer::Music`).
+3.  **Initialize Audio:** In `App::new()`, initialize the `sdl3_mixer` subsystem and create an instance of the `AudioManager`.
+4.  **Load Audio Assets:** Implement `load_sound()` and `load_music()` methods in the `AudioManager`. Call these methods at startup in `App::new()` to load all required audio files (e.g., `.wav` for sounds, `.ogg` for music) from the `assets/sounds` directory.
+5.  **Implement Playback Methods:** Create `play_sound(name)` and `play_music(name)` methods in the `AudioManager`. The `play_music` method should support looping.
+6.  **Integrate Audio Events:**
+    *   **Sound Effects:** In the game logic, call `play_sound()` when specific events occur. For example, in `player/state.rs`, call `play_sound("jump")` when the player enters the `Jumping` state.
+    *   **Music:** In the main application loop in `app.rs`, call `play_music("background_theme")` when the `GameState` transitions to `InGame`.
+
 ## Future Improvements
 
 *   **Mid-Air Control:** The player's control while in the air will be adjusted to prevent instant turning and acceleration, providing a more realistic feel.

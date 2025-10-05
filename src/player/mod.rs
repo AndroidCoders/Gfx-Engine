@@ -10,7 +10,6 @@ use crate::math::Vector2D;
 use state::PlayerState;
 
 pub enum PlayerDirection {
-    Front,
     Left,
     Right,
 }
@@ -18,8 +17,12 @@ pub enum PlayerDirection {
 pub struct Player {
     pub position: Vector2D,
     pub velocity: Vector2D,
-    pub width: u32,
-    pub height: u32,
+    pub width: u32, // Collision width
+    pub height: u32, // Collision height
+    pub draw_width: u32,
+    pub draw_height: u32,
+    pub horizontal_draw_offset: i32,
+    pub vertical_draw_offset: i32,
     pub direction: PlayerDirection,
     pub is_on_ground: bool,
     pub jump_time: u32,
@@ -35,7 +38,11 @@ impl Player {
             velocity: Vector2D::default(),
             width: config.width,
             height: config.height,
-            direction: PlayerDirection::Front,
+            draw_width: config.draw_width,
+            draw_height: config.draw_height,
+            horizontal_draw_offset: config.horizontal_draw_offset,
+            vertical_draw_offset: config.vertical_draw_offset,
+            direction: PlayerDirection::Right,
             is_on_ground: false,
             jump_time: 0,
             // TODO: Initialize this from config.physics.friction (air friction)

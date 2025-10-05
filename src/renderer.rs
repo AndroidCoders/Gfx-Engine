@@ -43,15 +43,20 @@ impl Renderer {
                         texture_canvas.fill_rect(rect).map_err(|e| e.to_string()).unwrap();
                     }
 
-                    // Draw player
-                    let dest_rect = Rect::new((player.position.x - camera.x as f32) as i32, (player.position.y - camera.y as f32) as i32, player.width, player.height);
+                    // Center the sprite horizontally over the collision box and apply offset
+                    let draw_x = player.position.x - (player.draw_width - player.width) as f32 / 2.0 + player.horizontal_draw_offset as f32;
+                    // Align the bottom of the sprite with the bottom of the collision box and apply offset
+                    let draw_y = player.position.y + player.height as f32 - player.draw_height as f32 + player.vertical_draw_offset as f32;
+                    let dest_rect = Rect::new((draw_x - camera.x as f32) as i32, (draw_y - camera.y as f32) as i32, player.draw_width, player.draw_height);
                     texture_canvas.copy(player_texture, src_rect.map(|r| r.into()), dest_rect).map_err(|e| e.to_string()).unwrap();
                 }).map_err(|e| e.to_string())?;
             } else {
                 // Texture not found, draw a fallback rectangle
                 canvas.with_texture_canvas(virtual_canvas_texture, |texture_canvas| {
                     texture_canvas.set_draw_color(Color::RGB(255, 0, 255)); // Bright pink for missing texture
-                    let dest_rect = Rect::new((player.position.x - camera.x as f32) as i32, (player.position.y - camera.y as f32) as i32, player.width, player.height);
+                    let draw_x = player.position.x - (player.draw_width - player.width) as f32 / 2.0 + player.horizontal_draw_offset as f32;
+                    let draw_y = player.position.y + player.height as f32 - player.draw_height as f32 + player.vertical_draw_offset as f32;
+                    let dest_rect = Rect::new((draw_x - camera.x as f32) as i32, (draw_y - camera.y as f32) as i32, player.draw_width, player.draw_height);
                     texture_canvas.fill_rect(dest_rect).map_err(|e| e.to_string()).unwrap();
                 }).map_err(|e| e.to_string())?;
             }
