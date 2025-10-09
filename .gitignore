@@ -1,6 +1,11 @@
 /target
-\n# Ignore generated output files\n/output/
+
+# Ignore generated output files
+/output/
 output/
 
 # Debug output
 /debug/
+
+# Screenshots
+/screenshots/
