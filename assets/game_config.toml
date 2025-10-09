@@ -17,7 +17,7 @@ width = 6000.0
 death_plane_y = 3000.0
 
 [animation.idle_left]
-texture = "assets/graphics/captain_cat_idle_left.png"
+texture = "assets/graphics/cat_idle_left.png"
 start_x = 0
 start_y = 0
 frame_width = 80
@@ -27,7 +27,7 @@ frame_duration = 8
 loops = true
 
 [animation.idle_right]
-texture = "assets/graphics/captain_cat_idle_right.png"
+texture = "assets/graphics/cat_idle_right.png"
 start_x = 0
 start_y = 0
 frame_width = 80
@@ -37,7 +37,7 @@ frame_duration = 8
 loops = true
 
 [animation.walk_left]
-texture = "assets/graphics/captain_cat_walk_left.png"
+texture = "assets/graphics/cat_walk_left.png"
 start_x = 0
 start_y = 0
 frame_width = 80
@@ -47,7 +47,7 @@ frame_duration = 4
 loops = true
 
 [animation.walk_right]
-texture = "assets/graphics/captain_cat_walk_right.png"
+texture = "assets/graphics/cat_walk_right.png"
 start_x = 0
 start_y = 0
 frame_width = 80
@@ -57,7 +57,7 @@ frame_duration = 4
 loops = true
 
 [animation.jump_left]
-texture = "assets/graphics/captain_cat_jump_left.png"
+texture = "assets/graphics/cat_jump_left.png"
 start_x = 0
 start_y = 0
 frame_width = 80
@@ -67,7 +67,7 @@ frame_duration = 6
 loops = false
 
 [animation.jump_right]
-texture = "assets/graphics/captain_cat_jump_right.png"
+texture = "assets/graphics/cat_jump_right.png"
 start_x = 0
 start_y = 0
 frame_width = 80
