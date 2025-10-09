@@ -1,12 +1,12 @@
-# Captain Cat: A Gfx-Engine Demo Game
+# Super Cat Bros: A Gfx-Engine Demo Game
 
 ## Overview
 
-"Captain Cat" is a 2D platformer demo game created to showcase the capabilities of the `Gfx-Engine`. The game is inspired by the classic Super Mario World and features a swashbuckling feline hero.
+"Super Cat Bros" is a 2D platformer demo game created to showcase the capabilities of the `Gfx-Engine`. The game is inspired by classic 16-bit era platformers.
 
 ## Character
 
-The protagonist of our game is Captain Cat, a charming and adventurous pirate cat, in the vein of "Puss in Boots". He is a brave explorer, always ready for a new adventure.
+The protagonist of our game is a charming and adventurous cat.
 
 ### Character Assets
 

@@ -12,11 +12,11 @@
 **TLDR:**
 *   Gfx-Engine is a 2D pixel-art game engine built with Rust and SDL3.
 *   It features a data-driven architecture and includes a complete demo game.
-*   The demo, "Captain Cat," is a platformer inspired by classic 16-bit era games.
+*   The demo, "Super Cat Bros," is a platformer inspired by classic 16-bit era games.
 
 Gfx-Engine is a modular 2D game engine written in Rust, designed for creating pixel-art platformers.
 
-The project includes a playable "Captain Cat" demo game that showcases the engine's capabilities, which include:
+The project includes a playable "Super Cat Bros" demo game that showcases the engine's capabilities, which include:
 *   A robust physics engine for platforming.
 *   A state machine-driven animation system.
 *   A data-driven design where levels, assets, and game properties are loaded from TOML configuration files.

@@ -14,12 +14,12 @@ This document lists the Development Tasks for the `GfX-Engine` project.
 - [x] Implement a device-independent, data-driven input system.
 - [x] Implement a sprite animation system.
 
-### Phase 2: "Captain Cat" Demo - Core Gameplay
+### Phase 2: "Super Cat Bros" Demo - Core Gameplay
 
 -   **Initial Setup:**
     -   [x] Create a new `feature/captain-cat-demo` branch for the demo implementation.
 -   **Asset Loading and Rendering:**
-    -   [x] Load and display the Captain Cat character sprite instead of the white box.
+    -   [x] Load and display the Super Cat Bros character sprite instead of the white box.
     -   [x] Implement sprite flipping for left/right movement.
 -   **Player Control:**
     -   [x] Implement basic player movement (left/right) based on input.

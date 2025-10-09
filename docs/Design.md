@@ -58,7 +58,7 @@ To manage the behavior of all dynamic entities (including the player and AI enem
 
 The engine currently has the following core features implemented:
 
-*   **Compiling Proof of Concept:** Displays the "Captain Cat" sprite.
+*   **Compiling Proof of Concept:** Displays the "Super Cat Bros" sprite.
 *   **Configuration:** Loads configuration from `.toml` files.
 *   **Input System:** A data-driven input system is in place.
 *   **Texture Management:** A `TextureManager` for loading and managing textures.
