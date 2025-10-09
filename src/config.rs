@@ -43,29 +43,16 @@ pub struct WindowConfig {
     pub scaling_quality: String,
 }
 
-#[derive(Deserialize, Clone)]
-pub struct GraphicsConfig {
-    pub platform_tileset: String,
-    pub platform_tile: TileConfig,
-}
 
-#[derive(Deserialize, Clone)]
-pub struct TileConfig {
-    pub x: i32,
-    pub y: i32,
-    pub width: u32,
-    pub height: u32,
-}
 
 /// Represents the game-specific configuration.
 #[derive(Deserialize, Clone)]
 pub struct GameConfig {
     pub player: PlayerConfig,
     pub world: WorldConfig,
-    pub assets: AssetsConfig,
     #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
-    pub graphics: GraphicsConfig,
+
 }
 
 #[derive(Deserialize, Clone)]
@@ -88,10 +75,8 @@ pub struct WorldConfig {
     pub death_plane_y: f32,
 }
 
-#[derive(Deserialize, Clone)]
-pub struct AssetsConfig {
-    pub level: String,
-}
+
+
 
 #[derive(Deserialize, Clone)]
 pub struct AnimationConfig {
@@ -110,6 +95,7 @@ pub struct AnimationConfig {
 pub struct PhysicsConfig {
     pub gravity: f32,
     pub max_speed: f32,
+    pub max_fall_speed: f32,
     pub acceleration: f32,
     pub friction: f32,
     pub jump_strength: f32,

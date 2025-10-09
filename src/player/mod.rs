@@ -26,7 +26,6 @@ pub struct Player {
     pub direction: PlayerDirection,
     pub is_on_ground: bool,
     pub jump_time: u32,
-    pub ground_friction: f32,
     pub state: PlayerState,
     pub animation_controller: AnimationController,
 }
@@ -45,8 +44,6 @@ impl Player {
             direction: PlayerDirection::Right,
             is_on_ground: false,
             jump_time: 0,
-            // TODO: Initialize this from config.physics.friction (air friction)
-            ground_friction: 0.9,
             state: PlayerState::Idle,
             animation_controller: AnimationController::new(),
         }

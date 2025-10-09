@@ -8,6 +8,9 @@ sdl3 = { version = "0.14.41", features = ["unsafe_textures"] }
 image = { version = "0.25.1", features = ["png"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.9.5"
+quick-xml = { version = "0.31.0", features = ["serialize"] }
+
+
 
 
 

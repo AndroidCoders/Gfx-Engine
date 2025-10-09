@@ -7,7 +7,7 @@ use sdl3::video::Window;
 use sdl3::render::{Canvas, Texture};
 
 use crate::config::{Config, GameConfig, load_config, load_game_config};
-use crate::renderer::Renderer;
+use crate::renderer::{Renderer, RenderContext};
 use crate::texture_manager::TextureManager;
 use crate::player::Player;
 use crate::input::{InputHandler, InputState};
@@ -48,8 +48,10 @@ impl App {
 
         // Load configuration
         let config = load_config().map_err(|e| e.to_string())?;
-        // TODO: Move this to a config file
         let game_config = load_game_config("game_config.toml").map_err(|e| e.to_string())?;
+
+        // Load level data
+        let level = load_level("assets/levels/world_1_level_1.tmx")?;
 
         // Set VSync hint
         if config.window.vsync {
@@ -73,19 +75,18 @@ impl App {
         let canvas = window.into_canvas();
         let texture_creator = canvas.texture_creator();
 
-        // Create the texture manager and load all animation textures
+        // Create the texture manager and load all textures
         let mut texture_manager = TextureManager::new();
-        let mut unique_textures = std::collections::HashSet::new();
+        // Load animation textures
         for anim_config in game_config.animation.values() {
-            unique_textures.insert(anim_config.texture.clone());
+            texture_manager.load(&anim_config.texture, &anim_config.texture, &texture_creator)?;
         }
-        for texture_path in unique_textures {
-            texture_manager.load(&texture_path, &texture_path, &texture_creator)?;
-        }
+        // Load tileset texture from the level
+        texture_manager.load(&level.tileset.texture, &level.tileset.texture, &texture_creator)?;
 
-        // Load world graphics
-        let platform_tileset_path = &game_config.graphics.platform_tileset;
-        texture_manager.load(platform_tileset_path, platform_tileset_path, &texture_creator)?;
+        // Load background textures
+        texture_manager.load("assets/graphics/background_blue_sky_with_clouds.png", "bg_sky", &texture_creator)?;
+
         // Create the virtual canvas texture
         let virtual_canvas_texture = texture_creator
             .create_texture_target(None, config.window.virtual_width, config.window.virtual_height)
@@ -99,6 +100,11 @@ impl App {
 
         // Create the player
         let mut player = Player::new(&game_config.player);
+        // Set player start position from level entities
+        if let Some(player_entity) = level.entities.iter().find(|e| e.r#type == "Player") {
+            player.position.x = player_entity.x as f32;
+            player.position.y = player_entity.y as f32;
+        }
 
         // Load animations
         for (name, anim_config) in &game_config.animation {
@@ -123,9 +129,6 @@ impl App {
         // Create input handler and state
         let input_handler = InputHandler::new(config.input.clone());
         let input_state = InputState::default();
-
-        // Load level data
-        let level = load_level(&game_config.assets.level)?;
 
         // Create the camera
         let camera = Camera::new(0, 0);
@@ -179,11 +182,13 @@ impl App {
             // Add a death plane
             if self.player.position.y > self.game_config.world.death_plane_y {
                 self.player.position = crate::math::Vector2D::new(self.game_config.player.respawn_x, self.game_config.player.respawn_y);
+                self.player.velocity = crate::math::Vector2D::default();
             }
 
 
             // Update camera
             self.camera.x = (self.player.position.x - (self.virtual_width / 2) as f32) as i32;
+            self.camera.y = (self.player.position.y - (self.virtual_height / 2) as f32) as i32;
 
             // Clamp camera to world boundaries
             if self.camera.x < 0 {
@@ -192,13 +197,15 @@ impl App {
             if self.camera.x + self.virtual_width as i32 > world_width as i32 {
                 self.camera.x = (world_width - self.virtual_width as f32) as i32;
             }
+            if self.camera.y < 0 {
+                self.camera.y = 0;
+            }
 
             // *****************************************************************
             //  Draw
             // *****************************************************************
-            let context = crate::renderer::RenderContext {
+            let context = RenderContext {
                 texture_manager: &self.texture_manager,
-                game_config: &self.game_config,
                 camera: &self.camera,
                 background_color: self.config.window.background_color,
             };

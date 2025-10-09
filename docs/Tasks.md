@@ -57,3 +57,13 @@ This document lists the Development Tasks for the `GfX-Engine` project.
 -   [ ] Implement `audio.rs` to load and play sounds.
 -   [ ] Add text rendering support.
 -   [ ] Write comprehensive tests for the engine.
+
+### Phase 4: Tooling and Expansion
+
+-   [ ] **Implement a Simple In-Game Level Editor:**
+    -   [ ] Add a toggle (e.g., F1 key) to switch between "Play" and "Edit" modes.
+    -   [ ] In Edit Mode, display the level's tileset on screen.
+    -   [ ] Implement controls to select a tile from the tileset with the mouse.
+    -   [ ] Implement painting logic to place/erase tiles on the level grid with mouse clicks.
+    -   [ ] Implement camera panning controls (e.g., WASD) for Edit Mode.
+    -   [ ] Add functionality to save the modified level back to the `.toml` file (e.g., F5 key).

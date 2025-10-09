@@ -6,16 +6,16 @@ use sdl3::pixels::Color;
 use sdl3::render::{Canvas, Texture};
 use sdl3::video::Window;
 use sdl3::rect::Rect;
+
 use crate::texture_manager::TextureManager;
 use crate::player::Player;
-use crate::level::Level;
 use crate::camera::Camera;
-use crate::config::GameConfig;
+
+use crate::level::Level;
 
 /// A context struct holding references to data needed for rendering.
 pub struct RenderContext<'a> {
     pub texture_manager: &'a TextureManager,
-    pub game_config: &'a GameConfig,
     pub camera: &'a Camera,
     pub background_color: [u8; 3],
 }
@@ -32,89 +32,57 @@ impl Renderer {
         player: &Player,
         level: &Level,
     ) -> Result<(), String> {
-        // Get the current animation frame and texture
-        if let Some(texture_name) = player.animation_controller.current_texture_name() {
-            if let Some(player_texture) = context.texture_manager.get(texture_name) {
-                let src_rect = player.animation_controller.current_frame_rect().copied();
+        canvas.with_texture_canvas(virtual_canvas_texture, |texture_canvas| {
+            // Clear the canvas
+            texture_canvas.set_draw_color(Color::RGB(context.background_color[0], context.background_color[1], context.background_color[2]));
+            texture_canvas.clear();
 
-                // Set render target to virtual canvas
-                canvas.with_texture_canvas(virtual_canvas_texture, |texture_canvas| {
-                    texture_canvas.set_draw_color(Color::RGB(context.background_color[0], context.background_color[1], context.background_color[2]));
-                    texture_canvas.clear();
+            // --- Draw Static Background ---
+            let bg_sky = context.texture_manager.get("bg_sky").unwrap();
+            texture_canvas.copy(bg_sky, None, None).unwrap();
 
-                    // --- Draw Tiled Platforms ---
-                    let tileset_path = &context.game_config.graphics.platform_tileset;
-                    if let Some(tileset_texture) = context.texture_manager.get(tileset_path) {
-                        let tile_config = &context.game_config.graphics.platform_tile;
-                        let src_tile_rect = Rect::new(
-                            tile_config.x,
-                            tile_config.y,
-                            tile_config.width,
-                            tile_config.height,
-                        );
 
-                        for object in &level.objects {
-                            let platform_rect = Rect::new(object.x - context.camera.x, object.y - context.camera.y, object.width, object.height);
-                            texture_canvas.set_clip_rect(Some(platform_rect));
+            // --- Draw the Visual Tilemap ---
+            let tileset_texture = context.texture_manager.get(&level.tileset.texture).unwrap();
+            let tileset_width_in_tiles = tileset_texture.query().width / level.tileset.tile_width;
+            let scale = 2.0;
+            let scaled_tile_width = (level.tileset.tile_width as f32 * scale) as u32;
+            let scaled_tile_height = (level.tileset.tile_height as f32 * scale) as u32;
 
-                            let tile_w = tile_config.width as i32;
-                            let tile_h = tile_config.height as i32;
-                            let scaled_tile_w = tile_w * 2;
-                            let scaled_tile_h = tile_h * 2;
+            for (y, row) in level.map.tiles.iter().enumerate() {
+                for (x, &tile_id) in row.iter().enumerate() {
+                    if tile_id == 0 { continue; }
 
-                            // Align the tiling pattern to the top-left of the platform
-                            let start_x = object.x - context.camera.x;
-                            let start_y = object.y - context.camera.y;
+                    let tile_id = tile_id - 1; // Adjust for 1-based indexing
+                    
+                    let tile_x_in_tileset = tile_id % tileset_width_in_tiles;
+                    let tile_y_in_tileset = tile_id / tileset_width_in_tiles;
 
-                            let num_tiles_x = (object.width as i32 + scaled_tile_w - 1) / scaled_tile_w;
-                            let num_tiles_y = (object.height as i32 + scaled_tile_h - 1) / scaled_tile_h;
+                    let src_x = (tile_x_in_tileset * level.tileset.tile_width) as i32;
+                    let src_y = (tile_y_in_tileset * level.tileset.tile_height) as i32;
+                    let src_rect = Rect::new(src_x, src_y, level.tileset.tile_width, level.tileset.tile_height);
 
-                            for i in 0..num_tiles_y {
-                                for j in 0..num_tiles_x {
-                                    let dest_rect = Rect::new(
-                                        start_x + j * scaled_tile_w,
-                                        start_y + i * scaled_tile_h,
-                                        scaled_tile_w as u32,
-                                        scaled_tile_h as u32,
-                                    );
-                                    texture_canvas.copy(tileset_texture, src_tile_rect, dest_rect).map_err(|e| e.to_string()).unwrap();
-                                }
-                            }
-                            // Reset clip rect for next draw calls
-                            texture_canvas.set_clip_rect(None);
-                        }
-                    } else {
-                        // Fallback: if texture is missing, draw white rectangles
-                        texture_canvas.set_draw_color(Color::RGB(255, 255, 255));
-                        for object in &level.objects {
-                            let rect = Rect::new(object.x - context.camera.x, object.y - context.camera.y, object.width, object.height);
-                            texture_canvas.fill_rect(rect).map_err(|e| e.to_string()).unwrap();
-                        }
-                    }
+                    let dest_x = (x as u32 * scaled_tile_width) as i32 - context.camera.x;
+                    let dest_y = (y as u32 * scaled_tile_height) as i32 - context.camera.y;
+                    let dest_rect = Rect::new(dest_x, dest_y, scaled_tile_width, scaled_tile_height);
 
-                    // Center the sprite horizontally over the collision box and apply offset
-                    let draw_x = player.position.x - (player.draw_width - player.width) as f32 / 2.0 + player.horizontal_draw_offset as f32;
-                    // Align the bottom of the sprite with the bottom of the collision box and apply offset
-                    let draw_y = player.position.y + player.height as f32 - player.draw_height as f32 + player.vertical_draw_offset as f32;
-                    let dest_rect = Rect::new((draw_x - context.camera.x as f32) as i32, (draw_y - context.camera.y as f32) as i32, player.draw_width, player.draw_height);
-                    texture_canvas.copy(player_texture, src_rect.map(|r| r.into()), dest_rect).map_err(|e| e.to_string()).unwrap();
-                }).map_err(|e| e.to_string())?;
-            } else {
-                // Texture not found, draw a fallback rectangle
-                canvas.with_texture_canvas(virtual_canvas_texture, |texture_canvas| {
-                    texture_canvas.set_draw_color(Color::RGB(255, 0, 255)); // Bright pink for missing texture
-                    let draw_x = player.position.x - (player.draw_width - player.width) as f32 / 2.0 + player.horizontal_draw_offset as f32;
-                    let draw_y = player.position.y + player.height as f32 - player.draw_height as f32 + player.vertical_draw_offset as f32;
-                    let dest_rect = Rect::new((draw_x - context.camera.x as f32) as i32, (draw_y - context.camera.y as f32) as i32, player.draw_width, player.draw_height);
-                    texture_canvas.fill_rect(dest_rect).map_err(|e| e.to_string()).unwrap();
-                }).map_err(|e| e.to_string())?;
+                    texture_canvas.copy(tileset_texture, src_rect, dest_rect).unwrap();
+                }
             }
-        } else {
-            // No animation playing, do nothing or draw a fallback
-        }
 
-        // Copy virtual canvas to main canvas
-        canvas.set_draw_color(Color::RGB(0, 0, 0)); // Clear main canvas
+            // --- Draw the Player ---
+            if let Some(texture_name) = player.animation_controller.current_texture_name() {
+                if let Some(player_texture) = context.texture_manager.get(texture_name) {
+                    let src_rect = player.animation_controller.current_frame_rect().copied();
+                    let draw_x = player.position.x - (player.draw_width - player.width) as f32 / 2.0 + player.horizontal_draw_offset as f32;
+                    let draw_y = player.position.y + player.height as f32 - player.draw_height as f32 + player.vertical_draw_offset as f32;
+                    let dest_rect = Rect::new((draw_x - context.camera.x as f32) as i32, (draw_y - context.camera.y as f32) as i32, player.draw_width, player.draw_height);
+                    texture_canvas.copy(player_texture, src_rect.map(|r| r.into()), dest_rect).unwrap();
+                }
+            }
+        }).map_err(|e| e.to_string())?;
+
+        canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.copy(
             virtual_canvas_texture,

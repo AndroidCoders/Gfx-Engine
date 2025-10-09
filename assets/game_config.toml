@@ -9,24 +9,12 @@ draw_width = 256
 draw_height = 256
 horizontal_draw_offset = 0
 vertical_draw_offset = 64
-respawn_x = 300.0
-respawn_y = 300.0
+respawn_x = 80.0
+respawn_y = 1900.0
 
 [world]
 width = 6000.0
-death_plane_y = 1500.0
-
-[graphics]
-platform_tileset = "assets/graphics/tileset_1_outside.png"
-
-[graphics.platform_tile]
-x = 32
-y = 0
-width = 32
-height = 32
-
-[assets]
-level = "assets/levels/level1.toml"
+death_plane_y = 3000.0
 
 [animation.idle_left]
 texture = "assets/graphics/captain_cat_idle_left.png"

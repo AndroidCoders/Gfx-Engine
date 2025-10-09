@@ -6,7 +6,6 @@ use crate::config::Config;
 use crate::input::{InputState, PlayerAction};
 use crate::level::Level;
 use crate::player::{Player, PlayerDirection};
-use sdl3::rect::Rect;
 
 /// Represents the distinct states the player character can be in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -84,7 +83,8 @@ fn handle_horizontal_movement(player: &mut Player, input_state: &InputState, con
     // Apply friction
     if !is_moving {
         let friction = if player.is_on_ground {
-            player.ground_friction
+            // TODO: Get ground friction from tile properties
+            config.physics.friction
         } else {
             config.physics.friction // Air friction
         };
@@ -179,60 +179,97 @@ fn handle_falling_state(
 fn apply_physics(player: &mut Player, config: &Config, level: &Level) {
     // Apply gravity
     player.velocity.y += config.physics.gravity;
+    player.velocity.y = player.velocity.y.min(config.physics.max_fall_speed);
 
     // Reset on_ground flag; it will be set by vertical collision if it occurs.
     player.is_on_ground = false;
 
+    let scale = 2.0;
+    let tile_width = level.tileset.tile_width as f32 * scale;
+    let tile_height = level.tileset.tile_height as f32 * scale;
+
     // --- Horizontal Collision ---
     player.position.x += player.velocity.x;
-    let player_rect_h = Rect::new(
+    let player_rect = sdl3::rect::Rect::new(
         player.position.x as i32,
         player.position.y as i32,
         player.width,
         player.height,
     );
 
-    for object in &level.objects {
-        let object_rect = Rect::new(object.x, object.y, object.width, object.height);
-        if player_rect_h.has_intersection(object_rect) {
-            if player.velocity.x > 0.0 {
-                // Moving right
-                player.position.x = (object.x - player.width as i32) as f32;
-            } else if player.velocity.x < 0.0 {
-                // Moving left
-                player.position.x = (object.x + object.width as i32) as f32;
+    let start_y = (player_rect.y() as f32 / tile_height).floor() as usize;
+    let end_y = ((player_rect.y() + player_rect.height() as i32) as f32 / tile_height).ceil() as usize;
+
+    if player.velocity.x > 0.0 { // Moving right
+        let tile_x = ((player_rect.x() + player_rect.width() as i32) as f32 / tile_width).floor() as usize;
+        for y in start_y..end_y {
+            if let Some(row) = level.collision.tiles.get(y) {
+                if let Some(&tile_id) = row.get(tile_x) {
+                    if tile_id == 1 { // Solid tile
+                        player.position.x = (tile_x as f32 * tile_width) - player.width as f32;
+                        player.velocity.x = 0.0;
+                        break;
+                    }
+                }
             }
-            player.velocity.x = 0.0;
+        }
+    } else if player.velocity.x < 0.0 { // Moving left
+        let tile_x = (player_rect.x() as f32 / tile_width).floor() as usize;
+        for y in start_y..end_y {
+            if let Some(row) = level.collision.tiles.get(y) {
+                if let Some(&tile_id) = row.get(tile_x) {
+                    if tile_id == 1 { // Solid tile
+                        player.position.x = (tile_x as f32 * tile_width) + tile_width;
+                        player.velocity.x = 0.0;
+                        break;
+                    }
+                }
+            }
         }
     }
 
     // --- Vertical Collision ---
     player.position.y += player.velocity.y;
-    let player_rect_v = Rect::new(
+    let player_rect = sdl3::rect::Rect::new(
         player.position.x as i32,
         player.position.y as i32,
         player.width,
         player.height,
     );
 
-    for object in &level.objects {
-        let object_rect = Rect::new(object.x, object.y, object.width, object.height);
-        if player_rect_v.has_intersection(object_rect) {
-            if player.velocity.y > 0.0 {
-                // Moving down (landing)
-                player.position.y = (object.y - player.height as i32) as f32;
-                player.is_on_ground = true;
-                player.jump_time = 0;
-                player.ground_friction = object.friction.unwrap_or(config.physics.friction);
-                // Transition back to Idle or Walking
-                if player.state == PlayerState::Falling || player.state == PlayerState::Jumping {
-                    player.state = PlayerState::Idle;
+    let start_x = (player_rect.x() as f32 / tile_width).floor() as usize;
+    let end_x = ((player_rect.x() + player_rect.width() as i32) as f32 / tile_width).ceil() as usize;
+
+    if player.velocity.y > 0.0 { // Moving down
+        let tile_y = ((player.position.y + player.height as f32) / tile_height).floor() as usize;
+        for x in start_x..end_x {
+            if let Some(row) = level.collision.tiles.get(tile_y) {
+                if let Some(&tile_id) = row.get(x) {
+                    if tile_id == 1 { // Solid tile
+                        player.position.y = (tile_y as f32 * tile_height) - player.height as f32;
+                        player.velocity.y = 0.0;
+                        player.is_on_ground = true;
+                        player.jump_time = 0;
+                        if player.state == PlayerState::Falling || player.state == PlayerState::Jumping {
+                            player.state = PlayerState::Idle;
+                        }
+                        break;
+                    }
                 }
-            } else if player.velocity.y < 0.0 {
-                // Moving up (hitting ceiling)
-                player.position.y = (object.y + object.height as i32) as f32;
             }
-            player.velocity.y = 0.0;
+        }
+    } else if player.velocity.y < 0.0 { // Moving up
+        let tile_y = (player_rect.y() as f32 / tile_height).floor() as usize;
+        for x in start_x..end_x {
+            if let Some(row) = level.collision.tiles.get(tile_y) {
+                if let Some(&tile_id) = row.get(x) {
+                    if tile_id == 1 { // Solid tile
+                        player.position.y = (tile_y as f32 * tile_height) + tile_height;
+                        player.velocity.y = 0.0;
+                        break;
+                    }
+                }
+            }
         }
     }
 }
