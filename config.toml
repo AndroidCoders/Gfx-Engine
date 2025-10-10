@@ -23,5 +23,5 @@ max_fall_speed = 25.0
 acceleration = 1.5
 friction = 0.9
 jump_strength = -28.0
-jump_hold_force = 1.5
-max_jump_time = 10
+jump_hold_force = 1.8
+max_jump_time = 20
