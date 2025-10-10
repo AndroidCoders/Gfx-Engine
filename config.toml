@@ -8,6 +8,7 @@ scaling_quality = "nearest"
 virtual_width = 1920
 virtual_height = 1080
 background_color = [0, 0, 0]
+camera_tightness = 0.01
 
 [input]
 left = "Left"

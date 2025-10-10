@@ -131,7 +131,7 @@ impl App {
         let input_state = InputState::default();
 
         // Create the camera
-        let camera = Camera::new(0, 0);
+        let camera = Camera::new(player.position.x, player.position.y, config.window.camera_tightness);
 
         // Return the new App instance
         Ok(Self {
@@ -187,18 +187,22 @@ impl App {
 
 
             // Update camera
-            self.camera.x = (self.player.position.x - (self.virtual_width / 2) as f32) as i32;
-            self.camera.y = (self.player.position.y - (self.virtual_height / 2) as f32) as i32;
+            let target_x = self.player.position.x - (self.virtual_width / 2) as f32;
+            let target_y = self.player.position.y - (self.virtual_height / 2) as f32;
+            self.camera.update(crate::math::Vector2D::new(target_x, target_y));
 
             // Clamp camera to world boundaries
-            if self.camera.x < 0 {
-                self.camera.x = 0;
+            if self.camera.position.x < 0.0 {
+                self.camera.position.x = 0.0;
+                self.camera.velocity.x = 0.0;
             }
-            if self.camera.x + self.virtual_width as i32 > world_width as i32 {
-                self.camera.x = (world_width - self.virtual_width as f32) as i32;
+            if self.camera.position.x + self.virtual_width as f32 > world_width {
+                self.camera.position.x = world_width - self.virtual_width as f32;
+                self.camera.velocity.x = 0.0;
             }
-            if self.camera.y < 0 {
-                self.camera.y = 0;
+            if self.camera.position.y < 0.0 {
+                self.camera.position.y = 0.0;
+                self.camera.velocity.y = 0.0;
             }
 
             // *****************************************************************

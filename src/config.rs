@@ -41,6 +41,7 @@ pub struct WindowConfig {
     pub vsync: bool,
     /// The scaling quality for the renderer.
     pub scaling_quality: String,
+    pub camera_tightness: f32,
 }
 
 

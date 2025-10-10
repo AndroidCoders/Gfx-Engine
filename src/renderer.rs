@@ -62,8 +62,8 @@ impl Renderer {
                     let src_y = (tile_y_in_tileset * level.tileset.tile_height) as i32;
                     let src_rect = Rect::new(src_x, src_y, level.tileset.tile_width, level.tileset.tile_height);
 
-                    let dest_x = (x as u32 * scaled_tile_width) as i32 - context.camera.x;
-                    let dest_y = (y as u32 * scaled_tile_height) as i32 - context.camera.y;
+                    let dest_x = (x as u32 * scaled_tile_width) as i32 - context.camera.position.x as i32;
+                    let dest_y = (y as u32 * scaled_tile_height) as i32 - context.camera.position.y as i32;
                     let dest_rect = Rect::new(dest_x, dest_y, scaled_tile_width, scaled_tile_height);
 
                     texture_canvas.copy(tileset_texture, src_rect, dest_rect).unwrap();
@@ -76,7 +76,7 @@ impl Renderer {
                     let src_rect = player.animation_controller.current_frame_rect().copied();
                     let draw_x = player.position.x - (player.draw_width - player.width) as f32 / 2.0 + player.horizontal_draw_offset as f32;
                     let draw_y = player.position.y + player.height as f32 - player.draw_height as f32 + player.vertical_draw_offset as f32;
-                    let dest_rect = Rect::new((draw_x - context.camera.x as f32) as i32, (draw_y - context.camera.y as f32) as i32, player.draw_width, player.draw_height);
+                    let dest_rect = Rect::new((draw_x - context.camera.position.x) as i32, (draw_y - context.camera.position.y) as i32, player.draw_width, player.draw_height);
                     texture_canvas.copy(player_texture, src_rect.map(|r| r.into()), dest_rect).unwrap();
                 }
             }
