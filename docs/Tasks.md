@@ -1,69 +1,67 @@
-File version: 3.00
+File version: 6.00
 
 **TLDR:**
-This document lists the Development Tasks for the `GfX-Engine` project.
+This document lists the Development Tasks for the `GfX-Engine` project, organized into a clear roadmap.
 
-### Phase 1: Core Engine Refactoring
+### Phase 1: Core Engine Refactoring (Complete)
 
 - [x] Define new project vision and goals.
 - [x] Implement new, simplified directory structure.
 - [x] Update project identity (`README.md`, `Cargo.toml`).
 - [x] Update all documentation in `docs/`.
-- [x] Create a minimalistic compiling POC (white box on black background).
+- [x] Create a minimalistic compiling POC.
 - [x] Refactor configuration to support sprite animations.
 - [x] Implement a device-independent, data-driven input system.
 - [x] Implement a sprite animation system.
 
-### Phase 2: "Super Cat Bros" Demo - Core Gameplay
+### Phase 2: "Super Cat Bros" Demo - Core Gameplay (Complete)
 
--   **Initial Setup:**
-    -   [x] Create a new `feature/captain-cat-demo` branch for the demo implementation.
--   **Asset Loading and Rendering:**
-    -   [x] Load and display the Super Cat Bros character sprite instead of the white box.
-    -   [x] Implement sprite flipping for left/right movement.
--   **Player Control:**
-    -   [x] Implement basic player movement (left/right) based on input.
-    -   [x] Implement Platform Feature - Variable Jump Height.
--   **Game World & Gameplay:**
-    -   [x] Create a simple level layout in a config file and render it.
+- [x] Create a new `feature/captain-cat-demo` branch for the demo implementation.
+- [x] Load and display the Super Cat Bros character sprite.
+- [x] Implement sprite flipping for left/right movement.
+- [x] Implement basic player movement (left/right) based on input.
+- [x] Implement Platform Feature - Variable Jump Height.
+- [x] Create a simple level layout in a config file and render it.
+- [x] Implement Platform Feature - Momentum-Based Movement.
+- [x] **1. Implement Multi-Frame Animations:** Extend the animation system to support sprite sheets with multiple frames to create fluid walking cycles.
+- [x] **2. Add Textured World Graphics:** Replace the placeholder level blocks with textured graphics loaded from files.
 
-### Phase 3: Gameplay Polish Sprint
+### Phase 3: Gameplay Polish Sprint (Current)
 
--   [x] **1. Implement Multi-Frame Animations:** Extend the animation system to support sprite sheets with multiple frames to create fluid walking cycles.
--   [ ] **2. Add Textured World Graphics:** Replace the placeholder level blocks with textured graphics loaded from files.
-    -   Create or locate a suitable tileset/texture for platforms.
-    -   Update `game_config.toml` to reference the new texture.
-    -   Modify the `Renderer` to draw textured platforms instead of solid rectangles.
--   [ ] **3. Implement Basic Sound Effects:** Integrate an audio system for key gameplay events.
-    -   Add the `sdl3_mixer` dependency.
-    -   Create an `AudioManager` in `src/audio.rs` to load and play sounds.
-    -   Trigger a jump sound effect in the player's state logic.
--   [ ] **4. Implement a Simple Enemy:** Add an enemy with basic patrol AI and stomp mechanics.
-    -   Define an `Enemy` struct and state machine.
-    -   Add enemy data to level configuration files.
-    -   Implement basic patrol AI.
-    -   Update the physics and game loop to handle enemy collision and "stomp" logic.
--   [ ] **5. Implement Damped Camera Movement:** Improve the camera to follow the player smoothly, enhancing the game's professional feel.
+- [ ] **1. Implement Damped Camera Movement:** Improve the camera to follow the player smoothly, enhancing the game's professional feel.
+- [ ] **2. Implement Basic Sound Effects:** Integrate an audio system for key gameplay events.
+- [ ] **3. Refactor Physics Logic:** Move physics and collision logic from `player/state.rs` into a generic `physics.rs` module.
+- [ ] **4. Implement a Simple Enemy:** Add an enemy with basic patrol AI and stomp mechanics.
 
-### Future Goals (Backlog)
+### Phase 4: Core Gameplay Systems (Backlog)
 
--   [x] Implement Platform Feature - Momentum-Based Movement.
--   [ ] Develop a very basic UI system with a title screen and menus.
--   [ ] Refactor hard-coded data out of the source code.
--   [ ] Improve player control in mid-air to prevent instant turning and acceleration.
--   [ ] Implement a debugging and profiling system.
--   [ ] Add collectible items (e.g., treasure chests) and a score display.
--   [ ] Implement `level.rs` to load level data from Tiled map files.
--   [ ] Implement `audio.rs` to load and play sounds.
--   [ ] Add text rendering support.
--   [ ] Write comprehensive tests for the engine.
+- [ ] **1. Implement Menu System:** Develop a basic UI system with a title screen and menus (`MainMenu`, `InGame`, `Exit`).
+- [ ] **2. Implement Player Health & Damage:** 
+    - [ ] Add a `health` component to the player.
+    - [ ] Make enemies deal damage on contact.
+    - [ ] Add Health-Up items (Heart, Potion) to levels.
+- [ ] **3. Add Collectible Treasures:** 
+    - [ ] Add items like Stars and Gold to levels.
+    - [ ] Implement a scoring system and UI display.
+- [ ] **4. Expand World Content:**
+    - [ ] Create larger, more complex level maps (50-100% larger).
+    - [ ] Implement a system for level start/goal locations.
+- [ ] **5. Implement Debugging Tools:** Create the planned in-game `Benchmarker` and on-screen debug display.
 
-### Phase 4: Tooling and Expansion
+### Phase 5: Player Abilities (Backlog)
 
--   [ ] **Implement a Simple In-Game Level Editor:**
-    -   [ ] Add a toggle (e.g., F1 key) to switch between "Play" and "Edit" modes.
-    -   [ ] In Edit Mode, display the level's tileset on screen.
-    -   [ ] Implement controls to select a tile from the tileset with the mouse.
-    -   [ ] Implement painting logic to place/erase tiles on the level grid with mouse clicks.
-    -   [ ] Implement camera panning controls (e.g., WASD) for Edit Mode.
-    -   [ ] Add functionality to save the modified level back to the `.toml` file (e.g., F5 key).
+- [ ] **Implement Power-Ups:**
+    - [ ] Add a "Run Fast" power-up.
+    - [ ] Add a "Shoot" power-up with projectiles.
+    - [ ] Add a "Fly" power-up.
+
+### Phase 6: Advanced Features & Tooling (Future)
+
+- [ ] **1. Implement a Boss Fight:** Design and build a multi-phase boss encounter in a dedicated arena.
+- [ ] **2. Implement a World Map:** Create a top-down world map screen for level selection.
+- [ ] **3. Implement a Simple In-Game Level Editor.**
+- [ ] **4. Write Comprehensive Tests.**
+
+### Ongoing Tasks
+
+- [ ] **Refactor for Modularity:** Continuously move hard-coded data from source files (`.rs`) into external configuration files.
