@@ -2,6 +2,7 @@
 name = "Gfx-Engine"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
 
 [dependencies]
 sdl3 = { version = "0.14.41", features = ["unsafe_textures"] }
