@@ -1,4 +1,4 @@
-File version: 6.00
+File version: 7.00
 
 **TLDR:**
 This document lists the Development Tasks for the `GfX-Engine` project, organized into a clear roadmap.
@@ -28,8 +28,13 @@ This document lists the Development Tasks for the `GfX-Engine` project, organize
 
 ### Phase 3: Gameplay Polish Sprint (Current)
 
-- [ ] **1. Implement Damped Camera Movement:** Improve the camera to follow the player smoothly, enhancing the game's professional feel.
-- [ ] **2. Implement Basic Sound Effects:** Integrate an audio system for key gameplay events.
+- [x] **1. Implement Damped Camera Movement:** Improve the camera to follow the player smoothly, enhancing the game's professional feel.
+- [ ] **2. Implement Basic Sound Effects (using Kira and Event-Driven Audio):** Integrate an audio system for key gameplay events.
+    - [ ] Add the `kira` crate to `Cargo.toml`.
+    - [ ] Create an `AudioManager` in `src/audio.rs` that wraps Kira's audio context.
+    - [ ] Define an `AudioEvent` enum and a channel for sending events.
+    - [ ] Modify `app.rs` to process `AudioEvent`s and instruct the `AudioManager` to play sounds.
+    - [ ] In game logic (e.g., `player/state.rs`), emit `AudioEvent`s when specific events occur (e.g., `AudioEvent::PlayerJumped`).
 - [ ] **3. Refactor Physics Logic:** Move physics and collision logic from `player/state.rs` into a generic `physics.rs` module.
 - [ ] **4. Implement a Simple Enemy:** Add an enemy with basic patrol AI and stomp mechanics.
 
@@ -65,3 +70,4 @@ This document lists the Development Tasks for the `GfX-Engine` project, organize
 ### Ongoing Tasks
 
 - [ ] **Refactor for Modularity:** Continuously move hard-coded data from source files (`.rs`) into external configuration files.
+- [ ] **Redesign to ECS Architecture:** Plan and execute a major refactoring to adopt an Entity-Component-System (ECS) architecture for improved modularity, reusability, and performance.

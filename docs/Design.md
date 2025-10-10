@@ -1,14 +1,17 @@
-File version: 2.00
+File version: 2.01
 
 **TLDR:**
 This document outlines the architecture and components of the `GfX-Engine`:
-*   Simple, data-driven game loop architecture.
+*   Simple, data-driven game loop architecture, with a future plan for ECS redesign.
 *   Key components are modular files in `src/` (e.g., `renderer`, `audio`, `physics`).
 *   Configurable VSync and fixed-timestep loop.
 
 ## Architecture
 
 A simple, data-driven game loop architecture will be used. The engine's logic is separated from the game's data. The engine reads `config.toml` and loads assets from the `assets/` directory to run the game.
+
+**Future Direction: ECS Redesign**
+In a future phase, the project aims to redesign the engine's core architecture around the Entity-Component-System (ECS) pattern. This will enhance modularity, reusability, and performance by strictly separating data (Components), logic (Systems), and entities (IDs).
 
 ## Components
 
@@ -48,7 +51,7 @@ To create a robust and engaging platformer experience, the following gameplay me
 
 *   **Stomping on Enemies:** As a primary form of interaction, the player will be able to defeat enemies by jumping on top of them.
 
-*   **Interactive Blocks:** The game levels will include simple interactive elements, such as breakable blocks that the player can hit from below.
+*   **Interactive Blocks:** The game levels will include simple interactive elements, suchs as breakable blocks that the player can hit from below.
 
 ## Entity State Management
 
@@ -92,18 +95,20 @@ A menu system is required to manage different application states, such as the ma
 5.  **Implement Text Rendering:** Create a `FontManager` to load and manage font files, similar to the `TextureManager`. Extend the `Renderer` to include a method for drawing text to the screen using the loaded fonts.
 6.  **Handle Menu Input:** In the main loop, when the `game_state` is `MainMenu` or `Options`, process input differently. Instead of player actions, listen for `Up`, `Down`, and `Enter` keys to navigate the menu. An `Enter` press will trigger a change in the `GameState` (e.g., from `MainMenu` to `InGame`).
 
-### Audio System Implementation
+### Audio System Implementation (Using Kira and Event-Driven Approach)
 
-An audio system is needed to handle sound effects and background music. This will be managed by a central `AudioManager`.
+An audio system is needed to handle sound effects and background music. This will be managed by a central `AudioManager` using the `kira` crate and an event-driven approach.
 
-1.  **Add Dependencies:** Add the `sdl3_mixer` crate to `Cargo.toml` to handle audio decoding and playback.
-2.  **Create Audio Manager:** In the existing `audio.rs` file, create an `AudioManager` struct. This struct will hold two `HashMaps`: one for short sound effects (`sdl3_mixer::Chunk`) and one for music tracks (`sdl3_mixer::Music`).
-3.  **Initialize Audio:** In `App::new()`, initialize the `sdl3_mixer` subsystem and create an instance of the `AudioManager`.
-4.  **Load Audio Assets:** Implement `load_sound()` and `load_music()` methods in the `AudioManager`. Call these methods at startup in `App::new()` to load all required audio files (e.g., `.wav` for sounds, `.ogg` for music) from the `assets/sounds` directory.
-5.  **Implement Playback Methods:** Create `play_sound(name)` and `play_music(name)` methods in the `AudioManager`. The `play_music` method should support looping.
+1.  **Add Dependencies:** Add the `kira` crate to `Cargo.toml`.
+2.  **Create Audio Manager:** In `audio.rs`, create an `AudioManager` struct that wraps Kira's audio context. It will manage loaded sounds and music.
+3.  **Initialize Audio:** In `App::new()`, initialize Kira's audio context and create an instance of the `AudioManager`.
+4.  **Load Audio Assets:** Implement `load_sound()` and `load_music()` methods in the `AudioManager` to load audio files (e.g., `.ogg`) from the `assets/sounds` directory using Kira's API.
+5.  **Implement Playback Methods:** Create `play_sound(name)` and `play_music(name)` methods in the `AudioManager` that use Kira's playback capabilities.
 6.  **Integrate Audio Events:**
-    *   **Sound Effects:** In the game logic, call `play_sound()` when specific events occur. For example, in `player/state.rs`, call `play_sound("jump")` when the player enters the `Jumping` state.
-    *   **Music:** In the main application loop in `app.rs`, call `play_music("background_theme")` when the `GameState` transitions to `InGame`.
+    *   Define an `AudioEvent` enum (e.g., `AudioEvent::PlayerJumped`).
+    *   Create a channel or queue for game logic to send `AudioEvent`s.
+    *   Modify the main application loop in `app.rs` to process these events and instruct the `AudioManager` to play sounds.
+    *   In game logic (e.g., `player/state.rs`), emit `AudioEvent`s when specific events occur (e.g., `AudioEvent::PlayerJumped` when the player jumps).
 
 ## Future Improvements
 
