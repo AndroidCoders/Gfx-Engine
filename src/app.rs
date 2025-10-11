@@ -14,6 +14,8 @@ use crate::input::{InputHandler, InputState};
 use crate::level::{Level, load_level};
 use crate::camera::Camera;
 
+use crate::audio::{GameAudioManager, AudioEvent};
+
 /// The main application struct, holding all state and context.
 pub struct App {
     /// The application's configuration, loaded from `config.toml`.
@@ -27,6 +29,7 @@ pub struct App {
     /// The virtual canvas texture.
     virtual_canvas_texture: Option<Texture>,
     texture_manager: TextureManager,
+    audio_manager: GameAudioManager,
     level: Level,
     camera: Camera,
     player: Player,
@@ -98,6 +101,10 @@ impl App {
         // Create the event pump
         let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
 
+        // Initialize Audio Manager
+        let mut audio_manager = GameAudioManager::new()?;
+        audio_manager.load_sound("assets/sounds/sfx_jump_01.ogg", "jump")?;
+
         // Create the player
         let mut player = Player::new(&game_config.player);
         // Set player start position from level entities
@@ -141,6 +148,7 @@ impl App {
             event_pump,
             virtual_canvas_texture: Some(virtual_canvas_texture),
             texture_manager,
+            audio_manager,
             level,
             camera,
             player,
@@ -167,7 +175,11 @@ impl App {
                 &self.input_state,
                 &self.config,
                 &self.level,
+                &self.audio_manager.event_sender(),
             );
+
+            // Process audio events
+            self.audio_manager.process_events();
 
             // --- World Boundary and Camera ---
 

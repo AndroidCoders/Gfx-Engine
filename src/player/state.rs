@@ -2,10 +2,12 @@
 
 //! Defines the player's specific states and the logic for each state.
 
+use crate::audio::{AudioEvent, GameAudioManager};
 use crate::config::Config;
 use crate::input::{InputState, PlayerAction};
 use crate::level::Level;
 use crate::player::{Player, PlayerDirection};
+use std::sync::mpsc;
 
 /// Represents the distinct states the player character can be in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -23,6 +25,7 @@ pub fn update_player_state(
     input_state: &InputState,
     config: &Config,
     level: &Level,
+    audio_event_sender: &mpsc::Sender<AudioEvent>,
 ) {
     // Handle horizontal movement consistently across states
     handle_horizontal_movement(player, input_state, config);
@@ -36,8 +39,8 @@ pub fn update_player_state(
 
     // Determine the next state based on the current state and input.
     let next_state = match player.state {
-        PlayerState::Idle => handle_idle_state(player, input_state, config),
-        PlayerState::Walking => handle_walking_state(player, input_state, config),
+        PlayerState::Idle => handle_idle_state(player, input_state, config, audio_event_sender),
+        PlayerState::Walking => handle_walking_state(player, input_state, config, audio_event_sender),
         PlayerState::Jumping => handle_jumping_state(player, input_state, config),
         PlayerState::Falling => handle_falling_state(player, input_state, config),
     };
@@ -103,10 +106,11 @@ fn handle_horizontal_movement(player: &mut Player, input_state: &InputState, con
 
 // --- State-Specific Logic ---
 
-fn handle_idle_state(player: &mut Player, input_state: &InputState, config: &Config) -> PlayerState {
+fn handle_idle_state(player: &mut Player, input_state: &InputState, config: &Config, audio_event_sender: &mpsc::Sender<AudioEvent>) -> PlayerState {
     // Transitions
     if input_state.is_action_just_pressed(PlayerAction::Jump) {
         player.velocity.y = config.physics.jump_strength;
+        let _ = audio_event_sender.send(AudioEvent::PlayerJumped); // Emit jump event
         return PlayerState::Jumping;
     }
     if !player.is_on_ground {
@@ -123,10 +127,12 @@ fn handle_walking_state(
     player: &mut Player,
     input_state: &InputState,
     config: &Config,
+    audio_event_sender: &mpsc::Sender<AudioEvent>,
 ) -> PlayerState {
     // Transitions
     if input_state.is_action_just_pressed(PlayerAction::Jump) {
         player.velocity.y = config.physics.jump_strength;
+        let _ = audio_event_sender.send(AudioEvent::PlayerJumped); // Emit jump event
         return PlayerState::Jumping;
     }
     if !player.is_on_ground {

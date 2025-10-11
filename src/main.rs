@@ -3,7 +3,7 @@ mod animation;
 mod config;
 mod renderer;
 mod state_machine;
-// mod audio;
+mod audio;
 mod input;
 mod math;
 mod camera;
