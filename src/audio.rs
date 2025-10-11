@@ -5,8 +5,6 @@
 use kira::{
     manager::{AudioManager, AudioManagerSettings, backend::DefaultBackend},
     sound::static_sound::{StaticSoundData, StaticSoundSettings},
-    tween::Tween,
-    StartTime,
 };
 use std::collections::HashMap;
 use std::path::Path;

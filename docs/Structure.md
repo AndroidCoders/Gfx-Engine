@@ -1,4 +1,4 @@
-File version: 1.04
+File version: 1.05
 
 **TLDR:**
 This document provides an overview of the `GfX-Engine` project's file structure:
@@ -19,6 +19,7 @@ docs/Workflow.md: Development Workflow with GitHub.
 
 src/main.rs: Main application source code.
 src/app.rs: Initializes SDL (graphics), creates the window, and runs the main application loop.
+src/animation.rs: Defines structures for managing sprite animations.
 src/audio.rs: Handles audio loading and playback.
 src/camera.rs: Defines the camera for viewing the game world.
 src/config.rs: Defines the application's configuration structures and handles loading from `config.toml`.
@@ -26,6 +27,7 @@ src/frame_capture.rs: Handles capturing frames for debugging or video output.
 src/input.rs: Handles user input and translates it into abstract game actions.
 src/level.rs: Manages loading and representing game levels.
 src/math.rs: Defines common mathematical structures.
-src/player.rs: Defines the player character's state and behavior.
+src/player/: Module containing the player character's state and behavior logic.
 src/renderer.rs: Handles all drawing operations for the engine.
+src/state_machine.rs: Defines generic traits for a Hierarchical State Machine (HSM).
 src/texture_manager.rs: Manages loading and storing textures.

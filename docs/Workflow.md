@@ -3,7 +3,7 @@
 **TLDR:**
 * This document outlines the development workflow for the project.
 * All new work is done on separate branches.
-* Pull requests merge new changes into `main`.
+* Pull requests merge new changes into `master`.
 * Pre-commit checks: `cargo check`, `cargo clippy`, `cargo test`
 
 This document outlines the development workflow for the `GfX-Engine` project. Following
@@ -32,7 +32,7 @@ All new work should be done on a separate branch. Branch names should be descrip
 ## Development Process
 
 1. **Create a Branch:**
-   Start by creating a new branch from the `main` branch with a descriptive name.
+   Start by creating a new branch from the `master` branch with a descriptive name.
 
    ```bash
    git checkout -b <branch-name>
@@ -84,7 +84,7 @@ All new work should be done on a separate branch. Branch names should be descrip
 
   - **Using the Web Interface:**
     Go to the project's GitHub page and create a new pull request from your branch
-    to the `main` branch.
+    to the `master` branch.
 
   - **Using the GitHub CLI:**
     You can use the `gh pr create` command to create a pull request from the command line.
@@ -100,7 +100,7 @@ All new work should be done on a separate branch. Branch names should be descrip
 
 ## Merging
 
-Once the pull request has been approved, it can be merged into the `main` branch.
+Once the pull request has been approved, it can be merged into the `master` branch.
 
 - **Using the Web Interface:**
   Use the "Squash and merge" option on GitHub to keep the commit history clean.

@@ -2,7 +2,7 @@
 
 //! Defines the player's specific states and the logic for each state.
 
-use crate::audio::{AudioEvent, GameAudioManager};
+use crate::audio::AudioEvent;
 use crate::config::Config;
 use crate::input::{InputState, PlayerAction};
 use crate::level::Level;

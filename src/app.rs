@@ -14,7 +14,7 @@ use crate::input::{InputHandler, InputState};
 use crate::level::{Level, load_level};
 use crate::camera::Camera;
 
-use crate::audio::{GameAudioManager, AudioEvent};
+use crate::audio::GameAudioManager;
 
 /// The main application struct, holding all state and context.
 pub struct App {

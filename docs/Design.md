@@ -1,4 +1,4 @@
-File version: 2.01
+File version: 2.02
 
 **TLDR:**
 This document outlines the architecture and components of the `GfX-Engine`:
@@ -67,10 +67,11 @@ The engine currently has the following core features implemented:
 *   **Texture Management:** A `TextureManager` for loading and managing textures.
 *   **Renderer:** Can draw sprites and level geometry.
 *   **Level Loading:** A basic level loading system from `.toml` files.
-*   **Camera:** A camera that follows the player.
+*   **Camera:** A damped camera that smoothly follows the player.
 *   **Physics:** Basic physics, including gravity, jumping, and collision detection.
 *   **Player Movement:** Player movement (left/right) and sprite flipping.
 *   **Animation:** A state-driven, multi-frame sprite animation system.
+*   **Audio:** An event-driven audio system using the `kira` crate.
 
 ## Debugging and Profiling
 
@@ -95,23 +96,6 @@ A menu system is required to manage different application states, such as the ma
 5.  **Implement Text Rendering:** Create a `FontManager` to load and manage font files, similar to the `TextureManager`. Extend the `Renderer` to include a method for drawing text to the screen using the loaded fonts.
 6.  **Handle Menu Input:** In the main loop, when the `game_state` is `MainMenu` or `Options`, process input differently. Instead of player actions, listen for `Up`, `Down`, and `Enter` keys to navigate the menu. An `Enter` press will trigger a change in the `GameState` (e.g., from `MainMenu` to `InGame`).
 
-### Audio System Implementation (Using Kira and Event-Driven Approach)
-
-An audio system is needed to handle sound effects and background music. This will be managed by a central `AudioManager` using the `kira` crate and an event-driven approach.
-
-1.  **Add Dependencies:** Add the `kira` crate to `Cargo.toml`.
-2.  **Create Audio Manager:** In `audio.rs`, create an `AudioManager` struct that wraps Kira's audio context. It will manage loaded sounds and music.
-3.  **Initialize Audio:** In `App::new()`, initialize Kira's audio context and create an instance of the `AudioManager`.
-4.  **Load Audio Assets:** Implement `load_sound()` and `load_music()` methods in the `AudioManager` to load audio files (e.g., `.ogg`) from the `assets/sounds` directory using Kira's API.
-5.  **Implement Playback Methods:** Create `play_sound(name)` and `play_music(name)` methods in the `AudioManager` that use Kira's playback capabilities.
-6.  **Integrate Audio Events:**
-    *   Define an `AudioEvent` enum (e.g., `AudioEvent::PlayerJumped`).
-    *   Create a channel or queue for game logic to send `AudioEvent`s.
-    *   Modify the main application loop in `app.rs` to process these events and instruct the `AudioManager` to play sounds.
-    *   In game logic (e.g., `player/state.rs`), emit `AudioEvent`s when specific events occur (e.g., `AudioEvent::PlayerJumped` when the player jumps).
-
 ## Future Improvements
 
 *   **Mid-Air Control:** The player's control while in the air will be adjusted to prevent instant turning and acceleration, providing a more realistic feel.
-
-*   **Damped Camera:** The camera system will be improved to implement a "damped" or "soft" follow, giving it a sense of weight and creating a smoother, more cinematic feel.
