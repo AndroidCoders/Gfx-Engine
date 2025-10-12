@@ -56,7 +56,8 @@ impl App {
         // Load level data
         let level = load_level("assets/levels/world_1_level_1.tmx")?;
 
-        // Set VSync hint
+        // Set rendering hints BEFORE creating the renderer
+        sdl3::hint::set("SDL_RENDER_SCALE_QUALITY", &config.window.scaling_quality);
         if config.window.vsync {
             sdl3::hint::set("SDL_RENDER_VSYNC", "1");
         } else {
@@ -76,6 +77,8 @@ impl App {
 
         // Create the canvas and texture creator
         let canvas = window.into_canvas();
+        // Set the scaling algorithm for the main canvas
+
         let texture_creator = canvas.texture_creator();
 
         // Create the texture manager and load all textures
@@ -95,8 +98,7 @@ impl App {
             .create_texture_target(None, config.window.virtual_width, config.window.virtual_height)
             .map_err(|e| e.to_string())?;
 
-        // Set scaling quality hint
-        sdl3::hint::set("SDL_HINT_RENDER_SCALE_QUALITY", &config.window.scaling_quality);
+
 
         // Create the event pump
         let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
