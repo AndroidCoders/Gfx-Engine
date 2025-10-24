@@ -2,15 +2,15 @@
 
 [player]
 start_x = 300.0
-start_y = 300.0
-width = 64
-height = 115
-draw_width = 256
-draw_height = 256
-horizontal_draw_offset = 0
-vertical_draw_offset = 64
-respawn_x = 80.0
-respawn_y = 1900.0
+start_y = 500.0
+width = 32
+height = 64
+draw_width = 80
+draw_height = 64
+horizontal_draw_offset = -16
+vertical_draw_offset = 16
+respawn_x = 300.0
+respawn_y = 500.0
 
 [world]
 width = 6000.0

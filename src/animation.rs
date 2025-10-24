@@ -15,6 +15,7 @@ pub struct Animation {
 }
 
 /// Manages the animations for an entity.
+#[derive(Clone)]
 pub struct AnimationController {
     animations: HashMap<String, Animation>,
     current_animation: Option<String>,
@@ -84,5 +85,10 @@ impl AnimationController {
             .as_ref()
             .and_then(|name| self.animations.get(name))
             .map(|anim| anim.texture_name.as_str())
+    }
+
+    /// Checks if an animation with the given name exists.
+    pub fn has_animation(&self, name: &str) -> bool {
+        self.animations.contains_key(name)
     }
 }

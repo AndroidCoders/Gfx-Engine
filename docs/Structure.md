@@ -27,7 +27,7 @@ src/frame_capture.rs: Handles capturing frames for debugging or video output.
 src/input.rs: Handles user input and translates it into abstract game actions.
 src/level.rs: Manages loading and representing game levels.
 src/math.rs: Defines common mathematical structures.
-src/player/: Module containing the player character's state and behavior logic.
+src/player/: Module containing player-specific ECS components and state definitions.
 src/renderer.rs: Handles all drawing operations for the engine.
-src/state_machine.rs: Defines generic traits for a Hierarchical State Machine (HSM).
+src/state_machine.rs: Defines generic traits and structures for the Entity-Component-System (ECS) State Machine.
 src/texture_manager.rs: Manages loading and storing textures.

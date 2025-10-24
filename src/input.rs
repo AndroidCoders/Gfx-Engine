@@ -57,6 +57,7 @@ impl InputHandler {
         input_state.just_pressed_actions.clear();
 
         for event in event_pump.poll_iter() {
+            println!("Event: {:?}", event);
             match event {
                 Event::Quit { .. } => return false,
                 Event::KeyDown { keycode: Some(keycode), .. } => {

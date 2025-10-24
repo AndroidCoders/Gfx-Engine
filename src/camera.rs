@@ -7,37 +7,39 @@ use crate::math::Vector2D;
 pub struct Camera {
     pub position: Vector2D,
     pub velocity: Vector2D,
-    pub tightness: f32, // How tightly the camera follows the player (e.g., 0.1)
+    pub tightness: f32,
+    pub virtual_width: f32,
+    pub virtual_height: f32,
+    pub map_width: f32,
+    pub map_height: f32,
 }
 
 impl Camera {
-    pub fn new(x: f32, y: f32, tightness: f32) -> Self {
+    pub fn new(x: f32, y: f32, tightness: f32, virtual_width: f32, virtual_height: f32, map_width: f32, map_height: f32) -> Self {
         Self {
             position: Vector2D::new(x, y),
             velocity: Vector2D::default(),
             tightness,
+            virtual_width,
+            virtual_height,
+            map_width,
+            map_height,
         }
     }
 
-    /// Updates the camera's position based on a target position using a spring-like model.
+    /// Updates the camera's position to center on a target.
     pub fn update(&mut self, target: Vector2D) {
-        // Calculate the distance vector between the camera and the target
-        let distance = Vector2D::new(target.x - self.position.x, target.y - self.position.y);
+        let desired_camera_x = target.x - (self.virtual_width / 2.0);
+        let desired_camera_y = target.y - (self.virtual_height / 2.0);
 
-        // A damping factor to prevent oscillation. A value closer to 1.0 is stiffer,
-        // closer to 0.0 is looser. 0.85 is a good starting point.
-        const DAMPING: f32 = 0.85;
+        let mut desired_pos = Vector2D::new(desired_camera_x, desired_camera_y);
 
-        // Apply the spring force to the velocity
-        self.velocity.x += distance.x * self.tightness;
-        self.velocity.y += distance.y * self.tightness;
+        // Clamp desired camera position to map boundaries
+        desired_pos.x = desired_pos.x.clamp(0.0, self.map_width - self.virtual_width);
+        desired_pos.y = desired_pos.y.clamp(0.0, self.map_height - self.virtual_height);
 
-        // Apply damping/friction to the velocity
-        self.velocity.x *= DAMPING;
-        self.velocity.y *= DAMPING;
-
-        // Update the camera's position
-        self.position.x += self.velocity.x;
-        self.position.y += self.velocity.y;
+        // Apply damping
+        self.position.x = self.position.x + (desired_pos.x - self.position.x) * self.tightness;
+        self.position.y = self.position.y + (desired_pos.y - self.position.y) * self.tightness;
     }
 }

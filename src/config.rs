@@ -2,6 +2,8 @@
 
 //! Loads and manages the engine's configuration from external files.
 
+pub const PIXEL_SCALE: f32 = 4.0;
+
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -30,10 +32,8 @@ pub struct WindowConfig {
     /// The virtual width of the game canvas.
     pub virtual_width: u32,
     /// The virtual height of the game canvas.
-    #[allow(dead_code)]
     pub virtual_height: u32,
-    /// The background color of the window.
-    pub background_color: [u8; 3],
+
     /// Whether the window should be fullscreen.
     #[allow(dead_code)]
     pub fullscreen: bool,
@@ -51,6 +51,7 @@ pub struct WindowConfig {
 pub struct GameConfig {
     pub player: PlayerConfig,
     pub world: WorldConfig,
+
     #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
 
@@ -72,6 +73,7 @@ pub struct PlayerConfig {
 
 #[derive(Deserialize, Clone)]
 pub struct WorldConfig {
+    #[allow(dead_code)]
     pub width: f32,
     pub death_plane_y: f32,
 }
@@ -101,7 +103,7 @@ pub struct PhysicsConfig {
     pub friction: f32,
     pub jump_strength: f32,
     pub jump_hold_force: f32,
-    pub max_jump_time: u32,
+
 }
 
 /// Configuration for input key bindings.

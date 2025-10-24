@@ -2,94 +2,92 @@
 
 //! Handles all drawing operations for the engine.
 
+use sdl3::render::WindowCanvas;
 use sdl3::pixels::Color;
-use sdl3::render::{Canvas, Texture};
-use sdl3::video::Window;
-use sdl3::rect::Rect;
-
-use crate::texture_manager::TextureManager;
-use crate::player::Player;
-use crate::camera::Camera;
-
 use crate::level::Level;
+use crate::camera::Camera;
+use crate::math::Vector2D;
+use crate::texture_manager::TextureManager;
+use std::ffi::CString;
+use sdl3_sys::everything::SDL_Renderer;
 
-/// A context struct holding references to data needed for rendering.
-pub struct RenderContext<'a> {
-    pub texture_manager: &'a TextureManager,
-    pub camera: &'a Camera,
-    pub background_color: [u8; 3],
+unsafe extern "C" {
+    pub fn SDL_RenderDebugText(renderer: *mut SDL_Renderer, x: f32, y: f32, text: *const libc::c_char);
 }
 
-/// The main rendering structure.
-pub struct Renderer {}
+pub struct Renderer {
+    canvas: WindowCanvas,
+}
 
 impl Renderer {
-    /// Draws the scene.
-    pub fn draw(
-        canvas: &mut Canvas<Window>,
-        virtual_canvas_texture: &mut Texture,
-        context: &RenderContext,
-        player: &Player,
-        level: &Level,
-    ) -> Result<(), String> {
-        canvas.with_texture_canvas(virtual_canvas_texture, |texture_canvas| {
-            // Clear the canvas
-            texture_canvas.set_draw_color(Color::RGB(context.background_color[0], context.background_color[1], context.background_color[2]));
-            texture_canvas.clear();
+    pub fn new(canvas: WindowCanvas) -> Result<Self, String> {
+        Ok(Self { canvas })
+    }
 
-            // --- Draw Static Background ---
-            let bg_sky = context.texture_manager.get("bg_sky").unwrap();
-            texture_canvas.copy(bg_sky, None, None).unwrap();
+    pub fn draw_debug_text(&mut self, text: &str, x: i32, y: i32) -> Result<(), String> {
+        let c_text = CString::new(text).map_err(|e| e.to_string())?;
+        unsafe {
+            SDL_RenderDebugText(self.canvas.raw(), x as f32, y as f32, c_text.as_ptr());
+        }
+        Ok(())
+    }
 
+    pub fn set_draw_color(&mut self, color: Color) {
+        self.canvas.set_draw_color(color);
+    }
 
-            // --- Draw the Visual Tilemap ---
-            let tileset_texture = context.texture_manager.get(&level.tileset.texture).unwrap();
-            let tileset_width_in_tiles = tileset_texture.query().width / level.tileset.tile_width;
-            let scale = 2.0;
-            let scaled_tile_width = (level.tileset.tile_width as f32 * scale) as u32;
-            let scaled_tile_height = (level.tileset.tile_height as f32 * scale) as u32;
+    pub fn clear(&mut self, color: Color) {
+        self.canvas.set_draw_color(color);
+        self.canvas.clear();
+    }
 
-            for (y, row) in level.map.tiles.iter().enumerate() {
-                for (x, &tile_id) in row.iter().enumerate() {
-                    if tile_id == 0 { continue; }
+    pub fn present(&mut self) {
+        self.canvas.present();
+    }
 
-                    let tile_id = tile_id - 1; // Adjust for 1-based indexing
-                    
-                    let tile_x_in_tileset = tile_id % tileset_width_in_tiles;
-                    let tile_y_in_tileset = tile_id / tileset_width_in_tiles;
+    pub fn draw_level(&mut self, level: &Level, texture_manager: &TextureManager, camera: &Camera) -> Result<(), String> {
+        // Draw background
+        if let Some(bg_texture) = texture_manager.get("bg_sky") {
+            self.canvas.copy(bg_texture, None, None).map_err(|e| e.to_string())?;
+        }
 
-                    let src_x = (tile_x_in_tileset * level.tileset.tile_width) as i32;
-                    let src_y = (tile_y_in_tileset * level.tileset.tile_height) as i32;
-                    let src_rect = Rect::new(src_x, src_y, level.tileset.tile_width, level.tileset.tile_height);
+        // Draw tiles
+        if let Some(tileset_texture) = texture_manager.get(&level.tileset.texture) {
+            let tile_width = level.tileset.tile_width;
+            let tile_height = level.tileset.tile_height;
 
-                    let dest_x = (x as u32 * scaled_tile_width) as i32 - context.camera.position.x as i32;
-                    let dest_y = (y as u32 * scaled_tile_height) as i32 - context.camera.position.y as i32;
-                    let dest_rect = Rect::new(dest_x, dest_y, scaled_tile_width, scaled_tile_height);
+            for (row_idx, row) in level.map.tiles.iter().enumerate() {
+                for (col_idx, &tile_id) in row.iter().enumerate() {
+                    if tile_id == 0 { continue; } // Skip empty tiles
 
-                    texture_canvas.copy(tileset_texture, src_rect, dest_rect).unwrap();
+                    // Calculate source rectangle in the tileset texture
+                    let tileset_cols = tileset_texture.query().width / tile_width;
+                    let src_x = ((tile_id - 1) % tileset_cols) * tile_width;
+                    let src_y = ((tile_id - 1) / tileset_cols) * tile_height;
+                    let src_rect = sdl3::rect::Rect::new(src_x as i32, src_y as i32, tile_width, tile_height);
+
+                    // Calculate destination rectangle on the screen
+                    let dest_x = ((col_idx as f32 * tile_width as f32) - camera.position.x) * crate::config::PIXEL_SCALE;
+                    let dest_y = ((row_idx as f32 * tile_height as f32) - camera.position.y) * crate::config::PIXEL_SCALE;
+                    let dest_rect = sdl3::rect::Rect::new(dest_x as i32, dest_y as i32, (tile_width as f32 * crate::config::PIXEL_SCALE) as u32, (tile_height as f32 * crate::config::PIXEL_SCALE) as u32);
+
+                    self.canvas.copy(tileset_texture, src_rect, dest_rect).map_err(|e| e.to_string())?;
                 }
             }
+        }
+        Ok(())
+    }
 
-            // --- Draw the Player ---
-            if let Some(texture_name) = player.animation_controller.current_texture_name() {
-                if let Some(player_texture) = context.texture_manager.get(texture_name) {
-                    let src_rect = player.animation_controller.current_frame_rect().copied();
-                    let draw_x = player.position.x - (player.draw_width - player.width) as f32 / 2.0 + player.horizontal_draw_offset as f32;
-                    let draw_y = player.position.y + player.height as f32 - player.draw_height as f32 + player.vertical_draw_offset as f32;
-                    let dest_rect = Rect::new((draw_x - context.camera.position.x) as i32, (draw_y - context.camera.position.y) as i32, player.draw_width, player.draw_height);
-                    texture_canvas.copy(player_texture, src_rect.map(|r| r.into()), dest_rect).unwrap();
-                }
-            }
-        }).map_err(|e| e.to_string())?;
-
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
-        canvas.clear();
-        canvas.copy(
-            virtual_canvas_texture,
-            None,
-            None,
-        ).map_err(|e| e.to_string())?;
-
+    pub fn draw_player(&mut self, player_pos: Vector2D, player_size: (u32, u32), player_offsets: (i32, i32), player_texture_name: &str, player_frame_rect: &sdl3::rect::Rect, texture_manager: &TextureManager, camera: &Camera) -> Result<(), String> {
+        if let Some(player_texture) = texture_manager.get(player_texture_name) {
+            let dest_rect = sdl3::rect::Rect::new(
+                (((player_pos.x - camera.position.x) + player_offsets.0 as f32) * crate::config::PIXEL_SCALE) as i32,
+                (((player_pos.y - camera.position.y) + player_offsets.1 as f32) * crate::config::PIXEL_SCALE) as i32,
+                (player_size.0 as f32 * crate::config::PIXEL_SCALE) as u32,
+                (player_size.1 as f32 * crate::config::PIXEL_SCALE) as u32,
+            );
+            self.canvas.copy(player_texture, *player_frame_rect, dest_rect).map_err(|e| e.to_string())?;
+        }
         Ok(())
     }
 }

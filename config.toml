@@ -4,11 +4,11 @@ width = 1920
 height = 1080
 fullscreen = true
 vsync = true
-scaling_quality = "nearest"
+scaling_quality = "0"
 virtual_width = 1920
 virtual_height = 1080
 background_color = [0, 0, 0]
-camera_tightness = 0.01
+camera_tightness = 0.1
 
 [input]
 left = "Left"
@@ -17,11 +17,11 @@ jump = "Space"
 quit = "Escape"
 
 [physics]
-gravity = 3.0
-max_speed = 15.0
-max_fall_speed = 25.0
-acceleration = 1.5
+gravity = 0.75
+max_speed = 4.0
+max_fall_speed = 10.0
+acceleration = 0.4
 friction = 0.9
-jump_strength = -28.0
-jump_hold_force = 1.8
+jump_strength = -8.0
+jump_hold_force = 0.45
 max_jump_time = 20

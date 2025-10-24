@@ -39,6 +39,17 @@ pub struct Level {
     pub entities: Vec<Entity>,
 }
 
+impl Level {
+    pub fn is_solid(&self, x: usize, y: usize) -> bool {
+        if let Some(row) = self.collision.tiles.get(y) {
+            if let Some(&tile_id) = row.get(x) {
+                return tile_id == 1;
+            }
+        }
+        false
+    }
+}
+
 // --- Structs for Deserializing TMX XML ---
 
 #[derive(Debug, Deserialize)]
@@ -91,11 +102,11 @@ pub fn load_level(path: &str) -> Result<Level, String> {
         .map(|chunk| chunk.to_vec())
         .collect();
 
-    // For now, create a simple collision map based on the visual map.
-    // Any tile that is not empty (0) is considered solid (1).
+    // Manually define which tiles are solid.
+    let solid_tiles: Vec<u32> = vec![34, 35, 36];
     let collision_tiles: Vec<Vec<u32>> = map_tiles.iter()
         .map(|row| {
-            row.iter().map(|&tile_id| if tile_id > 0 { 1 } else { 0 }).collect()
+            row.iter().map(|&tile_id| if solid_tiles.contains(&tile_id) { 1 } else { 0 }).collect()
         })
         .collect();
 
@@ -113,7 +124,7 @@ pub fn load_level(path: &str) -> Result<Level, String> {
         Entity {
             r#type: "Player".to_string(),
             x: 80,
-            y: 1900,
+            y: 100,
         }
     ];
 

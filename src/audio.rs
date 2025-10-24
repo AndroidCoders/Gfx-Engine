@@ -18,10 +18,10 @@ pub enum AudioEvent {
 
 /// Manages loading and playing audio assets using Kira.
 pub struct GameAudioManager {
-    manager: AudioManager<DefaultBackend>,
+    _manager: AudioManager<DefaultBackend>,
     sounds: HashMap<String, StaticSoundData>,
     // We can add music handles, spatial emitters, etc., here later
-    event_receiver: mpsc::Receiver<AudioEvent>,
+    _event_receiver: mpsc::Receiver<AudioEvent>,
     event_sender: mpsc::Sender<AudioEvent>,
 }
 
@@ -34,9 +34,9 @@ impl GameAudioManager {
         let (event_sender, event_receiver) = mpsc::channel();
 
         Ok(Self {
-            manager,
+            _manager: manager,
             sounds: HashMap::new(),
-            event_receiver,
+            _event_receiver: event_receiver,
             event_sender,
         })
     }
@@ -55,9 +55,10 @@ impl GameAudioManager {
     }
 
     /// Plays a loaded sound effect by name.
+    #[allow(dead_code)]
     pub fn play_sound(&mut self, name: &str) -> Result<(), String> {
         if let Some(sound_data) = self.sounds.get(name) {
-            self.manager.play(sound_data.clone())
+            self._manager.play(sound_data.clone())
                 .map_err(|e| format!("Failed to play sound '{}': {}", name, e))?;
             Ok(())
         } else {
@@ -67,7 +68,7 @@ impl GameAudioManager {
 
     /// Processes all pending audio events and triggers corresponding sounds.
     pub fn process_events(&mut self) {
-        while let Ok(event) = self.event_receiver.try_recv() {
+        while let Ok(event) = self._event_receiver.try_recv() {
             match event {
                 AudioEvent::PlayerJumped => {
                     let _ = self.play_sound("jump"); // TODO: Handle result properly

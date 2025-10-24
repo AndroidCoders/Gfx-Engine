@@ -8,8 +8,10 @@ version = "0.1.0"
 dependencies = [
  "image",
  "kira",
+ "libc",
  "quick-xml",
  "sdl3",
+ "sdl3-sys",
  "serde",
  "toml 0.9.7",
 ]
@@ -1185,9 +1187,9 @@ dependencies = [
 
 [[package]]
 name = "sdl3-sys"
-version = "0.5.4+SDL3-3.2.20"
+version = "0.5.9+SDL3-3.2.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c4f7f348dea346f67f38bc1392bf1edd9250d4c586479778e849f6ee61af2d8"
+checksum = "db1f57b04b1ff16bbab7837c0a5e06e3b78fccb410bc00920b9ee860f0f58251"
 
 [[package]]
 name = "send_wrapper"

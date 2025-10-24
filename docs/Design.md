@@ -10,8 +10,8 @@ This document outlines the architecture and components of the `GfX-Engine`:
 
 A simple, data-driven game loop architecture will be used. The engine's logic is separated from the game's data. The engine reads `config.toml` and loads assets from the `assets/` directory to run the game.
 
-**Future Direction: ECS Redesign**
-In a future phase, the project aims to redesign the engine's core architecture around the Entity-Component-System (ECS) pattern. This will enhance modularity, reusability, and performance by strictly separating data (Components), logic (Systems), and entities (IDs).
+**Current Architecture: ECS-based**
+The engine's core architecture is now built around the Entity-Component-System (ECS) pattern. This enhances modularity, reusability, and performance by strictly separating data (Components), logic (Systems), and entities (IDs).
 
 ## Components
 
@@ -99,3 +99,23 @@ A menu system is required to manage different application states, such as the ma
 ## Future Improvements
 
 *   **Mid-Air Control:** The player's control while in the air will be adjusted to prevent instant turning and acceleration, providing a more realistic feel.
+
+## Coordinate System and Scaling
+
+To ensure consistency and prevent bugs, the engine uses a strict separation between different coordinate systems.
+
+*   **World Units:** All game logic, physics, and configuration files operate in **World Units**.
+    *   **Definition:** 1 World Unit corresponds to 1 pixel of the source art assets (e.g., a sprite that is 32x32 pixels in its PNG file has a size of 32x32 World Units).
+    *   **Usage:** Used for entity positions, sizes, physics calculations, and all values specified in configuration files like `game_config.toml`.
+
+*   **Virtual Resolution:** The game is rendered internally to a fixed-size canvas, known as the **Virtual Resolution**.
+    *   **Definition:** This is the ideal resolution the game is designed for, such as `1920x1080`. It is set in `config.toml`.
+    *   **Purpose:** It provides a consistent rendering target, independent of the player's actual screen resolution.
+
+*   **`PIXEL_SCALE`:** This is a global scaling factor used by the renderer.
+    *   **Definition:** A constant value (e.g., `2.0`) that determines how many screen pixels are used to draw a single World Unit onto the Virtual Resolution canvas.
+    *   **Example:** With a `PIXEL_SCALE` of `2.0`, a 32x32 World Unit sprite is rendered as a 64x64 pixel image on the internal virtual canvas.
+
+*   **Screen Pixels (Final Resolution):** This is the actual resolution of the player's monitor.
+    *   **Behavior:** The engine takes the rendered `1920x1080` Virtual Resolution canvas and scales it to fit the player's screen.
+    *   **Aspect Ratio:** The 16:9 aspect ratio is always preserved. If the screen's aspect ratio is different, black bars will be added (pillarboxing or letterboxing). This guarantees that the game's appearance and gameplay are identical on all displays.
