@@ -2,7 +2,9 @@
 
 //! Defines common mathematical structures.
 
-#[derive(Clone, Copy, Debug, Default)]
+use serde::Deserialize;
+
+#[derive(Deserialize, Clone, Copy, Debug, Default)]
 pub struct Vector2D {
     pub x: f32,
     pub y: f32,

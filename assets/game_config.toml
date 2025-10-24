@@ -1,20 +1,23 @@
 # assets/game_config.toml
 
 [player]
-start_x = 300.0
-start_y = 500.0
+start_pos = { x = 300.0, y = 500.0 }
 width = 32
 height = 64
 draw_width = 80
 draw_height = 64
 horizontal_draw_offset = -16
 vertical_draw_offset = 16
-respawn_x = 300.0
-respawn_y = 500.0
+respawn_pos = { x = 300.0, y = 500.0 }
 
 [world]
 width = 6000.0
 death_plane_y = 3000.0
+
+[enemy.slime]
+width = 16
+height = 12
+speed = 1.0
 
 [animation.idle_left]
 texture = "assets/graphics/cat_idle_left.png"
@@ -75,3 +78,13 @@ frame_height = 64
 frame_count = 3
 frame_duration = 6
 loops = false
+
+[animation.slime_walk]
+texture = "assets/graphics/tileset_2.png"
+start_x = 0
+start_y = 80
+frame_width = 16
+frame_height = 12
+frame_count = 1
+frame_duration = 100
+loops = true

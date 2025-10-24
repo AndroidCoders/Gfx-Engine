@@ -78,15 +78,15 @@ impl Renderer {
         Ok(())
     }
 
-    pub fn draw_player(&mut self, player_pos: Vector2D, player_size: (u32, u32), player_offsets: (i32, i32), player_texture_name: &str, player_frame_rect: &sdl3::rect::Rect, texture_manager: &TextureManager, camera: &Camera) -> Result<(), String> {
-        if let Some(player_texture) = texture_manager.get(player_texture_name) {
+    pub fn draw_sprite(&mut self, pos: Vector2D, size: (u32, u32), offsets: (i32, i32), texture_name: &str, frame_rect: &sdl3::rect::Rect, texture_manager: &TextureManager, camera: &Camera) -> Result<(), String> {
+        if let Some(texture) = texture_manager.get(texture_name) {
             let dest_rect = sdl3::rect::Rect::new(
-                (((player_pos.x - camera.position.x) + player_offsets.0 as f32) * crate::config::PIXEL_SCALE) as i32,
-                (((player_pos.y - camera.position.y) + player_offsets.1 as f32) * crate::config::PIXEL_SCALE) as i32,
-                (player_size.0 as f32 * crate::config::PIXEL_SCALE) as u32,
-                (player_size.1 as f32 * crate::config::PIXEL_SCALE) as u32,
+                (((pos.x - camera.position.x) + offsets.0 as f32) * crate::config::PIXEL_SCALE) as i32,
+                (((pos.y - camera.position.y) + offsets.1 as f32) * crate::config::PIXEL_SCALE) as i32,
+                (size.0 as f32 * crate::config::PIXEL_SCALE) as u32,
+                (size.1 as f32 * crate::config::PIXEL_SCALE) as u32,
             );
-            self.canvas.copy(player_texture, *player_frame_rect, dest_rect).map_err(|e| e.to_string())?;
+            self.canvas.copy(texture, *frame_rect, dest_rect).map_err(|e| e.to_string())?;
         }
         Ok(())
     }

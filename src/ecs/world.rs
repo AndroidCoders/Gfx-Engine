@@ -11,6 +11,9 @@ pub struct World {
     pub renderables: HashMap<Entity, Renderable>,
     pub animations: HashMap<Entity, Animation>,
     pub player_tags: HashMap<Entity, PlayerTag>,
+    pub enemy_tags: HashMap<Entity, EnemyTag>,
+    pub dead_tags: HashMap<Entity, DeadTag>,
+    pub patrols: HashMap<Entity, Patrol>,
     pub gravity_tags: HashMap<Entity, Gravity>,
     pub collisions: HashMap<Entity, Collision>,
     pub grounded_tags: HashMap<Entity, Grounded>,
@@ -81,5 +84,17 @@ impl World {
 
     pub fn add_respawn_timer(&mut self, entity: Entity, component: RespawnTimer) {
         self.respawn_timers.insert(entity, component);
+    }
+
+    pub fn add_enemy_tag(&mut self, entity: Entity, component: EnemyTag) {
+        self.enemy_tags.insert(entity, component);
+    }
+
+    pub fn add_patrol(&mut self, entity: Entity, component: Patrol) {
+        self.patrols.insert(entity, component);
+    }
+
+    pub fn add_dead_tag(&mut self, entity: Entity, component: DeadTag) {
+        self.dead_tags.insert(entity, component);
     }
 }

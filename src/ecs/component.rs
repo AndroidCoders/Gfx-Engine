@@ -88,3 +88,20 @@ pub struct RespawnTimer {
 }
 
 impl Component for RespawnTimer {}
+
+// --- Enemy Tag Component ---
+#[derive(Debug, Clone, Copy)]
+pub struct EnemyTag;
+impl Component for EnemyTag {}
+
+// --- Patrol Component ---
+#[derive(Debug, Clone, Copy)]
+pub struct Patrol {
+    pub speed: f32,
+}
+impl Component for Patrol {}
+
+// --- Dead Tag Component ---
+#[derive(Debug, Clone, Copy)]
+pub struct DeadTag;
+impl Component for DeadTag {}

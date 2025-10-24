@@ -6,10 +6,12 @@ mod state_machine;
 mod audio;
 mod input;
 mod math;
+mod physics;
 mod camera;
 mod level;
 mod texture_manager;
 mod player;
+mod enemy;
 mod ecs;
 
 use app::App;

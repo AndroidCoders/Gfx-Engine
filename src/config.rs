@@ -4,6 +4,7 @@
 
 pub const PIXEL_SCALE: f32 = 4.0;
 
+use crate::math::Vector2D;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -53,22 +54,30 @@ pub struct GameConfig {
     pub world: WorldConfig,
 
     #[serde(default)]
+    pub enemy: HashMap<String, EnemyConfig>,
+
+    #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
 
 }
 
 #[derive(Deserialize, Clone)]
+pub struct EnemyConfig {
+    pub width: u32,
+    pub height: u32,
+    pub speed: f32,
+}
+
+#[derive(Deserialize, Clone)]
 pub struct PlayerConfig {
-    pub start_x: f32,
-    pub start_y: f32,
+    pub start_pos: Vector2D,
     pub width: u32,
     pub height: u32,
     pub draw_width: u32,
     pub draw_height: u32,
     pub horizontal_draw_offset: i32,
     pub vertical_draw_offset: i32,
-    pub respawn_x: f32,
-    pub respawn_y: f32,
+    pub respawn_pos: Vector2D,
 }
 
 #[derive(Deserialize, Clone)]

@@ -2,6 +2,7 @@
 
 //! Manages loading and representing game levels from Tiled .tmx files.
 
+use crate::math::Vector2D;
 use serde::Deserialize;
 use quick_xml::de::from_str;
 
@@ -27,8 +28,7 @@ pub struct Collision {
 #[derive(Clone)]
 pub struct Entity {
     pub r#type: String,
-    pub x: i32,
-    pub y: i32,
+    pub position: Vector2D,
 }
 
 #[derive(Clone)]
@@ -123,8 +123,7 @@ pub fn load_level(path: &str) -> Result<Level, String> {
     let entities = vec![
         Entity {
             r#type: "Player".to_string(),
-            x: 80,
-            y: 100,
+            position: Vector2D::new(80.0, 100.0),
         }
     ];
 

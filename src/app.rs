@@ -16,6 +16,7 @@ use crate::renderer::Renderer;
 use crate::math::Vector2D;
 use crate::state_machine::StateMachine;
 use crate::player::states::IdleState;
+use crate::enemy::states::PatrolState;
 
 use crate::animation::AnimationController;
 
@@ -123,7 +124,7 @@ impl App {
 
         // Create the player entity and determine its starting position from config
         let player_entity = world.create_entity();
-        let player_position = Position(Vector2D::new(game_config.player.start_x, game_config.player.start_y));
+        let player_position = Position(game_config.player.start_pos);
 
         // Create the camera using world units
         let map_width_in_tiles = level.map.tiles[0].len() as f32;
@@ -207,6 +208,55 @@ impl App {
         });
         world.add_state_component(player_entity, StateComponent { state_machine: StateMachine::new(IdleState) });
 
+        // Create the slime enemy
+        // TODO: Spawn enemies from level data
+        let slime_entity = world.create_entity();
+        let slime_pos = Position(Vector2D::new(500.0, 500.0));
+        let slime_config = &game_config.enemy["slime"];
+
+        world.add_position(slime_entity, slime_pos);
+        world.add_velocity(slime_entity, Velocity(Vector2D::new(slime_config.speed, 0.0)));
+        world.add_renderable(slime_entity, Renderable {
+            width: slime_config.width,
+            height: slime_config.height,
+            horizontal_offset: 0,
+            vertical_offset: 0,
+        });
+        let mut slime_animation_controller = AnimationController::new();
+        let slime_anim_config = &game_config.animation["slime_walk"];
+        let mut frames = Vec::new();
+            for i in 0..slime_anim_config.frame_count {
+                frames.push(sdl3::rect::Rect::new(
+                    slime_anim_config.start_x + (i * slime_anim_config.frame_width) as i32,
+                    slime_anim_config.start_y,
+                    slime_anim_config.frame_width,
+                    slime_anim_config.frame_height,
+                ));
+            }
+            let animation = crate::animation::Animation {
+                texture_name: slime_anim_config.texture.clone(),
+                frames,
+                frame_duration: slime_anim_config.frame_duration,
+                loops: slime_anim_config.loops,
+            };
+        slime_animation_controller.add_animation("slime_walk".to_string(), animation);
+        slime_animation_controller.set_animation("slime_walk");
+
+        world.add_animation(slime_entity, Animation { controller: slime_animation_controller });
+        world.add_enemy_tag(slime_entity, EnemyTag);
+        world.add_patrol(slime_entity, Patrol { speed: slime_config.speed });
+        world.add_gravity(slime_entity, Gravity);
+        world.add_collision(slime_entity, Collision {
+            rect: sdl3::rect::Rect::new(
+                slime_pos.0.x as i32,
+                slime_pos.0.y as i32,
+                slime_config.width,
+                slime_config.height,
+            ),
+        });
+        world.add_state_component(slime_entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
+
+
 
         // Create input handler and state
         let input_handler = InputHandler::new(config.input.clone());
@@ -246,6 +296,7 @@ impl App {
             let mut input_system = InputSystem;
             let mut physics_system = PhysicsSystem;
             let mut collision_system = CollisionSystem;
+            let mut kill_system = KillSystem;
             let mut animation_system = AnimationSystem;
             let mut state_machine_system = StateMachineSystem;
             let mut audio_system = AudioSystem;
@@ -267,6 +318,7 @@ impl App {
             input_system.update(&mut self.world, &mut system_context);
             physics_system.update(&mut self.world, &mut system_context);
             collision_system.update(&mut self.world, &mut system_context);
+            kill_system.update(&mut self.world, &mut system_context);
             death_system.update(&mut self.world, &mut system_context);
             respawn_system.update(&mut self.world, &mut system_context);
             respawn_timer_system.update(&mut self.world, &mut system_context);
@@ -278,14 +330,15 @@ impl App {
             self.renderer.clear(sdl3::pixels::Color::RGB(0, 0, 0));
             self.renderer.draw_level(&self.level, &self.texture_manager, &self.camera)?;
 
-            if let Some(player_pos) = self.world.positions.values().next() {
-                let player_renderable = self.world.renderables.values().next().unwrap();
-                if let Some(player_animation) = self.world.animations.get(&self.player_entity.unwrap()) {
-                    if let (Some(player_texture_name), Some(player_frame_rect)) = (
-                        player_animation.controller.current_texture_name(),
-                        player_animation.controller.current_frame_rect(),
-                    ) {
-                        self.renderer.draw_player(player_pos.0, (player_renderable.width, player_renderable.height), (player_renderable.horizontal_offset, player_renderable.vertical_offset), player_texture_name, player_frame_rect, &self.texture_manager, &self.camera)?;
+            for (entity, pos) in &self.world.positions {
+                if let Some(renderable) = self.world.renderables.get(entity) {
+                    if let Some(animation) = self.world.animations.get(entity) {
+                        if let (Some(texture_name), Some(frame_rect)) = (
+                            animation.controller.current_texture_name(),
+                            animation.controller.current_frame_rect(),
+                        ) {
+                            self.renderer.draw_sprite(pos.0, (renderable.width, renderable.height), (renderable.horizontal_offset, renderable.vertical_offset), texture_name, frame_rect, &self.texture_manager, &self.camera)?;
+                        }
                     }
                 }
             }

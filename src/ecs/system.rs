@@ -9,6 +9,9 @@ use crate::ecs::component::*;
 use crate::state_machine::StateMachine;
 
 
+use crate::physics;
+
+
 pub trait System<T> {
     fn update(&mut self, world: &mut World, context: &mut T);
 }
@@ -52,109 +55,50 @@ impl System<SystemContext<'_>> for PhysicsSystem {
 
 pub struct CollisionSystem;
 
-fn resolve_vertical_collisions(
-    pos: &mut Position,
-    vel: &mut Velocity,
-    bounds: sdl3::rect::Rect,
-    context: &SystemContext,
-) -> bool {
-    let tile_height = context.level.tileset.tile_height as f32;
-    let tile_width = context.level.tileset.tile_width as f32;
-    let scaled_bounds_width = bounds.width() as f32;
-    let scaled_bounds_height = bounds.height() as f32;
-
-    let next_y = pos.0.y + vel.0.y;
-    let mut grounded = false;
-
-    if vel.0.y > 0.0 { // Moving down
-        let left_x = pos.0.x + 0.1;
-        let right_x = pos.0.x + scaled_bounds_width - 0.1;
-        let bottom_y = next_y + scaled_bounds_height;
-
-        let left_tile = (left_x / tile_width).floor() as usize;
-        let right_tile = (right_x / tile_width).floor() as usize;
-        let bottom_tile = (bottom_y / tile_height).floor() as usize;
-
-        println!("[Collision] vert: pos={:?}, vel={:?}, bottom_y={}, bottom_tile={}", pos.0, vel.0, bottom_y, bottom_tile);
-
-        if context.level.is_solid(left_tile, bottom_tile) || context.level.is_solid(right_tile, bottom_tile) {
-            pos.0.y = (bottom_tile as f32 * tile_height) - scaled_bounds_height;
-            vel.0.y = 0.0;
-            grounded = true;
-        }
-    } else if vel.0.y < 0.0 { // Moving up
-        let left_x = pos.0.x + 0.1;
-        let right_x = pos.0.x + scaled_bounds_width - 0.1;
-        let top_y = next_y;
-
-        let left_tile = (left_x / tile_width).floor() as usize;
-        let right_tile = (right_x / tile_width).floor() as usize;
-        let top_tile = (top_y / tile_height).floor() as usize;
-
-        if context.level.is_solid(left_tile, top_tile) || context.level.is_solid(right_tile, top_tile) {
-            pos.0.y = (top_tile as f32 * tile_height) + tile_height;
-            vel.0.y = 0.0;
-        }
-    }
-
-    grounded
-}
-
-fn resolve_horizontal_collisions(
-    pos: &mut Position,
-    vel: &mut Velocity,
-    bounds: sdl3::rect::Rect,
-    context: &SystemContext,
-) {
-    let tile_height = context.level.tileset.tile_height as f32;
-    let tile_width = context.level.tileset.tile_width as f32;
-    let scaled_bounds_width = bounds.width() as f32;
-    let scaled_bounds_height = bounds.height() as f32;
-
-    let next_x = pos.0.x + vel.0.x;
-
-    if vel.0.x > 0.0 { // Moving right
-        let top_y = pos.0.y + 0.1;
-        let bottom_y = pos.0.y + scaled_bounds_height - 0.1;
-        let right_x = next_x + scaled_bounds_width;
-
-        let top_tile = (top_y / tile_height).floor() as usize;
-        let bottom_tile = (bottom_y / tile_height).floor() as usize;
-        let right_tile = (right_x / tile_width).floor() as usize;
-
-        if context.level.is_solid(right_tile, top_tile) || context.level.is_solid(right_tile, bottom_tile) {
-            pos.0.x = (right_tile as f32 * tile_width) - scaled_bounds_width - 1.0;
-            vel.0.x = 0.0;
-        }
-    } else if vel.0.x < 0.0 { // Moving left
-        let top_y = pos.0.y + 0.1;
-        let bottom_y = pos.0.y + scaled_bounds_height - 0.1;
-        let left_x = next_x;
-
-        let top_tile = (top_y / tile_height).floor() as usize;
-        let bottom_tile = (bottom_y / tile_height).floor() as usize;
-        let left_tile = (left_x / tile_width).floor() as usize;
-
-        if context.level.is_solid(left_tile, top_tile) || context.level.is_solid(left_tile, bottom_tile) {
-            pos.0.x = (left_tile as f32 * tile_width) + tile_width + 1.0;
-            vel.0.x = 0.0;
-        }
-    }
+struct StompEvent {
+    enemy: Entity,
+    player: Entity,
 }
 
 impl System<SystemContext<'_>> for CollisionSystem {
     fn update(&mut self, world: &mut World, context: &mut SystemContext) {
         world.grounded_tags.clear();
         let mut entities_to_ground = Vec::new();
+        let mut stomp_events = Vec::new();
 
+        // --- Collision Detection ---
+
+        // Player-enemy collision detection
+        let player_entities: Vec<Entity> = world.player_tags.keys().copied().collect();
+        let enemy_entities: Vec<Entity> = world.enemy_tags.keys().copied().collect();
+
+        for &player_entity in &player_entities {
+            for &enemy_entity in &enemy_entities {
+                // Use immutable borrows for detection
+                if let (Some(player_pos), Some(player_vel), Some(player_collision)) = (world.positions.get(&player_entity), world.velocities.get(&player_entity), world.collisions.get(&player_entity)) {
+                    if let (Some(enemy_pos), Some(enemy_collision)) = (world.positions.get(&enemy_entity), world.collisions.get(&enemy_entity)) {
+                        let player_rect = player_collision.rect;
+                        let enemy_rect = enemy_collision.rect;
+
+                        if player_rect.has_intersection(enemy_rect) {
+                            // Stomp check
+                            if player_vel.0.y > 0.0 && player_pos.0.y + player_rect.height() as f32 - player_vel.0.y <= enemy_pos.0.y {
+                                stomp_events.push(StompEvent { enemy: enemy_entity, player: player_entity });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Tile collision detection
         for (entity, pos) in world.positions.iter_mut() {
             if let (Some(vel), Some(collision)) = (world.velocities.get_mut(entity), world.collisions.get_mut(entity)) {
-                // Update the collision rect with the new position
                 collision.rect.set_x(pos.0.x as i32);
                 collision.rect.set_y(pos.0.y as i32);
 
-                let grounded = resolve_vertical_collisions(pos, vel, collision.rect, context);
-                resolve_horizontal_collisions(pos, vel, collision.rect, context);
+                let grounded = physics::resolve_vertical_collisions(pos, vel, collision.rect, context);
+                physics::resolve_horizontal_collisions(pos, vel, collision.rect, context);
 
                 if grounded {
                     entities_to_ground.push(*entity);
@@ -162,8 +106,39 @@ impl System<SystemContext<'_>> for CollisionSystem {
             }
         }
 
+        // --- Collision Resolution ---
+
+        // Resolve stomp events
+        for event in stomp_events {
+            world.add_dead_tag(event.enemy, DeadTag);
+            if let Some(player_vel) = world.velocities.get_mut(&event.player) {
+                player_vel.0.y = -4.0; // Bounce
+            }
+        }
+
+        // Resolve groundings
         for entity in entities_to_ground {
             world.add_grounded(entity, Grounded);
+        }
+    }
+}
+
+pub struct KillSystem;
+impl System<SystemContext<'_>> for KillSystem {
+    fn update(&mut self, world: &mut World, _context: &mut SystemContext) {
+        let dead_entities: Vec<Entity> = world.dead_tags.keys().copied().collect();
+        for entity in dead_entities {
+            world.positions.remove(&entity);
+            world.velocities.remove(&entity);
+            world.renderables.remove(&entity);
+            world.animations.remove(&entity);
+            world.enemy_tags.remove(&entity);
+            world.dead_tags.remove(&entity);
+            world.patrols.remove(&entity);
+            world.gravity_tags.remove(&entity);
+            world.collisions.remove(&entity);
+            world.grounded_tags.remove(&entity);
+            world.state_components.remove(&entity);
         }
     }
 }
@@ -257,8 +232,7 @@ impl System<SystemContext<'_>> for DeathSystem {
 pub struct RespawnSystem;
 impl System<SystemContext<'_>> for RespawnSystem {
     fn update(&mut self, world: &mut World, context: &mut SystemContext) {
-        let respawn_x = context.game_config.player.respawn_x;
-        let respawn_y = context.game_config.player.respawn_y;
+        let respawn_pos = context.game_config.player.respawn_pos;
 
         let to_respawn: Vec<Entity> = world.respawn_tags.keys().copied().collect();
 
@@ -266,8 +240,7 @@ impl System<SystemContext<'_>> for RespawnSystem {
             world.respawn_tags.remove(&entity);
 
             if let Some(pos) = world.positions.get_mut(&entity) {
-                pos.0.x = respawn_x;
-                pos.0.y = respawn_y;
+                pos.0 = respawn_pos;
             }
             if let Some(vel) = world.velocities.get_mut(&entity) {
                 vel.0.x = 0.0;
