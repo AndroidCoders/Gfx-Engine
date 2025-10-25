@@ -108,141 +108,277 @@ impl App {
         let canvas = window.into_canvas();
         let texture_creator = canvas.texture_creator();
 
-        // Create the texture manager and load all textures
-        let mut texture_manager = TextureManager::new();
+                                                let mut texture_manager = TextureManager::new();
 
-        for anim_config in game_config.animation.values() {
-            texture_manager.load(&anim_config.texture, &anim_config.texture, &texture_creator)?;
-        }
+                                                for (name, anim_config) in &game_config.animation {
 
-        texture_manager.load(&level.tileset.texture, &level.tileset.texture, &texture_creator)?;
+                                                    // Load all animation textures, but give the slime's a unique name
 
-        texture_manager.load("assets/graphics/background_blue_sky_with_clouds.png", "bg_sky", &texture_creator)?;
+                                                    if name == "slime_walk" {
 
-        // Create the world and systems
-        let mut world = World::new();
+                                                        texture_manager.load(&anim_config.texture, "slime_texture", &texture_creator)?;
 
-        // Create the player entity and determine its starting position from config
-        let player_entity = world.create_entity();
-        let player_position = Position(game_config.player.start_pos);
+                                                    } else {
 
-        // Create the camera using world units
-        let map_width_in_tiles = level.map.tiles[0].len() as f32;
-        let map_height_in_tiles = level.map.tiles.len() as f32;
-        let total_map_width = map_width_in_tiles * level.tileset.tile_width as f32;
-        let total_map_height = map_height_in_tiles * level.tileset.tile_height as f32;
+                                                        texture_manager.load(&anim_config.texture, &anim_config.texture, &texture_creator)?;
 
-        let virtual_width_in_world = config.window.virtual_width as f32 / crate::config::PIXEL_SCALE;
-        let virtual_height_in_world = config.window.virtual_height as f32 / crate::config::PIXEL_SCALE;
+                                                    }
 
-        // Calculate the center of the player sprite
-        let player_center_x = player_position.0.x + (game_config.player.width as f32 / 2.0);
-        let player_center_y = player_position.0.y + (game_config.player.height as f32 / 2.0);
+                                                }
 
-        // Calculate the desired top-left corner of the camera in world units
-        let initial_camera_x = player_center_x - (virtual_width_in_world / 2.0);
-        let initial_camera_y = player_center_y - (virtual_height_in_world / 2.0);
+                                                texture_manager.load(&level.tileset.texture, &level.tileset.texture, &texture_creator)?;
 
-        // Clamp initial camera position to map boundaries
-        let initial_camera_x_clamped = initial_camera_x.clamp(0.0, total_map_width - virtual_width_in_world);
-        let initial_camera_y_clamped = initial_camera_y.clamp(0.0, total_map_height - virtual_height_in_world);
+                                                texture_manager.load("assets/graphics/background_blue_sky_with_clouds.png", "bg_sky", &texture_creator)?;
 
-        let camera = Camera::new(
-            initial_camera_x_clamped,
-            initial_camera_y_clamped,
-            config.window.camera_tightness,
-            virtual_width_in_world,
-            virtual_height_in_world,
-            total_map_width,
-            total_map_height,
-        );
+                                        
 
-        // Create the renderer
-        let renderer = Renderer::new(canvas)?;
+                                                // Create the world and systems
 
-        // Create the event pump
-        let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
+                                                let mut world = World::new();
 
-        // Initialize Audio Manager
-        let mut audio_manager = GameAudioManager::new()?;
+                                        
 
-        audio_manager.load_sound("assets/sounds/sfx_jump_01.ogg", "jump")?;
-        world.add_position(player_entity, player_position);
-        world.add_velocity(player_entity, Velocity(Vector2D::default()));
-        world.add_renderable(player_entity, Renderable {
-            width: game_config.player.draw_width,
-            height: game_config.player.draw_height,
-            horizontal_offset: game_config.player.horizontal_draw_offset,
-            vertical_offset: game_config.player.vertical_draw_offset,
-        });
+                                                // Create the player entity and determine its starting position from config
 
-        let mut animation_controller = AnimationController::new();
-        for (name, anim_config) in &game_config.animation {
-            let mut frames = Vec::new();
-            for i in 0..anim_config.frame_count {
-                frames.push(sdl3::rect::Rect::new(
-                    anim_config.start_x + (i * anim_config.frame_width) as i32,
-                    anim_config.start_y,
-                    anim_config.frame_width,
-                    anim_config.frame_height,
-                ));
-            }
-            let animation = crate::animation::Animation {
-                texture_name: anim_config.texture.clone(),
-                frames,
-                frame_duration: anim_config.frame_duration,
-                loops: anim_config.loops,
-            };
-            animation_controller.add_animation(name.clone(), animation);
-        }
-        world.add_animation(player_entity, Animation { controller: animation_controller });
-        world.add_player_tag(player_entity, PlayerTag);
-        world.add_gravity(player_entity, Gravity);
-        world.add_collision(player_entity, Collision {
-            rect: sdl3::rect::Rect::new(
-                player_position.0.x as i32,
-                player_position.0.y as i32,
-                game_config.player.width,
-                game_config.player.height,
-            ),
-        });
-        world.add_state_component(player_entity, StateComponent { state_machine: StateMachine::new(IdleState) });
+                                                let player_entity = world.create_entity();
 
-        // Create the slime enemy
-        // TODO: Spawn enemies from level data
-        let slime_entity = world.create_entity();
-        let slime_pos = Position(Vector2D::new(500.0, 500.0));
-        let slime_config = &game_config.enemy["slime"];
+                                                let player_position = Position(game_config.player.start_pos);
 
-        world.add_position(slime_entity, slime_pos);
-        world.add_velocity(slime_entity, Velocity(Vector2D::new(slime_config.speed, 0.0)));
-        world.add_renderable(slime_entity, Renderable {
-            width: slime_config.width,
-            height: slime_config.height,
-            horizontal_offset: 0,
-            vertical_offset: 0,
-        });
-        let mut slime_animation_controller = AnimationController::new();
-        let slime_anim_config = &game_config.animation["slime_walk"];
-        let mut frames = Vec::new();
-            for i in 0..slime_anim_config.frame_count {
-                frames.push(sdl3::rect::Rect::new(
-                    slime_anim_config.start_x + (i * slime_anim_config.frame_width) as i32,
-                    slime_anim_config.start_y,
-                    slime_anim_config.frame_width,
-                    slime_anim_config.frame_height,
-                ));
-            }
-            let animation = crate::animation::Animation {
-                texture_name: slime_anim_config.texture.clone(),
-                frames,
-                frame_duration: slime_anim_config.frame_duration,
-                loops: slime_anim_config.loops,
-            };
-        slime_animation_controller.add_animation("slime_walk".to_string(), animation);
-        slime_animation_controller.set_animation("slime_walk");
+                                        
 
-        world.add_animation(slime_entity, Animation { controller: slime_animation_controller });
+                                                // Create the camera using world units
+
+                                                let map_width_in_tiles = level.map.tiles[0].len() as f32;
+
+                                                let map_height_in_tiles = level.map.tiles.len() as f32;
+
+                                                let total_map_width = map_width_in_tiles * level.tileset.tile_width as f32;
+
+                                                let total_map_height = map_height_in_tiles * level.tileset.tile_height as f32;
+
+                                        
+
+                                                let virtual_width_in_world = config.window.virtual_width as f32 / crate::config::PIXEL_SCALE;
+
+                                                let virtual_height_in_world = config.window.virtual_height as f32 / crate::config::PIXEL_SCALE;
+
+                                        
+
+                                                // Calculate the center of the player sprite
+
+                                                let player_center_x = player_position.0.x + (game_config.player.width as f32 / 2.0);
+
+                                                let player_center_y = player_position.0.y + (game_config.player.height as f32 / 2.0);
+
+                                        
+
+                                                // Calculate the desired top-left corner of the camera in world units
+
+                                                let initial_camera_x = player_center_x - (virtual_width_in_world / 2.0);
+
+                                                let initial_camera_y = player_center_y - (virtual_height_in_world / 2.0);
+
+                                        
+
+                                                // Clamp initial camera position to map boundaries
+
+                                                let initial_camera_x_clamped = initial_camera_x.clamp(0.0, total_map_width - virtual_width_in_world);
+
+                                                let initial_camera_y_clamped = initial_camera_y.clamp(0.0, total_map_height - virtual_height_in_world);
+
+                                        
+
+                                                let camera = Camera::new(
+
+                                                    initial_camera_x_clamped,
+
+                                                    initial_camera_y_clamped,
+
+                                                    config.window.camera_tightness,
+
+                                                    virtual_width_in_world,
+
+                                                    virtual_height_in_world,
+
+                                                    total_map_width,
+
+                                                    total_map_height,
+
+                                                );
+
+                                        
+
+                                                // Create the renderer
+
+                                                let renderer = Renderer::new(canvas)?;
+
+                                        
+
+                                                // Create the event pump
+
+                                                let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
+
+                                        
+
+                                                // Initialize Audio Manager
+
+                                                let mut audio_manager = GameAudioManager::new()?;
+
+                                        
+
+                                                audio_manager.load_sound("assets/sounds/sfx_jump_01.ogg", "jump")?;
+
+                                                world.add_position(player_entity, player_position);
+
+                                                world.add_velocity(player_entity, Velocity(Vector2D::default()));
+
+                                                world.add_renderable(player_entity, Renderable {
+
+                                                    width: game_config.player.draw_width,
+
+                                                    height: game_config.player.draw_height,
+
+                                                    horizontal_offset: game_config.player.horizontal_draw_offset,
+
+                                                    vertical_offset: game_config.player.vertical_draw_offset,
+
+                                                });
+
+                                        
+
+                                                let mut player_animation_controller = AnimationController::new();
+
+                                                for (name, anim_config) in &game_config.animation {
+
+                                                    if !name.starts_with("slime") { // A simple way to filter
+
+                                                        let mut frames = Vec::new();
+
+                                                        for i in 0..anim_config.frame_count {
+
+                                                            frames.push(sdl3::rect::Rect::new(
+
+                                                                anim_config.start_x + (i * anim_config.frame_width) as i32,
+
+                                                                anim_config.start_y,
+
+                                                                anim_config.frame_width,
+
+                                                                anim_config.frame_height,
+
+                                                            ));
+
+                                                        }
+
+                                                        let animation = crate::animation::Animation {
+
+                                                            texture_name: anim_config.texture.clone(),
+
+                                                            frames,
+
+                                                            frame_duration: anim_config.frame_duration,
+
+                                                            loops: anim_config.loops,
+
+                                                        };
+
+                                                        player_animation_controller.add_animation(name.clone(), animation);
+
+                                                    }
+
+                                                }
+
+                                                world.add_animation(player_entity, Animation { controller: player_animation_controller });
+
+                                                world.add_player_tag(player_entity, PlayerTag);
+
+                                                world.add_gravity(player_entity, Gravity);
+
+                                                world.add_collision(player_entity, Collision {
+
+                                                    rect: sdl3::rect::Rect::new(
+
+                                                        player_position.0.x as i32,
+
+                                                        player_position.0.y as i32,
+
+                                                        game_config.player.width,
+
+                                                        game_config.player.height,
+
+                                                    ),
+
+                                                });
+
+                                                world.add_state_component(player_entity, StateComponent { state_machine: StateMachine::new(IdleState) });
+
+                                        
+
+                                                // Create the slime enemy
+
+                                                // TODO: Spawn enemies from level data
+
+                                                let slime_entity = world.create_entity();
+
+                                                let slime_pos = Position(Vector2D::new(400.0, 500.0));
+
+                                                let slime_config = &game_config.enemy["slime"];
+
+                                        
+
+                                                world.add_position(slime_entity, slime_pos);
+
+                                                world.add_velocity(slime_entity, Velocity(Vector2D::new(slime_config.speed, 0.0)));
+
+                                                world.add_renderable(slime_entity, Renderable {
+
+                                                    width: slime_config.width,
+
+                                                    height: slime_config.height,
+
+                                                    horizontal_offset: 0,
+
+                                                    vertical_offset: 0,
+
+                                                });
+
+                                                let mut slime_animation_controller = AnimationController::new();
+
+                                                let slime_anim_config = &game_config.animation["slime_walk"];
+
+                                                let mut frames = Vec::new();
+
+                                                    for i in 0..slime_anim_config.frame_count {
+
+                                                        frames.push(sdl3::rect::Rect::new(
+
+                                                            slime_anim_config.start_x + (i * slime_anim_config.frame_width) as i32,
+
+                                                            slime_anim_config.start_y,
+
+                                                            slime_anim_config.frame_width,
+
+                                                            slime_anim_config.frame_height,
+
+                                                        ));
+
+                                                    }
+
+                                                    let animation = crate::animation::Animation {
+
+                                                        texture_name: "slime_texture".to_string(),
+
+                                                        frames,
+
+                                                        frame_duration: slime_anim_config.frame_duration,
+
+                                                        loops: slime_anim_config.loops,
+
+                                                    };
+
+                                                slime_animation_controller.add_animation("slime_walk".to_string(), animation);
+
+                                                slime_animation_controller.set_animation("slime_walk");
         world.add_enemy_tag(slime_entity, EnemyTag);
         world.add_patrol(slime_entity, Patrol { speed: slime_config.speed });
         world.add_gravity(slime_entity, Gravity);
@@ -297,7 +433,8 @@ impl App {
             let mut physics_system = PhysicsSystem;
             let mut collision_system = CollisionSystem;
             let mut kill_system = KillSystem;
-            let mut animation_system = AnimationSystem;
+            let mut player_animation_system = PlayerAnimationSystem;
+            let mut animation_update_system = AnimationUpdateSystem;
             let mut state_machine_system = StateMachineSystem;
             let mut audio_system = AudioSystem;
             let mut death_system = DeathSystem;
@@ -323,7 +460,8 @@ impl App {
             respawn_system.update(&mut self.world, &mut system_context);
             respawn_timer_system.update(&mut self.world, &mut system_context);
             state_machine_system.update(&mut self.world, &mut system_context);
-            animation_system.update(&mut self.world, &mut system_context);
+            player_animation_system.update(&mut self.world, &mut system_context);
+            animation_update_system.update(&mut self.world, &mut system_context);
             audio_system.update(&mut self.world, &mut self.audio_manager);
 
             // --- Rendering ---

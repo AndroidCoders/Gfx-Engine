@@ -27,19 +27,44 @@ impl Camera {
         }
     }
 
-    /// Updates the camera's position to center on a target.
+    /// Updates the camera's position to center on a target with dynamic acceleration and a panic zone.
     pub fn update(&mut self, target: Vector2D) {
-        let desired_camera_x = target.x - (self.virtual_width / 2.0);
-        let desired_camera_y = target.y - (self.virtual_height / 2.0);
+        let dead_zone_x = self.virtual_width * 0.05;
+        let dead_zone_y = self.virtual_height * 0.05;
+        let panic_zone_x = self.virtual_width * 0.4;
+        let panic_zone_y = self.virtual_height * 0.4;
 
-        let mut desired_pos = Vector2D::new(desired_camera_x, desired_camera_y);
+        let camera_center_x = self.position.x + self.virtual_width / 2.0;
+        let camera_center_y = self.position.y + self.virtual_height / 2.0;
 
-        // Clamp desired camera position to map boundaries
-        desired_pos.x = desired_pos.x.clamp(0.0, self.map_width - self.virtual_width);
-        desired_pos.y = desired_pos.y.clamp(0.0, self.map_height - self.virtual_height);
+        let delta_x = target.x - camera_center_x;
+        let delta_y = target.y - camera_center_y;
 
-        // Apply damping
-        self.position.x = self.position.x + (desired_pos.x - self.position.x) * self.tightness;
-        self.position.y = self.position.y + (desired_pos.y - self.position.y) * self.tightness;
+        let mut move_x = 0.0;
+        if delta_x.abs() > dead_zone_x {
+            let speed_factor = if delta_x.abs() > panic_zone_x {
+                1.0 // Full speed in the panic zone
+            } else {
+                ((delta_x.abs() - dead_zone_x) / (panic_zone_x - dead_zone_x)).powi(3)
+            };
+            move_x = delta_x * speed_factor * self.tightness;
+        }
+
+        let mut move_y = 0.0;
+        if delta_y.abs() > dead_zone_y {
+            let speed_factor = if delta_y.abs() > panic_zone_y {
+                1.0 // Full speed in the panic zone
+            } else {
+                ((delta_y.abs() - dead_zone_y) / (panic_zone_y - dead_zone_y)).powi(3)
+            };
+            move_y = delta_y * speed_factor * self.tightness;
+        }
+
+        self.position.x += move_x;
+        self.position.y += move_y;
+
+        // Clamp camera position to map boundaries
+        self.position.x = self.position.x.clamp(0.0, self.map_width - self.virtual_width);
+        self.position.y = self.position.y.clamp(0.0, self.map_height - self.virtual_height);
     }
 }
