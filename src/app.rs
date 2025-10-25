@@ -204,6 +204,10 @@ impl App {
 
                                                     total_map_height,
 
+                                                    config.window.camera_slow_zone,
+
+                                                    config.window.camera_fast_zone,
+
                                                 );
 
                                         

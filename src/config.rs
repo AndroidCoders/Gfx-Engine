@@ -43,6 +43,8 @@ pub struct WindowConfig {
     /// The scaling quality for the renderer.
     pub scaling_quality: String,
     pub camera_tightness: f32,
+    pub camera_slow_zone: f32,
+    pub camera_fast_zone: f32,
 }
 
 

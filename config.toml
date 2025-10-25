@@ -9,6 +9,8 @@ virtual_width = 1920
 virtual_height = 1080
 background_color = [0, 0, 0]
 camera_tightness = 0.5
+camera_slow_zone = 0.05
+camera_fast_zone = 0.4
 
 [input]
 left = "Left"

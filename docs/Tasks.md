@@ -32,7 +32,11 @@ This document lists the Development Tasks for the `GfX-Engine` project, organize
 
 - [ ] **1. Implement Damped Camera Movement:** Improve the camera to follow the player smoothly, enhancing the game's professional feel.
 
-    - [ ] Re-implement lerp-based smoothing to restore damping effect.
+    - [x] Re-implement lerp-based smoothing to restore damping effect.
+    - [ ] Implement Advanced Camera Mechanics:
+        - [ ] Implement "Look-Ahead" (Directional Bias) to show more of the screen in front of the player.
+        - [ ] Implement "Platform Snap" to prevent vertical camera movement during jumps.
+        - [x] Rename camera zones to "Slow Zone" and "Fast Zone" and move their configuration to `config.toml`.
 
 - [x] **2. Implement Basic Sound Effects (using Kira and Event-Driven Audio):** Integrate an audio system for key gameplay events.
 
