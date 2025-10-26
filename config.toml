@@ -11,12 +11,19 @@ background_color = [0, 0, 0]
 camera_tightness = 0.5
 camera_slow_zone = 0.05
 camera_fast_zone = 0.4
+camera_vertical_snap_threshold = 0.1
+camera_vertical_tightness = 0.1
 
 [input]
 left = "Left"
 right = "Right"
 jump = "Space"
 quit = "Escape"
+debug_toggle = "F1"
+
+[debug]
+show_debug_info = true
+debug_draw_collision_boxes = true
 
 [physics]
 gravity = 0.75

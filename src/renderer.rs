@@ -78,6 +78,12 @@ impl Renderer {
         Ok(())
     }
 
+    pub fn draw_rect(&mut self, rect: &sdl3::rect::Rect, color: Color) -> Result<(), String> {
+        self.canvas.set_draw_color(color);
+        self.canvas.draw_rect((*rect).into()).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     pub fn draw_sprite(&mut self, pos: Vector2D, size: (u32, u32), offsets: (i32, i32), texture_name: &str, frame_rect: &sdl3::rect::Rect, texture_manager: &TextureManager, camera: &Camera) -> Result<(), String> {
         if let Some(texture) = texture_manager.get(texture_name) {
             let dest_rect = sdl3::rect::Rect::new(

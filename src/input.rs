@@ -19,6 +19,11 @@ pub enum PlayerAction {
     Jump,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DebugAction {
+    ToggleDebugInfo,
+}
+
 /// Holds the current state of all player actions.
 #[derive(Debug, Default)]
 pub struct InputState {
@@ -26,6 +31,8 @@ pub struct InputState {
     active_actions: HashSet<PlayerAction>,
     /// A set of all actions that were just pressed in the current frame.
     just_pressed_actions: HashSet<PlayerAction>,
+    /// A set of all debug actions that were just pressed in the current frame.
+    just_pressed_debug_actions: HashSet<DebugAction>,
 }
 
 impl InputState {
@@ -37,6 +44,11 @@ impl InputState {
     /// Checks if a specific action was just pressed in the current frame.
     pub fn is_action_just_pressed(&self, action: PlayerAction) -> bool {
         self.just_pressed_actions.contains(&action)
+    }
+
+    /// Checks if a specific debug action was just pressed in the current frame.
+    pub fn is_debug_action_just_pressed(&self, action: DebugAction) -> bool {
+        self.just_pressed_debug_actions.contains(&action)
     }
 }
 
@@ -55,6 +67,7 @@ impl InputHandler {
     pub fn process_events(&self, event_pump: &mut EventPump, input_state: &mut InputState) -> bool {
         // Clear the just-pressed actions at the beginning of the frame.
         input_state.just_pressed_actions.clear();
+        input_state.just_pressed_debug_actions.clear();
 
         for event in event_pump.poll_iter() {
             println!("Event: {:?}", event);
@@ -78,7 +91,7 @@ impl InputHandler {
 
     /// Handles a single key event and updates the input state.
     fn handle_key_event(&self, keycode: Keycode, input_state: &mut InputState, is_down: bool) {
-        let action = if keycode.name() == self.input_config.left {
+        let player_action = if keycode.name() == self.input_config.left {
             Some(PlayerAction::MoveLeft)
         } else if keycode.name() == self.input_config.right {
             Some(PlayerAction::MoveRight)
@@ -88,7 +101,7 @@ impl InputHandler {
             None
         };
 
-        if let Some(action) = action {
+        if let Some(action) = player_action {
             if is_down {
                 // If the action is not already active, it's a "just pressed" event.
                 if !input_state.active_actions.contains(&action) {
@@ -97,6 +110,18 @@ impl InputHandler {
                 input_state.active_actions.insert(action);
             } else {
                 input_state.active_actions.remove(&action);
+            }
+        }
+
+        let debug_action = if keycode.name() == self.input_config.debug_toggle {
+            Some(DebugAction::ToggleDebugInfo)
+        } else {
+            None
+        };
+
+        if let Some(action) = debug_action {
+            if is_down {
+                input_state.just_pressed_debug_actions.insert(action);
             }
         }
     }

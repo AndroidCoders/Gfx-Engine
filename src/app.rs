@@ -43,6 +43,7 @@ pub struct App {
     /// The virtual height of the game canvas.
     #[allow(dead_code)]
     _virtual_height: u32,
+    show_debug_info: bool,
 }
 
 impl App {
@@ -207,6 +208,8 @@ impl App {
                                                     config.window.camera_slow_zone,
 
                                                     config.window.camera_fast_zone,
+                                                    config.window.camera_vertical_snap_threshold,
+                                                    config.window.camera_vertical_tightness,
 
                                                 );
 
@@ -420,6 +423,7 @@ impl App {
             _sdl_context: sdl_context,
             _virtual_width: config.window.virtual_width,
             _virtual_height: config.window.virtual_height,
+            show_debug_info: true,
         })
     }
 
@@ -430,6 +434,10 @@ impl App {
             // Process events
             if !self.input_handler.process_events(&mut self.event_pump, &mut self.input_state) {
                 break 'running;
+            }
+
+            if self.input_state.is_debug_action_just_pressed(crate::input::DebugAction::ToggleDebugInfo) {
+                self.show_debug_info = !self.show_debug_info;
             }
 
             // --- Create system instances locally ---
@@ -493,29 +501,44 @@ impl App {
                 ) {
                     let sprite_center_x = player_pos.0.x + renderable.horizontal_offset as f32 + (renderable.width as f32 / 2.0);
                     let sprite_center_y = player_pos.0.y + renderable.vertical_offset as f32 + (renderable.height as f32 / 2.0);
-                    self.camera.update(Vector2D::new(sprite_center_x, sprite_center_y));
+                    let is_grounded = self.world.is_grounded(player_entity);
+                    self.camera.update(Vector2D::new(sprite_center_x, sprite_center_y), is_grounded);
                 }
             }
 
             // --- Debug Output ---
-            if let Some(player_entity) = self.player_entity {
-                if let (Some(pos), Some(vel), Some(state_comp), Some(collision)) = (
-                    self.world.positions.get(&player_entity),
-                    self.world.velocities.get(&player_entity),
-                    self.world.state_components.get(&player_entity),
-                    self.world.collisions.get(&player_entity),
-                ) {
-                    let is_grounded = self.world.is_grounded(player_entity);
-                    let state_name = state_comp.state_machine.current_state.as_ref().map_or("None", |s| s.get_name());
+            if self.show_debug_info {
+                if self.config.debug.debug_draw_collision_boxes {
+                    for (_entity, collision) in &self.world.collisions {
+                        let rect = sdl3::rect::Rect::new(
+                            ((collision.rect.x as f32 - self.camera.position.x) * crate::config::PIXEL_SCALE) as i32,
+                            ((collision.rect.y as f32 - self.camera.position.y) * crate::config::PIXEL_SCALE) as i32,
+                            (collision.rect.width() as f32 * crate::config::PIXEL_SCALE) as u32,
+                            (collision.rect.height() as f32 * crate::config::PIXEL_SCALE) as u32,
+                        );
+                        self.renderer.draw_rect(&rect, sdl3::pixels::Color::RGB(255, 0, 0))?;
+                    }
+                }
 
-                    let debug_text_color = sdl3::pixels::Color::RGB(255, 255, 255);
-                    self.renderer.set_draw_color(debug_text_color);
-                    self.renderer.draw_debug_text(&format!("Frame: {}", self.frame_count), 10, 10)?;
-                    self.renderer.draw_debug_text(&format!("Player Pos: ({:.2}, {:.2})", pos.0.x, pos.0.y), 10, 30)?;
-                    self.renderer.draw_debug_text(&format!("Vel: ({:.2}, {:.2})", vel.0.x, vel.0.y), 10, 50)?;
-                    self.renderer.draw_debug_text(&format!("State: {}", state_name), 10, 70)?;
-                    self.renderer.draw_debug_text(&format!("Grounded: {}", is_grounded), 10, 90)?;
-                    self.renderer.draw_debug_text(&format!("Collision Rect: {:?}", collision.rect), 10, 110)?;
+                if let Some(player_entity) = self.player_entity {
+                    if let (Some(pos), Some(vel), Some(state_comp), Some(collision)) = (
+                        self.world.positions.get(&player_entity),
+                        self.world.velocities.get(&player_entity),
+                        self.world.state_components.get(&player_entity),
+                        self.world.collisions.get(&player_entity),
+                    ) {
+                        let is_grounded = self.world.is_grounded(player_entity);
+                        let state_name = state_comp.state_machine.current_state.as_ref().map_or("None", |s| s.get_name());
+
+                        let debug_text_color = sdl3::pixels::Color::RGB(255, 255, 255);
+                        self.renderer.set_draw_color(debug_text_color);
+                        self.renderer.draw_debug_text(&format!("Frame: {}", self.frame_count), 10, 10)?;
+                        self.renderer.draw_debug_text(&format!("Player Pos: ({:.2}, {:.2})", pos.0.x, pos.0.y), 10, 30)?;
+                        self.renderer.draw_debug_text(&format!("Vel: ({:.2}, {:.2})", vel.0.x, vel.0.y), 10, 50)?;
+                        self.renderer.draw_debug_text(&format!("State: {}", state_name), 10, 70)?;
+                        self.renderer.draw_debug_text(&format!("Grounded: {}", is_grounded), 10, 90)?;
+                        self.renderer.draw_debug_text(&format!("Collision Rect: {:?}", collision.rect), 10, 110)?;
+                    }
                 }
             }
 

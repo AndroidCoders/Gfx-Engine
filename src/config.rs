@@ -19,6 +19,8 @@ pub struct Config {
     pub input: InputConfig,
     /// Physics configuration.
     pub physics: PhysicsConfig,
+    /// Debug configuration.
+    pub debug: DebugConfig,
 }
 
 /// Holds all window-related configuration.
@@ -45,8 +47,16 @@ pub struct WindowConfig {
     pub camera_tightness: f32,
     pub camera_slow_zone: f32,
     pub camera_fast_zone: f32,
+    pub camera_vertical_snap_threshold: f32,
+    pub camera_vertical_tightness: f32,
 }
 
+/// Configuration for debug settings.
+#[derive(Deserialize, Clone)]
+pub struct DebugConfig {
+    pub show_debug_info: bool,
+    pub debug_draw_collision_boxes: bool,
+}
 
 
 /// Represents the game-specific configuration.
@@ -124,6 +134,7 @@ pub struct InputConfig {
     pub right: String,
     pub jump: String,
     pub quit: String,
+    pub debug_toggle: String,
 }
 
 /// Loads the main application configuration from the "config.toml" file.
