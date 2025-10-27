@@ -78,6 +78,8 @@ pub struct EnemyConfig {
     pub width: u32,
     pub height: u32,
     pub speed: f32,
+    pub draw_width: u32,
+    pub draw_height: u32,
 }
 
 #[derive(Deserialize, Clone)]

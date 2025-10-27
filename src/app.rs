@@ -112,19 +112,7 @@ impl App {
                                                 let mut texture_manager = TextureManager::new();
 
                                                 for (name, anim_config) in &game_config.animation {
-
-                                                    // Load all animation textures, but give the slime's a unique name
-
-                                                    if name == "slime_walk" {
-
-                                                        texture_manager.load(&anim_config.texture, "slime_texture", &texture_creator)?;
-
-                                                    } else {
-
-                                                        texture_manager.load(&anim_config.texture, &anim_config.texture, &texture_creator)?;
-
-                                                    }
-
+                                                    texture_manager.load(&anim_config.texture, &anim_config.texture, &texture_creator)?;
                                                 }
 
                                                 texture_manager.load(&level.tileset.texture, &level.tileset.texture, &texture_creator)?;
@@ -339,9 +327,9 @@ impl App {
 
                                                 world.add_renderable(slime_entity, Renderable {
 
-                                                    width: slime_config.width,
+                                                    width: slime_config.draw_width,
 
-                                                    height: slime_config.height,
+                                                    height: slime_config.draw_height,
 
                                                     horizontal_offset: 0,
 
@@ -351,41 +339,48 @@ impl App {
 
                                                 let mut slime_animation_controller = AnimationController::new();
 
-                                                let slime_anim_config = &game_config.animation["slime_walk"];
+                                                for (name, anim_config) in &game_config.animation {
 
-                                                let mut frames = Vec::new();
+                                                    if name.starts_with("slime") {
 
-                                                    for i in 0..slime_anim_config.frame_count {
+                                                        let mut frames = Vec::new();
 
-                                                        frames.push(sdl3::rect::Rect::new(
+                                                        for i in 0..anim_config.frame_count {
 
-                                                            slime_anim_config.start_x + (i * slime_anim_config.frame_width) as i32,
+                                                            frames.push(sdl3::rect::Rect::new(
 
-                                                            slime_anim_config.start_y,
+                                                                anim_config.start_x + (i * anim_config.frame_width) as i32,
 
-                                                            slime_anim_config.frame_width,
+                                                                anim_config.start_y,
 
-                                                            slime_anim_config.frame_height,
+                                                                anim_config.frame_width,
 
-                                                        ));
+                                                                anim_config.frame_height,
+
+                                                            ));
+
+                                                        }
+
+                                                        let animation = crate::animation::Animation {
+
+                                                            texture_name: anim_config.texture.clone(),
+
+                                                            frames,
+
+                                                            frame_duration: anim_config.frame_duration,
+
+                                                            loops: anim_config.loops,
+
+                                                        };
+
+                                                        slime_animation_controller.add_animation(name.clone(), animation);
 
                                                     }
 
-                                                    let animation = crate::animation::Animation {
+                                                }
 
-                                                        texture_name: "slime_texture".to_string(),
-
-                                                        frames,
-
-                                                        frame_duration: slime_anim_config.frame_duration,
-
-                                                        loops: slime_anim_config.loops,
-
-                                                    };
-
-                                                slime_animation_controller.add_animation("slime_walk".to_string(), animation);
-
-                                                slime_animation_controller.set_animation("slime_walk");
+                                                slime_animation_controller.set_animation("slime_1");
+        world.add_animation(slime_entity, Animation { controller: slime_animation_controller });
         world.add_enemy_tag(slime_entity, EnemyTag);
         world.add_patrol(slime_entity, Patrol { speed: slime_config.speed });
         world.add_gravity(slime_entity, Gravity);

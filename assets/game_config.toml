@@ -15,9 +15,11 @@ width = 6000.0
 death_plane_y = 3000.0
 
 [enemy.slime]
-width = 16
-height = 12
+width = 32
+height = 32
 speed = 1.0
+draw_width = 32
+draw_height = 32
 
 [animation.idle_left]
 texture = "assets/graphics/cat_idle_left.png"
@@ -79,12 +81,32 @@ frame_count = 3
 frame_duration = 6
 loops = false
 
-[animation.slime_walk]
-texture = "assets/graphics/tileset_2.png"
+[animation.slime_1]
+texture = "assets/graphics/enemy_1.png"
 start_x = 0
-start_y = 80
+start_y = 0
 frame_width = 16
-frame_height = 12
+frame_height = 16
 frame_count = 1
-frame_duration = 100
+frame_duration = 10
+loops = true
+
+[animation.slime_2]
+texture = "assets/graphics/enemy_2.png"
+start_x = 0
+start_y = 0
+frame_width = 16
+frame_height = 16
+frame_count = 1
+frame_duration = 10
+loops = true
+
+[animation.slime_3]
+texture = "assets/graphics/enemy_3.png"
+start_x = 0
+start_y = 0
+frame_width = 16
+frame_height = 16
+frame_count = 1
+frame_duration = 10
 loops = true
