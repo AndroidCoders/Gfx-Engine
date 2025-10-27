@@ -126,6 +126,32 @@ This document lists the Development Tasks for the `GfX-Engine` project, organize
 
 
 
+
+
+
+
 - [ ] **Refactor for Modularity:** Continuously move hard-coded data from source files (`.rs`) into external configuration files.
 
+
+
+
+
+
+
 - [x] **Redesign to ECS Architecture:** Plan and execute a major refactoring to adopt an Entity-Component-System (ECS) architecture for improved modularity, reusability, and performance.
+
+
+
+
+
+
+
+### Phase 8: Engine Refactoring (Future)
+
+
+
+
+
+
+
+- [ ] **1. Refactor to a 1:1 Pixel Coordinate System:** Remove the `PIXEL_SCALE` constant and update the renderer, camera, and configuration to work directly in pixel dimensions. This will simplify the logic and make asset integration more intuitive.

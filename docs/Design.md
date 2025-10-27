@@ -110,6 +110,8 @@ A menu system is required to manage different application states, such as the ma
 
 ## Future Improvements
 
+*   **Refactor to 1:1 Pixel Coordinates:** The engine will be refactored to remove the `PIXEL_SCALE` constant and use a 1:1 pixel-based coordinate system. This will make all configuration values correspond directly to pixel dimensions, simplifying the engine's logic and making asset integration more intuitive.
+
 *   **Mid-Air Control:** The player's control while in the air will be adjusted to prevent instant turning and acceleration, providing a more realistic feel.
 
 ## Coordinate System and Scaling
