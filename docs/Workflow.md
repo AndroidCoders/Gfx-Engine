@@ -151,3 +151,6 @@ Once the pull request has been approved, it can be merged into the `main` branch
   git branch -d <branch-name>
   git push origin --delete <branch-name>
   ```
+
+---
+**Note To Self:** Remember that the 'main' code branch in Fedora Linux Git is called 'master'.
