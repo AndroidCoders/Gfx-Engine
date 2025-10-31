@@ -1,3 +1,4 @@
+use crate::ecs::systems::System;
 use sdl3::EventPump;
 use sdl3::Sdl;
 
@@ -9,7 +10,21 @@ use crate::camera::Camera;
 use crate::audio::GameAudioManager;
 use crate::ecs::{
     world::{World, Entity},
-    system::*,
+    systems::{self,
+        animation_update::AnimationUpdateSystem,
+        audio::AudioSystem,
+        coin_collection::CoinCollectionSystem,
+        death::DeathSystem,
+        input::InputSystem,
+        interaction::InteractionSystem,
+        kill::KillSystem,
+        physics::PhysicsSystem,
+        player_animation::PlayerAnimationSystem,
+        respawn::RespawnSystem,
+        respawn_timer::RespawnTimerSystem,
+        state_machine::StateMachineSystem,
+        tile_collision::TileCollisionSystem,
+    },
     component::*,
 };
 use crate::renderer::Renderer;
@@ -17,6 +32,7 @@ use crate::math::Vector2D;
 use crate::state_machine::StateMachine;
 use crate::player::states::IdleState;
 use crate::enemy::states::PatrolState;
+
 
 use crate::animation::AnimationController;
 
@@ -44,6 +60,7 @@ pub struct App {
     #[allow(dead_code)]
     _virtual_height: u32,
     show_debug_info: bool,
+    gold_coin_count: u32,
 }
 
 impl App {
@@ -111,7 +128,7 @@ impl App {
 
                                                 let mut texture_manager = TextureManager::new();
 
-                                                for (name, anim_config) in &game_config.animation {
+                                                for (_name, anim_config) in &game_config.animation {
                                                     texture_manager.load(&anim_config.texture, &anim_config.texture, &texture_creator)?;
                                                 }
 
@@ -122,279 +139,205 @@ impl App {
                                         
 
                                                 // Create the world and systems
-
                                                 let mut world = World::new();
+                                                let mut player_entity = None;
 
-                                        
+                                                // Create entities from level data
+                                                for entity_data in &level.entities {
+                                                    let entity = world.create_entity();
+                                                    match entity_data.r#type.as_str() {
+                                                        "Player" => {
+                                                            let player_position = Position(entity_data.position);
+                                                            world.add_position(entity, player_position);
+                                                            world.add_velocity(entity, Velocity(Vector2D::default()));
+                                                            world.add_renderable(entity, Renderable {
+                                                                width: game_config.player.draw_width,
+                                                                height: game_config.player.draw_height,
+                                                                horizontal_offset: game_config.player.horizontal_draw_offset,
+                                                                vertical_offset: game_config.player.vertical_draw_offset,
+                                                            });
+                                                            let mut player_animation_controller = AnimationController::new();
+                                                            for (name, anim_config) in &game_config.animation {
+                                                                if !name.starts_with("enemy_spider") && !name.starts_with("gold_coin") {
+                                                                    let mut frames = Vec::new();
+                                                                    for i in 0..anim_config.frame_count {
+                                                                        frames.push(sdl3::rect::Rect::new(
+                                                                            anim_config.start_x + (i * anim_config.frame_width) as i32,
+                                                                            anim_config.start_y,
+                                                                            anim_config.frame_width,
+                                                                            anim_config.frame_height,
+                                                                        ));
+                                                                    }
+                                                                    let animation = crate::animation::Animation {
+                                                                        texture_name: anim_config.texture.clone(),
+                                                                        frames,
+                                                                        frame_duration: anim_config.frame_duration,
+                                                                        loops: anim_config.loops,
+                                                                    };
+                                                                    player_animation_controller.add_animation(name.clone(), animation);
+                                                                }
+                                                            }
+                                                            world.add_animation(entity, Animation { controller: player_animation_controller });
+                                                            world.add_player_tag(entity, PlayerTag);
+                                                            world.add_gravity(entity, Gravity);
+                                                            world.add_collision(entity, Collision {
+                                                                rect: sdl3::rect::Rect::new(
+                                                                    player_position.0.x as i32,
+                                                                    player_position.0.y as i32,
+                                                                    game_config.player.width,
+                                                                    game_config.player.height,
+                                                                ),
+                                                            });
+                                                            world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(IdleState) });
+                                                            player_entity = Some(entity);
+                                                        }
+                                                        "GoldCoin" => {
+                                                            let coin_config = &game_config.collectible["gold_coin"];
+                                                            world.add_position(entity, Position(entity_data.position));
+                                                            world.add_renderable(entity, Renderable {
+                                                                width: coin_config.draw_width,
+                                                                height: coin_config.draw_height,
+                                                                horizontal_offset: 0,
+                                                                vertical_offset: 0,
+                                                            });
+                                                            let mut coin_animation_controller = AnimationController::new();
+                                                            if let Some(anim_config) = game_config.animation.get("gold_coin_spin") {
+                                                                let mut frames = Vec::new();
+                                                                for i in 0..anim_config.frame_count {
+                                                                    let padding = anim_config.frame_padding.unwrap_or(0);
+                                                                    frames.push(sdl3::rect::Rect::new(
+                                                                        anim_config.start_x + (i * (anim_config.frame_width + padding)) as i32,
+                                                                        anim_config.start_y,
+                                                                        anim_config.frame_width,
+                                                                        anim_config.frame_height,
+                                                                    ));
+                                                                }
+                                                                let animation = crate::animation::Animation {
+                                                                    texture_name: anim_config.texture.clone(),
+                                                                    frames,
+                                                                    frame_duration: anim_config.frame_duration,
+                                                                    loops: anim_config.loops,
+                                                                };
+                                                                coin_animation_controller.add_animation("gold_coin_spin".to_string(), animation);
+                                                                coin_animation_controller.set_animation("gold_coin_spin");
+                                                            }
+                                                            world.add_animation(entity, Animation { controller: coin_animation_controller });
+                                                            world.add_gold_coin(entity, GoldCoin);
+                                                            world.add_collision(entity, Collision {
+                                                                rect: sdl3::rect::Rect::new(
+                                                                    entity_data.position.x as i32,
+                                                                    entity_data.position.y as i32,
+                                                                    coin_config.width,
+                                                                    coin_config.height,
+                                                                ),
+                                                            });
+                                                        }
+                                                        "EnemySpider" => {
+                                                            let enemy_spider_pos = Position(entity_data.position);
+                                                            let enemy_spider_config = &game_config.enemy["enemy_spider"];
+                                                            world.add_position(entity, enemy_spider_pos);
+                                                            world.add_velocity(entity, Velocity(Vector2D::new(enemy_spider_config.speed, 0.0)));
+                                                            world.add_renderable(entity, Renderable {
+                                                                width: enemy_spider_config.draw_width,
+                                                                height: enemy_spider_config.draw_height,
+                                                                horizontal_offset: 0,
+                                                                vertical_offset: 0,
+                                                            });
+                                                            let mut enemy_spider_animation_controller = AnimationController::new();
+                                                            for (name, anim_config) in &game_config.animation {
+                                                                if name.starts_with("enemy_spider") {
+                                                                    let mut frames = Vec::new();
+                                                                    for i in 0..anim_config.frame_count {
+                                                                        let padding = anim_config.frame_padding.unwrap_or(0);
+                                                                        frames.push(sdl3::rect::Rect::new(
+                                                                            anim_config.start_x + (i * (anim_config.frame_width + padding)) as i32,
+                                                                            anim_config.start_y,
+                                                                            anim_config.frame_width,
+                                                                            anim_config.frame_height,
+                                                                        ));
+                                                                    }
+                                                                    let animation = crate::animation::Animation {
+                                                                        texture_name: anim_config.texture.clone(),
+                                                                        frames,
+                                                                        frame_duration: anim_config.frame_duration,
+                                                                        loops: anim_config.loops,
+                                                                    };
+                                                                    enemy_spider_animation_controller.add_animation(name.clone(), animation);
+                                                                }
+                                                            }
+                                                            enemy_spider_animation_controller.set_animation("enemy_spider_1");
+                                                            world.add_animation(entity, Animation { controller: enemy_spider_animation_controller });
+                                                            world.add_enemy_tag(entity, EnemyTag);
+                                                            world.add_patrol(entity, Patrol { speed: enemy_spider_config.speed });
+                                                            world.add_gravity(entity, Gravity);
+                                                            world.add_collision(entity, Collision {
+                                                                rect: sdl3::rect::Rect::new(
+                                                                    enemy_spider_pos.0.x as i32,
+                                                                    enemy_spider_pos.0.y as i32,
+                                                                    enemy_spider_config.width,
+                                                                    enemy_spider_config.height,
+                                                                ),
+                                                            });
+                                                            world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
+                                                        }
+                                                        _ => {}
+                                                    }
+                                                }
 
-                                                // Create the player entity and determine its starting position from config
-
-                                                let player_entity = world.create_entity();
-
-                                                let player_position = Position(game_config.player.start_pos);
-
-                                        
+                                                // The camera creation needs the player's starting position.
+                                                let player_start_pos = level.entities.iter()
+                                                    .find(|e| e.r#type == "Player")
+                                                    .map(|e| e.position)
+                                                    .unwrap_or(game_config.player.start_pos);
 
                                                 // Create the camera using world units
-
                                                 let map_width_in_tiles = level.map.tiles[0].len() as f32;
-
                                                 let map_height_in_tiles = level.map.tiles.len() as f32;
-
                                                 let total_map_width = map_width_in_tiles * level.tileset.tile_width as f32;
-
                                                 let total_map_height = map_height_in_tiles * level.tileset.tile_height as f32;
 
-                                        
-
                                                 let virtual_width_in_world = config.window.virtual_width as f32 / crate::config::PIXEL_SCALE;
-
                                                 let virtual_height_in_world = config.window.virtual_height as f32 / crate::config::PIXEL_SCALE;
 
-                                        
-
                                                 // Calculate the center of the player sprite
-
-                                                let player_center_x = player_position.0.x + (game_config.player.width as f32 / 2.0);
-
-                                                let player_center_y = player_position.0.y + (game_config.player.height as f32 / 2.0);
-
-                                        
+                                                let player_center_x = player_start_pos.x + (game_config.player.width as f32 / 2.0);
+                                                let player_center_y = player_start_pos.y + (game_config.player.height as f32 / 2.0);
 
                                                 // Calculate the desired top-left corner of the camera in world units
-
                                                 let initial_camera_x = player_center_x - (virtual_width_in_world / 2.0);
-
                                                 let initial_camera_y = player_center_y - (virtual_height_in_world / 2.0);
 
-                                        
-
                                                 // Clamp initial camera position to map boundaries
-
                                                 let initial_camera_x_clamped = initial_camera_x.clamp(0.0, total_map_width - virtual_width_in_world);
-
                                                 let initial_camera_y_clamped = initial_camera_y.clamp(0.0, total_map_height - virtual_height_in_world);
 
-                                        
-
                                                 let camera = Camera::new(
-
                                                     initial_camera_x_clamped,
-
                                                     initial_camera_y_clamped,
-
                                                     config.window.camera_tightness,
-
                                                     virtual_width_in_world,
-
                                                     virtual_height_in_world,
-
                                                     total_map_width,
-
                                                     total_map_height,
-
                                                     config.window.camera_slow_zone,
-
                                                     config.window.camera_fast_zone,
                                                     config.window.camera_vertical_snap_threshold,
                                                     config.window.camera_vertical_tightness,
-
+                                                    config.window.camera_falling_tightness,
+                                                    config.window.camera_falling_velocity_threshold,
+                                                    config.physics.entity_max_fall_speed,
                                                 );
 
-                                        
-
                                                 // Create the renderer
-
                                                 let renderer = Renderer::new(canvas)?;
 
-                                        
-
                                                 // Create the event pump
-
                                                 let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
 
-                                        
-
                                                 // Initialize Audio Manager
-
                                                 let mut audio_manager = GameAudioManager::new()?;
 
-                                        
-
                                                 audio_manager.load_sound("assets/sounds/sfx_jump_01.ogg", "jump")?;
-
-                                                world.add_position(player_entity, player_position);
-
-                                                world.add_velocity(player_entity, Velocity(Vector2D::default()));
-
-                                                world.add_renderable(player_entity, Renderable {
-
-                                                    width: game_config.player.draw_width,
-
-                                                    height: game_config.player.draw_height,
-
-                                                    horizontal_offset: game_config.player.horizontal_draw_offset,
-
-                                                    vertical_offset: game_config.player.vertical_draw_offset,
-
-                                                });
-
-                                        
-
-                                                let mut player_animation_controller = AnimationController::new();
-
-                                                for (name, anim_config) in &game_config.animation {
-
-                                                    if !name.starts_with("slime") { // A simple way to filter
-
-                                                        let mut frames = Vec::new();
-
-                                                        for i in 0..anim_config.frame_count {
-
-                                                            frames.push(sdl3::rect::Rect::new(
-
-                                                                anim_config.start_x + (i * anim_config.frame_width) as i32,
-
-                                                                anim_config.start_y,
-
-                                                                anim_config.frame_width,
-
-                                                                anim_config.frame_height,
-
-                                                            ));
-
-                                                        }
-
-                                                        let animation = crate::animation::Animation {
-
-                                                            texture_name: anim_config.texture.clone(),
-
-                                                            frames,
-
-                                                            frame_duration: anim_config.frame_duration,
-
-                                                            loops: anim_config.loops,
-
-                                                        };
-
-                                                        player_animation_controller.add_animation(name.clone(), animation);
-
-                                                    }
-
-                                                }
-
-                                                world.add_animation(player_entity, Animation { controller: player_animation_controller });
-
-                                                world.add_player_tag(player_entity, PlayerTag);
-
-                                                world.add_gravity(player_entity, Gravity);
-
-                                                world.add_collision(player_entity, Collision {
-
-                                                    rect: sdl3::rect::Rect::new(
-
-                                                        player_position.0.x as i32,
-
-                                                        player_position.0.y as i32,
-
-                                                        game_config.player.width,
-
-                                                        game_config.player.height,
-
-                                                    ),
-
-                                                });
-
-                                                world.add_state_component(player_entity, StateComponent { state_machine: StateMachine::new(IdleState) });
-
-                                        
-
-                                                // Create the slime enemy
-
-                                                // TODO: Spawn enemies from level data
-
-                                                let slime_entity = world.create_entity();
-
-                                                let slime_pos = Position(Vector2D::new(400.0, 500.0));
-
-                                                let slime_config = &game_config.enemy["slime"];
-
-                                        
-
-                                                world.add_position(slime_entity, slime_pos);
-
-                                                world.add_velocity(slime_entity, Velocity(Vector2D::new(slime_config.speed, 0.0)));
-
-                                                world.add_renderable(slime_entity, Renderable {
-
-                                                    width: slime_config.draw_width,
-
-                                                    height: slime_config.draw_height,
-
-                                                    horizontal_offset: 0,
-
-                                                    vertical_offset: 0,
-
-                                                });
-
-                                                let mut slime_animation_controller = AnimationController::new();
-
-                                                for (name, anim_config) in &game_config.animation {
-
-                                                    if name.starts_with("slime") {
-
-                                                        let mut frames = Vec::new();
-
-                                                        for i in 0..anim_config.frame_count {
-
-                                                            frames.push(sdl3::rect::Rect::new(
-
-                                                                anim_config.start_x + (i * anim_config.frame_width) as i32,
-
-                                                                anim_config.start_y,
-
-                                                                anim_config.frame_width,
-
-                                                                anim_config.frame_height,
-
-                                                            ));
-
-                                                        }
-
-                                                        let animation = crate::animation::Animation {
-
-                                                            texture_name: anim_config.texture.clone(),
-
-                                                            frames,
-
-                                                            frame_duration: anim_config.frame_duration,
-
-                                                            loops: anim_config.loops,
-
-                                                        };
-
-                                                        slime_animation_controller.add_animation(name.clone(), animation);
-
-                                                    }
-
-                                                }
-
-                                                slime_animation_controller.set_animation("slime_1");
-        world.add_animation(slime_entity, Animation { controller: slime_animation_controller });
-        world.add_enemy_tag(slime_entity, EnemyTag);
-        world.add_patrol(slime_entity, Patrol { speed: slime_config.speed });
-        world.add_gravity(slime_entity, Gravity);
-        world.add_collision(slime_entity, Collision {
-            rect: sdl3::rect::Rect::new(
-                slime_pos.0.x as i32,
-                slime_pos.0.y as i32,
-                slime_config.width,
-                slime_config.height,
-            ),
-        });
-        world.add_state_component(slime_entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
-
-
 
         // Create input handler and state
         let input_handler = InputHandler::new(config.input.clone());
@@ -413,12 +356,13 @@ impl App {
             input_handler,
             input_state,
             world,
-            player_entity: Some(player_entity),
+            player_entity,
             frame_count: 0,
             _sdl_context: sdl_context,
             _virtual_width: config.window.virtual_width,
             _virtual_height: config.window.virtual_height,
             show_debug_info: true,
+            gold_coin_count: 0,
         })
     }
 
@@ -438,7 +382,9 @@ impl App {
             // --- Create system instances locally ---
             let mut input_system = InputSystem;
             let mut physics_system = PhysicsSystem;
-            let mut collision_system = CollisionSystem;
+            let mut tile_collision_system = TileCollisionSystem;
+            let mut interaction_system = InteractionSystem;
+            let mut coin_collection_system = CoinCollectionSystem;
             let mut kill_system = KillSystem;
             let mut player_animation_system = PlayerAnimationSystem;
             let mut animation_update_system = AnimationUpdateSystem;
@@ -449,22 +395,28 @@ impl App {
             let mut respawn_timer_system = RespawnTimerSystem;
 
             // --- Create a mutable context for systems ---
-            let mut system_context = SystemContext {
+            let mut system_context = systems::SystemContext {
                 level: &self.level,
-                _camera: &self.camera,
                 input_state: &self.input_state,
                 config: &self.config,
                 game_config: &self._game_config,
                 audio_sender: &self.audio_manager.event_sender(),
+                gold_coin_count: &mut self.gold_coin_count,
             };
 
             // --- Run systems ---
             input_system.update(&mut self.world, &mut system_context);
             physics_system.update(&mut self.world, &mut system_context);
-            collision_system.update(&mut self.world, &mut system_context);
+            tile_collision_system.update(&mut self.world, &mut system_context);
+            interaction_system.update(&mut self.world, &mut system_context);
+            coin_collection_system.update(&mut self.world, &mut system_context);
             kill_system.update(&mut self.world, &mut system_context);
             death_system.update(&mut self.world, &mut system_context);
-            respawn_system.update(&mut self.world, &mut system_context);
+            let mut respawn_system_context = systems::RespawnSystemContext {
+                camera: &mut self.camera,
+                game_config: &self._game_config,
+            };
+            respawn_system.update(&mut self.world, &mut respawn_system_context);
             respawn_timer_system.update(&mut self.world, &mut system_context);
             state_machine_system.update(&mut self.world, &mut system_context);
             player_animation_system.update(&mut self.world, &mut system_context);
@@ -497,7 +449,8 @@ impl App {
                     let sprite_center_x = player_pos.0.x + renderable.horizontal_offset as f32 + (renderable.width as f32 / 2.0);
                     let sprite_center_y = player_pos.0.y + renderable.vertical_offset as f32 + (renderable.height as f32 / 2.0);
                     let is_grounded = self.world.is_grounded(player_entity);
-                    self.camera.update(Vector2D::new(sprite_center_x, sprite_center_y), is_grounded);
+                    let player_vel_y = self.world.velocities.get(&player_entity).map_or(0.0, |v| v.0.y);
+                    self.camera.update(Vector2D::new(sprite_center_x, sprite_center_y), is_grounded, player_vel_y);
                 }
             }
 
@@ -533,6 +486,7 @@ impl App {
                         self.renderer.draw_debug_text(&format!("State: {}", state_name), 10, 70)?;
                         self.renderer.draw_debug_text(&format!("Grounded: {}", is_grounded), 10, 90)?;
                         self.renderer.draw_debug_text(&format!("Collision Rect: {:?}", collision.rect), 10, 110)?;
+                        self.renderer.draw_debug_text(&format!("Gold: {}", self.gold_coin_count), 10, 130)?;
                     }
                 }
             }

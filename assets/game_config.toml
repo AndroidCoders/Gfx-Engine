@@ -3,21 +3,27 @@
 [player]
 start_pos = { x = 300.0, y = 500.0 }
 width = 24
-height = 32
+height = 26
 draw_width = 80
 draw_height = 64
 horizontal_draw_offset = -28
-vertical_draw_offset = -16
+vertical_draw_offset = -22
 respawn_pos = { x = 300.0, y = 500.0 }
 
 [world]
 width = 6000.0
-death_plane_y = 3000.0
+death_plane_y = 1200.0
 
-[enemy.slime]
+[enemy.enemy_spider]
 width = 16
 height = 16
 speed = 1.0
+draw_width = 16
+draw_height = 16
+
+[collectible.gold_coin]
+width = 16
+height = 16
 draw_width = 16
 draw_height = 16
 
@@ -81,7 +87,7 @@ frame_count = 3
 frame_duration = 6
 loops = false
 
-[animation.slime_1]
+[animation.enemy_spider_1]
 texture = "assets/graphics/enemy_1.png"
 start_x = 0
 start_y = 0
@@ -91,7 +97,7 @@ frame_count = 1
 frame_duration = 10
 loops = true
 
-[animation.slime_2]
+[animation.enemy_spider_2]
 texture = "assets/graphics/enemy_2.png"
 start_x = 0
 start_y = 0
@@ -101,7 +107,7 @@ frame_count = 1
 frame_duration = 10
 loops = true
 
-[animation.slime_3]
+[animation.enemy_spider_3]
 texture = "assets/graphics/enemy_3.png"
 start_x = 0
 start_y = 0
@@ -110,3 +116,14 @@ frame_height = 64
 frame_count = 1
 frame_duration = 10
 loops = true
+
+[animation.gold_coin_spin]
+texture = "assets/graphics/tileset_3.png"
+start_x = 210
+start_y = 134
+frame_width = 16
+frame_height = 16
+frame_count = 2
+frame_duration = 10
+loops = true
+frame_padding = 3
