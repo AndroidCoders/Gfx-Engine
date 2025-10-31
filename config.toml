@@ -13,6 +13,8 @@ camera_slow_zone = 0.05
 camera_fast_zone = 0.4
 camera_vertical_snap_threshold = 0.1
 camera_vertical_tightness = 0.1
+camera_falling_tightness = 0.9
+camera_falling_velocity_threshold = 1.0
 
 [input]
 left = "Left"
@@ -28,7 +30,7 @@ debug_draw_collision_boxes = true
 [physics]
 gravity = 0.75
 max_speed = 4.0
-max_fall_speed = 10.0
+entity_max_fall_speed = 10.0
 acceleration = 0.4
 friction = 0.9
 jump_strength = -8.0

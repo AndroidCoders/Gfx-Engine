@@ -1,10 +1,15 @@
-File version: 1.05
+File version: 1.06
 
 **TLDR:**
-This document describes the `GfX-Engine` project:
-* A 2D pixel art game engine built in Rust.
-* The engine is being developed with a "Super Cat Bros" demo game.
-* The project has a well-defined vision, goals, and thorough documentation.
+* This document describes the `GfX-Engine` project, its vision, and its goals.
+* `GfX-Engine` is a 2D pixel art game engine built in Rust.
+* The engine is being developed alongside a complete demo game, "Super Cat Bros."
+
+## Project Vision
+
+To create a fun, classic-style 2D platformer ("Super Cat Bros") while simultaneously building a reusable, data-driven, and performant game engine (`Gfx-Engine`) for the Rust community to learn from and build upon.
+
+## Overview
 
 `GfX-Engine` is a 2D pixel art game engine built with Rust. The project's primary goal is to create a reusable and modular engine, with the development of a "Super Cat Bros" demo game to showcase its capabilities.
 

@@ -4,7 +4,7 @@
 
 use crate::state_machine::State;
 use crate::ecs::world::{World, Entity};
-use crate::ecs::system::SystemContext;
+use crate::ecs::systems::SystemContext;
 use crate::input::PlayerAction;
 use crate::audio::AudioEvent;
 

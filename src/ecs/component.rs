@@ -21,6 +21,11 @@ impl Component for Velocity {}
 pub struct PlayerTag;
 impl Component for PlayerTag {}
 
+// --- GoldCoin Tag Component ---
+#[derive(Debug, Clone, Copy)]
+pub struct GoldCoin;
+impl Component for GoldCoin {}
+
 // --- Animation Component ---
 #[derive(Clone)]
 pub struct Animation {

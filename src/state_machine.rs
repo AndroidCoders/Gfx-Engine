@@ -3,8 +3,8 @@
 pub trait State {
     fn enter(&mut self);
     fn exit(&mut self);
-    fn update_with_context(&mut self, world: &mut crate::ecs::world::World, context: &mut crate::ecs::system::SystemContext, entity: crate::ecs::world::Entity);
-    fn transition_with_context(&mut self, world: &mut crate::ecs::world::World, context: &mut crate::ecs::system::SystemContext, entity: crate::ecs::world::Entity) -> Option<Box<dyn State>>;
+    fn update_with_context(&mut self, world: &mut crate::ecs::world::World, context: &mut crate::ecs::systems::SystemContext, entity: crate::ecs::world::Entity);
+    fn transition_with_context(&mut self, world: &mut crate::ecs::world::World, context: &mut crate::ecs::systems::SystemContext, entity: crate::ecs::world::Entity) -> Option<Box<dyn State>>;
     fn get_name(&self) -> &str;
 }
 
@@ -19,7 +19,7 @@ impl StateMachine {
         state_machine
     }
 
-    pub fn update_with_context(&mut self, world: &mut crate::ecs::world::World, context: &mut crate::ecs::system::SystemContext, entity: crate::ecs::world::Entity) {
+    pub fn update_with_context(&mut self, world: &mut crate::ecs::world::World, context: &mut crate::ecs::systems::SystemContext, entity: crate::ecs::world::Entity) {
         if let Some(state) = self.current_state.as_mut() {
             state.update_with_context(world, context, entity);
             if let Some(next_state) = state.transition_with_context(world, context, entity) {

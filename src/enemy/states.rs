@@ -4,7 +4,7 @@
 
 use crate::state_machine::State;
 use crate::ecs::world::{World, Entity};
-use crate::ecs::system::SystemContext;
+use crate::ecs::systems::SystemContext;
 
 pub struct PatrolState;
 
@@ -36,8 +36,8 @@ impl State for PatrolState {
             if let Some(pos) = world.positions.get(&entity) {
                 let tile_width = context.level.tileset.tile_width as f32;
                 let tile_height = context.level.tileset.tile_height as f32;
-                let enemy_width = context.game_config.enemy["slime"].width as f32;
-                let enemy_height = context.game_config.enemy["slime"].height as f32;
+                let enemy_width = context.game_config.enemy["enemy_spider"].width as f32;
+                let enemy_height = context.game_config.enemy["enemy_spider"].height as f32;
 
                 let mut should_reverse = false;
 

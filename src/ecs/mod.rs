@@ -1,3 +1,3 @@
 pub mod component;
-pub mod system;
+pub mod systems;
 pub mod world;

@@ -11,6 +11,7 @@ pub struct World {
     pub renderables: HashMap<Entity, Renderable>,
     pub animations: HashMap<Entity, Animation>,
     pub player_tags: HashMap<Entity, PlayerTag>,
+    pub gold_coins: HashMap<Entity, GoldCoin>,
     pub enemy_tags: HashMap<Entity, EnemyTag>,
     pub dead_tags: HashMap<Entity, DeadTag>,
     pub patrols: HashMap<Entity, Patrol>,
@@ -96,5 +97,9 @@ impl World {
 
     pub fn add_dead_tag(&mut self, entity: Entity, component: DeadTag) {
         self.dead_tags.insert(entity, component);
+    }
+
+    pub fn add_gold_coin(&mut self, entity: Entity, component: GoldCoin) {
+        self.gold_coins.insert(entity, component);
     }
 }

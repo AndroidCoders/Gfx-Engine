@@ -56,16 +56,11 @@ impl Level {
 struct TmxMap {
     #[serde(rename = "@width")]
     width: u32,
-    layer: TmxLayer,
-    // We will manually load the tileset for now, so we don't need to parse this.
-    // tileset: TmxTileset,
+    #[serde(rename = "layer", default)]
+    tile_layers: Vec<TmxLayer>,
+    #[serde(rename = "objectgroup", default)]
+    object_groups: Vec<TmxObjectGroup>,
 }
-
-// #[derive(Debug, Deserialize)]
-// struct TmxTileset {
-//     #[serde(rename = "@source")]
-//     source: String,
-// }
 
 #[derive(Debug, Deserialize)]
 struct TmxLayer {
@@ -80,24 +75,43 @@ struct TmxData {
     content: String,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct TmxObject {
+    #[serde(rename = "@type")]
+    pub r#type: String,
+    #[serde(rename = "@x")]
+    pub x: f32,
+    #[serde(rename = "@y")]
+    pub y: f32,
+}
+
+
+#[derive(Debug, Deserialize)]
+struct TmxObjectGroup {
+    #[serde(rename = "@name")]
+    name: String,
+    #[serde(rename = "object", default)]
+    objects: Vec<TmxObject>,
+}
+
 /// Loads a level from a Tiled .tmx file.
 pub fn load_level(path: &str) -> Result<Level, String> {
     let tmx_str = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
     let tmx_map: TmxMap = from_str(&tmx_str).map_err(|e| e.to_string())?;
 
-    if tmx_map.layer.data.encoding != "csv" {
+    // Find and parse the first tile layer
+    let tile_layer = tmx_map.tile_layers.get(0).ok_or("No tile layer found in TMX file")?;
+    if tile_layer.data.encoding != "csv" {
         return Err("Level data must be CSV encoded.".to_string());
     }
 
-    // Parse the CSV data
-    let tile_data: Vec<u32> = tmx_map.layer.data.content
+    let tile_data: Vec<u32> = tile_layer.data.content
         .split(',')
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .map(|s| s.parse::<u32>().unwrap_or(0))
         .collect();
 
-    // Reconstruct the 2D tile map
     let map_tiles: Vec<Vec<u32>> = tile_data.chunks(tmx_map.width as usize)
         .map(|chunk| chunk.to_vec())
         .collect();
@@ -118,14 +132,23 @@ pub fn load_level(path: &str) -> Result<Level, String> {
         tile_height: 32,
     };
 
-    // Manually define entities for now
-    // TODO: Parse object layers in the TMX file
-    let entities = vec![
-        Entity {
-            r#type: "Player".to_string(),
-            position: Vector2D::new(80.0, 100.0),
+    // Parse object layers
+    let mut entities = Vec::new();
+    for object_group in &tmx_map.object_groups {
+        for object in &object_group.objects {
+            entities.push(Entity {
+                r#type: object.r#type.clone(),
+                position: Vector2D::new(object.x, object.y),
+            });
         }
-    ];
+    }
+
+    // Manually add player for now
+    entities.push(Entity {
+        r#type: "Player".to_string(),
+        position: Vector2D::new(80.0, 100.0),
+    });
+
 
     Ok(Level {
         tileset,

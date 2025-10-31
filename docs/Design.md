@@ -8,10 +8,7 @@ This document outlines the architecture and components of the `GfX-Engine`:
 
 ## Architecture
 
-A simple, data-driven game loop architecture will be used. The engine's logic is separated from the game's data. The engine reads `config.toml` and loads assets from the `assets/` directory to run the game.
-
-**Current Architecture: ECS-based**
-The engine's core architecture is now built around the Entity-Component-System (ECS) pattern. This enhances modularity, reusability, and performance by strictly separating data (Components), logic (Systems), and entities (IDs).
+The engine's core architecture is built around the **Entity-Component-System (ECS)** pattern. This enhances modularity, reusability, and performance by strictly separating data (Components), logic (Systems), and entities (IDs). The engine follows a data-driven design, where configuration is loaded from external `.toml` files and assets are loaded from the `assets/` directory.
 
 ## Components
 
@@ -37,13 +34,13 @@ To ensure a stable and smooth visual experience, we use a **fixed-timestep game 
 
 The rendering pipeline in `Gfx-Engine` is designed for modularity and clear separation of concerns.
 
-*   **Centralized `Renderer`:** The `renderer.rs` module encapsulates all drawing logic. It receives the necessary game data (`GameState`, `GameConfig`, `TextureManager`) and is solely responsible for determining what to draw and how to draw it.
-*   **Simplified `App` Loop:** The main application loop (`app.rs`) is streamlined. Its role is to orchestrate the game loop phases (input, update, render) and trigger the `Renderer` each frame, without containing rendering-specific logic.
-*   **Clear Ownership:** The `App` struct directly owns the `TextureCreator` and the `virtual_canvas_texture`. The `TextureManager` is dedicated to loading and managing game asset textures. This explicit ownership model prevents Rust's borrow checker conflicts and ensures resource lifetimes are correctly handled.
+*   **Centralized `Renderer`:** The `renderer.rs` module, which owns the `WindowCanvas`, encapsulates all drawing logic. It is responsible for all rendering operations.
+*   **Simplified `App` Loop:** The main application loop in `app.rs` orchestrates the game loop phases (input, update, render) and calls the `Renderer` each frame. It does not contain rendering-specific logic.
+*   **Resource Management:** The `TextureCreator` is created during initialization and used by the `TextureManager` to load all game textures. This ensures that texture management is handled separately from the main application logic.
 
 ## Gameplay Mechanics
 
-To create a robust and engaging platformer experience, the following gameplay mechanics, inspired by classics like "Super Mario World," are planned for implementation:
+To create a robust and engaging platformer experience, the following gameplay mechanics, inspired by classics like "Super Mario World," are the design goals for the engine. See the "Implemented Core Features" section for current implementation status.
 
 *   **Variable Jump Height:** The player will be able to control the height of their jump by holding down the jump button. This allows for more nuanced platforming challenges.
 
@@ -51,7 +48,7 @@ To create a robust and engaging platformer experience, the following gameplay me
 
 *   **Stomping on Enemies:** As a primary form of interaction, the player will be able to defeat enemies by jumping on top of them.
 
-*   **Interactive Blocks:** The game levels will include simple interactive elements, suchs as breakable blocks that the player can hit from below.
+*   **Interactive Blocks:** The game levels will include simple interactive elements, such as breakable blocks that the player can hit from below.
 
 ### Camera Design
 
@@ -95,24 +92,25 @@ To facilitate robust testing and optimization, the following systems are planned
 
 *   **Programmatic Video Capture:** To enable automated analysis and capture hard-to-reproduce bugs, the engine will integrate programmatic video recording. This will be achieved by using a Rust wrapper for the `ffmpeg` library (such as `ffmpeg-next`), allowing the engine to start and stop video capture from within the code.
 
-## Future Implementations
+## Architectural Roadmap
 
-### Menu System Implementation
+The following sections outline the high-level direction for future engine and gameplay features. The detailed tasks and priorities for these items are managed in the **Product Backlog** (`docs/Tasks.md`).
 
-A menu system is required to manage different application states, such as the main menu, options screen, and the game itself. This involves creating a game state manager and a UI rendering system.
+### Core Engine Enhancements
+*   **Menu System:** A generic menu system will be required to manage application states (e.g., Main Menu, Options, In-Game).
+*   **Enhanced Debugging Tools:** To facilitate robust testing and optimization, we plan to add an in-game profiler and more detailed on-screen debug displays.
+*   **Spatial Partitioning:** To support large levels efficiently, a uniform grid or similar spatial partitioning system is planned.
+*   **1:1 Pixel Coordinate System:** The engine will be refactored to use a 1:1 pixel-based coordinate system, removing the `PIXEL_SCALE` constant to simplify logic.
+*   **Parallax Scrolling:** The renderer will be extended to support multi-layered parallax backgrounds for a greater sense of depth.
+*   **Interactive Audio:** The audio system will be enhanced to support dynamic soundtracks and sound effects that respond to gameplay events.
 
-1.  **Add Dependencies:** Add the `sdl3_ttf` crate to `Cargo.toml` to enable text rendering.
-2.  **Create Game State Manager:** In `app.rs`, define a `GameState` enum (e.g., `MainMenu`, `Options`, `InGame`). Add a field `game_state: GameState` to the `App` struct to track the current state.
-3.  **Refactor Main Loop:** Modify the `run()` method in `app.rs` to delegate logic based on the current `game_state`. Use a `match` statement to call state-specific update and render functions (e.g., `update_game()`, `render_game()`, `update_menu()`, `render_menu()`).
-4.  **Implement UI Module:** Create a new `ui.rs` module. This module will define the structure for menus, including buttons, text labels, and logic for handling navigation (e.g., tracking the currently selected button).
-5.  **Implement Text Rendering:** Create a `FontManager` to load and manage font files, similar to the `TextureManager`. Extend the `Renderer` to include a method for drawing text to the screen using the loaded fonts.
-6.  **Handle Menu Input:** In the main loop, when the `game_state` is `MainMenu` or `Options`, process input differently. Instead of player actions, listen for `Up`, `Down`, and `Enter` keys to navigate the menu. An `Enter` press will trigger a change in the `GameState` (e.g., from `MainMenu` to `InGame`).
-
-## Future Improvements
-
-*   **Refactor to 1:1 Pixel Coordinates:** The engine will be refactored to remove the `PIXEL_SCALE` constant and use a 1:1 pixel-based coordinate system. This will make all configuration values correspond directly to pixel dimensions, simplifying the engine's logic and making asset integration more intuitive.
-
-*   **Mid-Air Control:** The player's control while in the air will be adjusted to prevent instant turning and acceleration, providing a more realistic feel.
+### Gameplay Features
+*   **Advanced Camera Mechanics:** The camera will be improved with features like "Look-Ahead" and "Platform Snap."
+*   **Advanced Physics and Terrain:** The physics engine will be enhanced to handle more complex terrain, such as sloped surfaces.
+*   **Interactive World Elements:** The engine will support a variety of interactive blocks, such as power-up blocks and breakable blocks.
+*   **Flexible Power-Up System:** A system will be designed to allow for power-ups that modify player state and grant new abilities.
+*   **Companions/Sidekicks:** The engine will support companion characters with their own unique abilities.
+*   **Improved Player Control:** Player movement, especially mid-air control, will be fine-tuned for a better feel.
 
 ## Coordinate System and Scaling
 

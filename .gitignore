@@ -9,3 +9,7 @@ output/
 
 # Screenshots
 /screenshots/
+
+# Screencasts and Screenshots
+Screencast*.webm
+Screenshot*.png

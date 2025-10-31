@@ -49,6 +49,8 @@ pub struct WindowConfig {
     pub camera_fast_zone: f32,
     pub camera_vertical_snap_threshold: f32,
     pub camera_vertical_tightness: f32,
+    pub camera_falling_tightness: f32,
+    pub camera_falling_velocity_threshold: f32,
 }
 
 /// Configuration for debug settings.
@@ -61,12 +63,23 @@ pub struct DebugConfig {
 
 /// Represents the game-specific configuration.
 #[derive(Deserialize, Clone)]
+pub struct CollectibleConfig {
+    pub width: u32,
+    pub height: u32,
+    pub draw_width: u32,
+    pub draw_height: u32,
+}
+
+#[derive(Deserialize, Clone)]
 pub struct GameConfig {
     pub player: PlayerConfig,
     pub world: WorldConfig,
 
     #[serde(default)]
     pub enemy: HashMap<String, EnemyConfig>,
+
+    #[serde(default)]
+    pub collectible: HashMap<String, CollectibleConfig>,
 
     #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
@@ -114,6 +127,7 @@ pub struct AnimationConfig {
     pub frame_count: u32,
     pub frame_duration: u32,
     pub loops: bool,
+    pub frame_padding: Option<u32>,
 }
 
 /// Configuration for physics parameters.
@@ -121,7 +135,7 @@ pub struct AnimationConfig {
 pub struct PhysicsConfig {
     pub gravity: f32,
     pub max_speed: f32,
-    pub max_fall_speed: f32,
+    pub entity_max_fall_speed: f32,
     pub acceleration: f32,
     pub friction: f32,
     pub jump_strength: f32,

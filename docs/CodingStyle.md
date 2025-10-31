@@ -54,9 +54,7 @@ development process:
 We also follow these principles for development:
 
 - Build on what works, and make it better in iterations. This is a principle from ITIL.
-- When writing new code, get it working with 80 % accuracy (or better). Then improve the code in each iteration until it is working 96 % (or better).
 - If you move data out from the source code and into data files (or config files), the source code does not have to be recompiled after updating data.
-- Use a versioning system (v.1.00), increase the version number when making a change (v1.01), and test the code changes.
 
 ### Incremental and Modular Development
 
