@@ -144,11 +144,7 @@ pub fn load_level(path: &str) -> Result<Level, String> {
         }
     }
 
-    // Manually add player for now
-    entities.push(Entity {
-        r#type: "Player".to_string(),
-        position: Vector2D::new(80.0, 100.0),
-    });
+
 
 
     Ok(Level {

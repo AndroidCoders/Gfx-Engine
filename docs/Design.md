@@ -62,6 +62,44 @@ To create a robust and engaging platformer experience, the following gameplay me
 
 *   **Interactive Blocks:** The game levels will include simple interactive elements, such as breakable blocks that the player can hit from below.
 
+### Health and Power-ups
+
+To create a more engaging and challenging experience, the game will feature a health system and collectible items that affect the player's state.
+
+*   **Player Health:** The player will have a health meter (e.g., hearts). Collisions with enemies will decrease the player's health. When health reaches zero, the player loses a life.
+*   **Health Pickups:** Players can replenish their health by collecting "Medical Kits" or "Potions of Health" found in the levels. These could be dropped by defeated enemies or found in treasure chests.
+
+#### Power-Ups, Weapons, and Magical Items Ideas
+
+##### Consumables (Instant Use)
+
+*   **Potion of Health:** A red potion that instantly restores one heart of the player's health.
+*   **Extra Life:** A special item (perhaps a "1-Up" icon) that grants the player an extra life.
+*   **Key:** A key that can be used to unlock a single treasure chest or door.
+
+##### Temporary Power-Ups
+
+*   **Star of Invincibility:** A classic glowing star that grants the player temporary invincibility. The player can defeat enemies by simply touching them, and the game's music could speed up to create a sense of urgency and power.
+*   **Boots of Speed:** Special boots that temporarily increase the player's maximum speed and acceleration, leaving a trail of dust behind them.
+*   **Feather of Flight:** A magical feather that allows the player to perform a double jump or to glide for a short period by holding down the jump button.
+*   **Shield of Protection:** A shimmering shield that orbits the player and protects them from a single instance of damage, shattering on impact.
+
+##### Weapons & Combat Items
+
+*   **Fire Flower:** A flower that allows the player to shoot bouncing fireballs to defeat enemies from a distance.
+*   **Ice Flower:** A variation of the Fire Flower that shoots ice balls, which can temporarily freeze enemies in place, turning them into platforms.
+*   **Sword of Slashing:** A short-range sword that allows the player to perform a quick slash attack. This would introduce a new combat mechanic beyond stomping.
+*   **Hammer of Smashing:** A heavy hammer that can be used to break special blocks or deal extra damage to armored enemies.
+*   **Ninja Star:** A throwable projectile that can be used to defeat enemies from a distance.
+
+**Design Constraint for Weapons:** The player can only hold and use one special weapon at a time. Picking up a new weapon will replace the currently equipped one.
+
+##### Permanent Upgrades (Metroidvania-style)
+
+*   **Climbing Gloves:** Gloves that allow the player to cling to and climb up walls, opening up new vertical paths in the levels.
+*   **Dash Boots:** Boots that grant the player a permanent dash ability, allowing them to cross large gaps or break through certain barriers.
+*   **Goggles of Seeing:** Special goggles that, when activated, reveal hidden platforms, secret passages, or invisible treasures in the level.
+
 ### Camera Design
 
 The camera system is designed to be both smooth and responsive, keeping the player in focus without feeling jarring or restrictive. It is inspired by the camera in classic platformers like "Super Mario World" and is built on the following principles:

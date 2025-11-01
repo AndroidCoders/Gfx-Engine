@@ -1,14 +1,14 @@
 # assets/game_config.toml
 
 [player]
-start_pos = { x = 300.0, y = 500.0 }
+start_pos = { x = 80.0, y = 700.0 }
 width = 24
 height = 26
 draw_width = 80
 draw_height = 64
 horizontal_draw_offset = -28
 vertical_draw_offset = -22
-respawn_pos = { x = 300.0, y = 500.0 }
+respawn_pos = { x = 80.0, y = 700.0 }
 
 [world]
 width = 6000.0
