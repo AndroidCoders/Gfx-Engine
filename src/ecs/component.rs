@@ -40,6 +40,7 @@ pub struct Renderable {
     pub height: u32,
     pub horizontal_offset: i32,
     pub vertical_offset: i32,
+    pub z_index: u8,
 }
 impl Component for Renderable {}
 
@@ -110,3 +111,25 @@ impl Component for Patrol {}
 #[derive(Debug, Clone, Copy)]
 pub struct DeadTag;
 impl Component for DeadTag {}
+
+// --- Health Component ---
+#[derive(Debug, Clone, Copy)]
+pub struct Health {
+    pub current: u32,
+    pub max: u32,
+}
+impl Component for Health {}
+
+// --- Invincibility Component ---
+#[derive(Debug, Clone, Copy)]
+pub struct Invincibility {
+    pub timer: f32,
+}
+impl Component for Invincibility {}
+
+// --- Lifetime Component ---
+#[derive(Debug, Clone, Copy)]
+pub struct Lifetime {
+    pub timer: f32,
+}
+impl Component for Lifetime {}

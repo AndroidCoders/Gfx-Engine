@@ -89,6 +89,7 @@ pub struct TmxObject {
 #[derive(Debug, Deserialize)]
 struct TmxObjectGroup {
     #[serde(rename = "@name")]
+    #[allow(dead_code)]
     name: String,
     #[serde(rename = "object", default)]
     objects: Vec<TmxObject>,

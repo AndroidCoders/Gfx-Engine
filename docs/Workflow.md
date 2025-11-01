@@ -60,7 +60,7 @@ The following technical practices support our Agile workflow.
 
 ### Branching Strategy
 
-All new work (features, bugfixes, etc.) must be done on a separate branch. This keeps the `main` branch stable and always in a potentially releasable state. Branch names should be descriptive and follow this convention:
+All new work (features, bugfixes, etc.) must be done on a separate branch. This keeps the `master` branch stable and always in a potentially releasable state. Branch names should be descriptive and follow this convention:
 
 - **Features:** `feature/<short-description>`
 - **Bugfixes:** `bugfix/<short-description>`
@@ -69,7 +69,7 @@ All new work (features, bugfixes, etc.) must be done on a separate branch. This 
 
 ### Development Process
 
-1.  **Create a Branch:** Before starting a task, create a new branch from `main`.
+1.  **Create a Branch:** Before starting a task, create a new branch from `master`.
     ```bash
     git checkout -b <branch-name>
     ```
@@ -87,15 +87,16 @@ All new work (features, bugfixes, etc.) must be done on a separate branch. This 
     ```bash
     git commit -m "feat: Add player jump" -m "Implements variable jump height based on button press duration."
     ```
+> **Note:** When using `git commit -m`, it's best to use short, single-line messages. Long or multi-line messages can sometimes be misinterpreted by the shell, especially when using multiple `-m` flags. For automated processes like those in the Gemini CLI, it is crucial to avoid interactive prompts. Therefore, always provide the full commit message directly within the `git commit -m` command, ensuring it is properly quoted to prevent parsing issues.
 
 ### Automated Testing (Continuous Integration)
 
-To guarantee that our `main` branch is always stable, we automate our testing process using **Continuous Integration (CI)** provided by GitHub Actions.
+To guarantee that our `master` branch is always stable, we automate our testing process using **Continuous Integration (CI)** provided by GitHub Actions.
 
 The `cargo run` command is used for quick, local playtesting and does not run the test suite. The `cargo test` command is used to run our full suite of unit, integration, and documentation tests.
 
 Our CI workflow is configured to automatically run `cargo test` for every Pull Request. Here is how it works:
-1.  A developer pushes a new feature branch and opens a Pull Request to merge it into `main`.
+1.  A developer pushes a new feature branch and opens a Pull Request to merge it into `master`.
 2.  GitHub Actions automatically detects the PR and begins the CI process.
 3.  It checks out the code into a clean, virtual environment.
 4.  It runs `cargo check`, `cargo clippy`, and, most importantly, `cargo test`.
@@ -117,7 +118,7 @@ A PR **cannot be merged** until all tests pass and it has a green checkmark from
 
   - **Using the Web Interface:**
     Go to the project's GitHub page and create a new pull request from your branch
-    to the `main` branch.
+    to the `master` branch.
 
   - **Using the GitHub CLI:**
     You can use the `gh pr create` command to create a pull request from the command line.
@@ -133,10 +134,10 @@ A PR **cannot be merged** until all tests pass and it has a green checkmark from
 
 ### Merging
 
-Once the pull request has been approved, it can be merged into the `main` branch.
+Once the pull request has been approved, it can be merged into the `master` branch.
 
 - **Using the Web Interface:**
-  Use the "Squash and merge" option on GitHub to keep the `main` branch history clean.
+  Use the "Squash and merge" option on GitHub to keep the `master` branch history clean.
   After merging, the feature branch should be deleted.
 
 - **Using the GitHub CLI:**

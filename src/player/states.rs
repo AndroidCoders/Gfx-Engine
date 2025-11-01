@@ -61,7 +61,7 @@ impl State for IdleState {
                 if let Some(vel_mut) = world.velocities.get_mut(&entity) {
                     vel_mut.0.y = physics_config.jump_strength;
                 }
-                let _ = context.audio_sender.send(AudioEvent::PlayerJumped);
+                let _ = context.audio_sender.send(AudioEvent::PlaySound("player_jump".to_string()));
                 return Some(Box::new(JumpingState));
             }
             if !world.is_grounded(entity) && vel.0.y > 0.0 {
@@ -130,7 +130,7 @@ impl State for WalkingState {
                 if let Some(vel_mut) = world.velocities.get_mut(&entity) {
                     vel_mut.0.y = physics_config.jump_strength;
                 }
-                let _ = context.audio_sender.send(AudioEvent::PlayerJumped);
+                let _ = context.audio_sender.send(AudioEvent::PlaySound("player_jump".to_string()));
                 return Some(Box::new(JumpingState));
             }
             if !world.is_grounded(entity) && vel.0.y > 0.0 {

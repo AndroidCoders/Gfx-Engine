@@ -64,4 +64,4 @@ To ensure the project remains robust, maintainable, and easy to contribute to, w
 
 *   **Modularity and Decoupling:** The codebase is designed to be highly modular. When adding or modifying a feature, changes should be confined to a single module whenever possible. This reduces the risk of unintended side effects in other parts of theapplication and makes the code easier to understand, test, and refactor.
 
-*   **Always Be Releasable:** The `main` branch should always be in a releasable state. This means that every change merged into `main` must be fully tested and functional. This practice is a cornerstone of incremental development and allows us to have a stable codebase at all times.
+*   **Always Be Releasable:** The `master` branch should always be in a releasable state. This means that every change merged into `master` must be fully tested and functional. This practice is a cornerstone of incremental development and allows us to have a stable codebase at all times.

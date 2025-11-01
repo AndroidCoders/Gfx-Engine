@@ -6,6 +6,7 @@ use crate::math::Vector2D;
 
 pub struct Camera {
     pub position: Vector2D,
+    #[allow(dead_code)]
     pub velocity: Vector2D,
     pub tightness: f32,
     pub virtual_width: f32,
@@ -15,6 +16,7 @@ pub struct Camera {
     pub slow_zone: f32,
     pub fast_zone: f32,
     pub target_y: f32,
+    #[allow(dead_code)]
     pub vertical_snap_threshold: f32,
     pub vertical_tightness: f32,
     pub camera_falling_tightness: f32,

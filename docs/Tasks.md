@@ -50,6 +50,10 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 
     - [x] In game logic (e.g., `player/state.rs`), emit `AudioEvent`s when specific events occur (e.g., `AudioEvent::PlayerJumped`).
 
+    - [x] Add a sound to the "coin pickup" event (e.g., `assets/sounds/sfx_coin_01.flac`).
+    - [ ] Add a sound to the Player-to-Enemy collision event.
+    - [ ] Add a sound to the Player-stomping-Enemy event.
+
 - [ ] **3. Refactor Physics Logic:** Move physics and collision logic from `player/state.rs` into a generic `physics.rs` module.
 
 - [ ] **4. Implement a Simple Enemy:** Add an enemy with basic patrol AI and stomp mechanics.
@@ -449,6 +453,11 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 
 
 - [ ] **2. Implement Interactive Audio:** Create a system for dynamic music and sound effects that respond to gameplay events.
+
+- [ ] **3. Implement Z-Layer Rendering:** Add a z-layer system to control the draw order of entities.
+    - [ ] Add a `z_index` field to the `Renderable` component.
+    - [ ] Refactor the rendering loop in `app.rs` to sort entities by `z_index` before drawing.
+    - [ ] Assign `z_index` values to Player, Enemies, and Effects.
 
 
 

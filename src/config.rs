@@ -56,6 +56,7 @@ pub struct WindowConfig {
 /// Configuration for debug settings.
 #[derive(Deserialize, Clone)]
 pub struct DebugConfig {
+    #[allow(dead_code)]
     pub show_debug_info: bool,
     pub debug_draw_collision_boxes: bool,
 }
@@ -83,6 +84,9 @@ pub struct GameConfig {
 
     #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
+
+    #[serde(default)]
+    pub audio: HashMap<String, String>,
 
 }
 

@@ -24,6 +24,9 @@ use crate::ecs::{
         respawn_timer::RespawnTimerSystem,
         state_machine::StateMachineSystem,
         tile_collision::TileCollisionSystem,
+        invincibility::InvincibilitySystem,
+        player_death::PlayerDeathSystem,
+        lifetime::LifetimeSystem,
     },
     component::*,
 };
@@ -155,6 +158,7 @@ impl App {
                                                                 height: game_config.player.draw_height,
                                                                 horizontal_offset: game_config.player.horizontal_draw_offset,
                                                                 vertical_offset: game_config.player.vertical_draw_offset,
+                                                                z_index: 100,
                                                             });
                                                             let mut player_animation_controller = AnimationController::new();
                                                             for (name, anim_config) in &game_config.animation {
@@ -189,6 +193,7 @@ impl App {
                                                                 ),
                                                             });
                                                             world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(IdleState) });
+                                                            world.add_health(entity, Health { current: 3, max: 3 });
                                                             player_entity = Some(entity);
                                                         }
                                                         "GoldCoin" => {
@@ -199,6 +204,7 @@ impl App {
                                                                 height: coin_config.draw_height,
                                                                 horizontal_offset: 0,
                                                                 vertical_offset: 0,
+                                                                z_index: 100,
                                                             });
                                                             let mut coin_animation_controller = AnimationController::new();
                                                             if let Some(anim_config) = game_config.animation.get("gold_coin_spin") {
@@ -242,6 +248,7 @@ impl App {
                                                                 height: enemy_spider_config.draw_height,
                                                                 horizontal_offset: 0,
                                                                 vertical_offset: 0,
+                                                                z_index: 100,
                                                             });
                                                             let mut enemy_spider_animation_controller = AnimationController::new();
                                                             for (name, anim_config) in &game_config.animation {
@@ -335,9 +342,7 @@ impl App {
                                                 let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
 
                                                 // Initialize Audio Manager
-                                                let mut audio_manager = GameAudioManager::new()?;
-
-                                                audio_manager.load_sound("assets/sounds/sfx_jump_01.ogg", "jump")?;
+                                                let audio_manager = GameAudioManager::new(&game_config.audio)?;
 
         // Create input handler and state
         let input_handler = InputHandler::new(config.input.clone());
@@ -393,6 +398,9 @@ impl App {
             let mut death_system = DeathSystem;
             let mut respawn_system = RespawnSystem;
             let mut respawn_timer_system = RespawnTimerSystem;
+            let mut invincibility_system = InvincibilitySystem;
+            let mut player_death_system = PlayerDeathSystem;
+            let mut lifetime_system = LifetimeSystem;
 
             // --- Create a mutable context for systems ---
             let mut system_context = systems::SystemContext {
@@ -409,6 +417,7 @@ impl App {
             physics_system.update(&mut self.world, &mut system_context);
             tile_collision_system.update(&mut self.world, &mut system_context);
             interaction_system.update(&mut self.world, &mut system_context);
+            player_death_system.update(&mut self.world, &mut system_context);
             coin_collection_system.update(&mut self.world, &mut system_context);
             kill_system.update(&mut self.world, &mut system_context);
             death_system.update(&mut self.world, &mut system_context);
@@ -418,6 +427,8 @@ impl App {
             };
             respawn_system.update(&mut self.world, &mut respawn_system_context);
             respawn_timer_system.update(&mut self.world, &mut system_context);
+            invincibility_system.update(&mut self.world, &mut system_context);
+            lifetime_system.update(&mut self.world, &mut system_context);
             state_machine_system.update(&mut self.world, &mut system_context);
             player_animation_system.update(&mut self.world, &mut system_context);
             animation_update_system.update(&mut self.world, &mut system_context);
@@ -427,14 +438,29 @@ impl App {
             self.renderer.clear(sdl3::pixels::Color::RGB(0, 0, 0));
             self.renderer.draw_level(&self.level, &self.texture_manager, &self.camera)?;
 
-            for (entity, pos) in &self.world.positions {
-                if let Some(renderable) = self.world.renderables.get(entity) {
-                    if let Some(animation) = self.world.animations.get(entity) {
-                        if let (Some(texture_name), Some(frame_rect)) = (
-                            animation.controller.current_texture_name(),
-                            animation.controller.current_frame_rect(),
-                        ) {
-                            self.renderer.draw_sprite(pos.0, (renderable.width, renderable.height), (renderable.horizontal_offset, renderable.vertical_offset), texture_name, frame_rect, &self.texture_manager, &self.camera)?;
+            // Collect all renderable entities into a list
+            let mut renderables_sorted: Vec<(u8, Entity)> = Vec::new();
+            for (entity, renderable) in &self.world.renderables {
+                // Ensure the entity also has a position before adding it to the render list
+                if self.world.positions.contains_key(entity) {
+                    renderables_sorted.push((renderable.z_index, *entity));
+                }
+            }
+
+            // Sort the list by z_index (higher z_index is further back, rendered first)
+            renderables_sorted.sort_by_key(|k| k.0);
+
+            // Draw the sorted entities
+            for (_, entity) in renderables_sorted {
+                if let Some(pos) = self.world.positions.get(&entity) {
+                    if let Some(renderable) = self.world.renderables.get(&entity) {
+                        if let Some(animation) = self.world.animations.get(&entity) {
+                            if let (Some(texture_name), Some(frame_rect)) = (
+                                animation.controller.current_texture_name(),
+                                animation.controller.current_frame_rect(),
+                            ) {
+                                self.renderer.draw_sprite(pos.0, (renderable.width, renderable.height), (renderable.horizontal_offset, renderable.vertical_offset), texture_name, frame_rect, &self.texture_manager, &self.camera)?;
+                            }
                         }
                     }
                 }
