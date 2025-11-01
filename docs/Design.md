@@ -38,6 +38,18 @@ The rendering pipeline in `Gfx-Engine` is designed for modularity and clear sepa
 *   **Simplified `App` Loop:** The main application loop in `app.rs` orchestrates the game loop phases (input, update, render) and calls the `Renderer` each frame. It does not contain rendering-specific logic.
 *   **Resource Management:** The `TextureCreator` is created during initialization and used by the `TextureManager` to load all game textures. This ensures that texture management is handled separately from the main application logic.
 
+### Z-Layer Rendering
+
+To control the draw order of sprites and enable effects like parallax scrolling, the engine uses a z-layer system.
+
+*   **`z_index` Component Field:** The `Renderable` component contains a `z_index` field, which is a `u8` integer.
+*   **Convention:** The `z_index` ranges from 1 to 255. A higher value means the object is "further back" and will be rendered *first*. A lower value means the object is "closer" and will be rendered *last* (appearing on top).
+*   **Sorting:** Before drawing, all renderable entities are collected into a list and sorted by their `z_index` in ascending order.
+*   **Usage:**
+    *   **Backgrounds:** High `z_index` values (e.g., 200-255).
+    *   **Gameplay Layer:** Mid-range `z_index` values. The Player and Enemies are at `100`. Effects like explosions are slightly behind at `101`.
+    *   **Foregrounds/UI:** Low `z_index` values (e.g., 1-50).
+
 ## Gameplay Mechanics
 
 To create a robust and engaging platformer experience, the following gameplay mechanics, inspired by classics like "Super Mario World," are the design goals for the engine. See the "Implemented Core Features" section for current implementation status.
