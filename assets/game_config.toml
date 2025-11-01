@@ -127,3 +127,13 @@ frame_count = 2
 frame_duration = 10
 loops = true
 frame_padding = 3
+
+[animation.explosion]
+texture = "assets/graphics/explosion.png"
+start_x = 0
+start_y = 0
+frame_width = 96
+frame_height = 96
+frame_count = 12
+frame_duration = 6
+loops = false

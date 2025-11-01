@@ -11,6 +11,11 @@ pub mod respawn;
 pub mod respawn_timer;
 pub mod state_machine;
 pub mod tile_collision;
+pub mod invincibility;
+pub mod player_death;
+pub mod lifetime;
+
+use crate::ecs::systems::lifetime::LifetimeSystem;
 
 use crate::config::{Config, GameConfig};
 use crate::input::InputState;

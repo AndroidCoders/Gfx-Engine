@@ -21,6 +21,9 @@ pub struct World {
     pub state_components: HashMap<Entity, StateComponent>,
     pub respawn_tags: HashMap<Entity, RespawnTag>,
     pub respawn_timers: HashMap<Entity, RespawnTimer>,
+    pub healths: HashMap<Entity, Health>,
+    pub invincibilities: HashMap<Entity, Invincibility>,
+    pub lifetimes: HashMap<Entity, Lifetime>,
 }
 
 impl World {
@@ -101,5 +104,17 @@ impl World {
 
     pub fn add_gold_coin(&mut self, entity: Entity, component: GoldCoin) {
         self.gold_coins.insert(entity, component);
+    }
+
+    pub fn add_health(&mut self, entity: Entity, component: Health) {
+        self.healths.insert(entity, component);
+    }
+
+    pub fn add_invincibility(&mut self, entity: Entity, component: Invincibility) {
+        self.invincibilities.insert(entity, component);
+    }
+
+    pub fn add_lifetime(&mut self, entity: Entity, component: Lifetime) {
+        self.lifetimes.insert(entity, component);
     }
 }
