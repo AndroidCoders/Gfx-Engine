@@ -50,7 +50,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 
     - [x] In game logic (e.g., `player/state.rs`), emit `AudioEvent`s when specific events occur (e.g., `AudioEvent::PlayerJumped`).
 
-    - [ ] Add a sound to the "coin pickup" event (e.g., `assets/sounds/sfx_coin_01.flac`).
+    - [x] Add a sound to the "coin pickup" event (e.g., `assets/sounds/sfx_coin_01.flac`).
     - [ ] Add a sound to the Player-to-Enemy collision event.
     - [ ] Add a sound to the Player-stomping-Enemy event.
 

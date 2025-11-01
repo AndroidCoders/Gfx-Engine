@@ -84,6 +84,9 @@ pub struct GameConfig {
     #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
 
+    #[serde(default)]
+    pub audio: HashMap<String, String>,
+
 }
 
 #[derive(Deserialize, Clone)]

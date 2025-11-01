@@ -12,31 +12,36 @@ use std::sync::mpsc;
 
 /// Represents the types of audio events that can occur in the game.
 pub enum AudioEvent {
-    PlayerJumped,
-    // Add other events as needed, e.g., EnemyHit, CollectCoin, BackgroundMusicStart
+    PlaySound(String),
 }
 
 /// Manages loading and playing audio assets using Kira.
 pub struct GameAudioManager {
-    _manager: AudioManager<DefaultBackend>,
+    manager: AudioManager<DefaultBackend>,
     sounds: HashMap<String, StaticSoundData>,
-    // We can add music handles, spatial emitters, etc., here later
-    _event_receiver: mpsc::Receiver<AudioEvent>,
+    event_receiver: mpsc::Receiver<AudioEvent>,
     event_sender: mpsc::Sender<AudioEvent>,
 }
 
 impl GameAudioManager {
     /// Creates a new `GameAudioManager` and initializes Kira's audio manager.
-    pub fn new() -> Result<Self, String> {
+    pub fn new(audio_config: &HashMap<String, String>) -> Result<Self, String> {
         let manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default())
             .map_err(|e| format!("Failed to create Kira audio manager: {}", e))?;
 
         let (event_sender, event_receiver) = mpsc::channel();
 
+        let mut sounds = HashMap::new();
+        for (name, path) in audio_config {
+            let sound_data = StaticSoundData::from_file(Path::new(path), StaticSoundSettings::default())
+                .map_err(|e| format!("Failed to load sound '{}': {}", path, e))?;
+            sounds.insert(name.clone(), sound_data);
+        }
+
         Ok(Self {
-            _manager: manager,
-            sounds: HashMap::new(),
-            _event_receiver: event_receiver,
+            manager,
+            sounds,
+            event_receiver,
             event_sender,
         })
     }
@@ -46,19 +51,10 @@ impl GameAudioManager {
         self.event_sender.clone()
     }
 
-    /// Loads a sound effect from a file and stores it with a given name.
-    pub fn load_sound(&mut self, path: &str, name: &str) -> Result<(), String> {
-        let sound_data = StaticSoundData::from_file(Path::new(path), StaticSoundSettings::default())
-            .map_err(|e| format!("Failed to load sound '{}': {}", path, e))?;
-        self.sounds.insert(name.to_string(), sound_data);
-        Ok(())
-    }
-
     /// Plays a loaded sound effect by name.
-    #[allow(dead_code)]
-    pub fn play_sound(&mut self, name: &str) -> Result<(), String> {
+    fn play_sound(&mut self, name: &str) -> Result<(), String> {
         if let Some(sound_data) = self.sounds.get(name) {
-            self._manager.play(sound_data.clone())
+            self.manager.play(sound_data.clone())
                 .map_err(|e| format!("Failed to play sound '{}': {}", name, e))?;
             Ok(())
         } else {
@@ -68,12 +64,11 @@ impl GameAudioManager {
 
     /// Processes all pending audio events and triggers corresponding sounds.
     pub fn process_events(&mut self) {
-        while let Ok(event) = self._event_receiver.try_recv() {
+        while let Ok(event) = self.event_receiver.try_recv() {
             match event {
-                AudioEvent::PlayerJumped => {
-                    let _ = self.play_sound("jump"); // TODO: Handle result properly
+                AudioEvent::PlaySound(sound_name) => {
+                    let _ = self.play_sound(&sound_name); // TODO: Handle result properly
                 }
-                // Handle other events here
             }
         }
     }

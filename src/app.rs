@@ -342,9 +342,7 @@ impl App {
                                                 let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
 
                                                 // Initialize Audio Manager
-                                                let mut audio_manager = GameAudioManager::new()?;
-
-                                                audio_manager.load_sound("assets/sounds/sfx_jump_01.ogg", "jump")?;
+                                                let audio_manager = GameAudioManager::new(&game_config.audio)?;
 
         // Create input handler and state
         let input_handler = InputHandler::new(config.input.clone());

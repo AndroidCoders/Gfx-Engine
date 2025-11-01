@@ -137,3 +137,7 @@ frame_height = 96
 frame_count = 12
 frame_duration = 6
 loops = false
+
+[audio]
+player_jump = "assets/sounds/sfx_jump_01.ogg"
+coin_pickup = "assets/sounds/sfx_coin_01.flac"

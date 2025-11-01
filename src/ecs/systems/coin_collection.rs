@@ -1,6 +1,7 @@
 use crate::ecs::component::DeadTag;
 use crate::ecs::systems::{System, SystemContext};
 use crate::ecs::world::{Entity, World};
+use crate::audio::AudioEvent;
 
 pub struct CoinCollectionSystem;
 impl System<SystemContext<'_>> for CoinCollectionSystem {
@@ -24,6 +25,7 @@ impl System<SystemContext<'_>> for CoinCollectionSystem {
         for coin_entity in collected_coins {
             world.add_dead_tag(coin_entity, DeadTag);
             *context.gold_coin_count += 1;
+            let _ = context.audio_sender.send(AudioEvent::PlaySound("coin_pickup".to_string()));
         }
     }
 }

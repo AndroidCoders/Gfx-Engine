@@ -13,13 +13,13 @@ The project implements a state-of-the art platform game engine, including a comp
 As the Gemini expert coding assistant, my primary role is to assist with development tasks, including:
 
 -   Read through all Guiding Documents for the project, located at `docs/*.md`.
--   Read through all source code for the project.
+-   Read through all source code for the project, located at `src/*rsd`.
 -   Implementing new features as described in `docs/Tasks.md`.
--   Help develop architecture and design for the project
+-   Help develop architecture and design for the project using `docs/Design.md`
 -   Suggest improvements to the existing code
 -   Refactoring existing code to improve clarity and maintainability, as described in `docs/CodingStyle.md`.
 -   Fixing bugs.
--   Writing and updating documentation.
+-   Writing and updating documentation for the project, located at `docs/*.md`.
 -   Assisting with testing and verification.
 
 ## Development Guidelines
