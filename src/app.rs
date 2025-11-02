@@ -91,7 +91,7 @@ impl App {
 
                 let video_subsystem = sdl_context.video().map_err(|e| e.to_string())?;
 
-                let mut mouse = sdl_context.mouse();
+                let mouse = sdl_context.mouse();
                 mouse.show_cursor(false);
 
                 // Set rendering hints BEFORE creating the renderer
@@ -144,7 +144,6 @@ impl App {
 
                                                 // Create the world and systems
                                                 let mut world = World::new();
-                                                let mut player_entity = None;
 
                                                 // Create entities from level data
                                                 for entity_data in &level.entities {
@@ -291,7 +290,7 @@ impl App {
                                                 });
                                                 world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
                                                 world.add_health(player_entity_instance, Health { current: 3, max: 3 });
-                                                player_entity = Some(player_entity_instance);
+                                                let player_entity = Some(player_entity_instance);
 
                                                 // The camera creation needs the player's starting position.
                                                 let player_start_pos = game_config.player.start_pos;
