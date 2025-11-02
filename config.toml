@@ -31,8 +31,9 @@ debug_draw_collision_boxes = true
 gravity = 0.75
 max_speed = 4.0
 entity_max_fall_speed = 10.0
-acceleration = 0.4
-friction = 0.9
+acceleration = 0.3
+deceleration = 0.3
+
 jump_strength = -8.0
 jump_hold_force = 0.45
 max_jump_time = 20

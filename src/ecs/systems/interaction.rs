@@ -39,12 +39,15 @@ impl System<SystemContext<'_>> for InteractionSystem {
             ) {
                 for &enemy_entity in &enemy_entities {
                     if let Some(enemy_collision) = world.collisions.get(&enemy_entity) {
-                        if player_collision.rect.has_intersection(enemy_collision.rect) {
-                            // Stomp check
-                            if player_vel.0.y > 0.0 && player_pos.0.y + player_collision.rect.height() as f32 - player_vel.0.y <= enemy_collision.rect.y() as f32 {
+                        if let Some(intersection) = player_collision.rect.intersection(enemy_collision.rect) {
+                            let player_is_falling = player_vel.0.y > 0.0;
+
+                            // A stomp is a vertical collision where the player is falling.
+                            // We can approximate this by checking if the intersection is wider than it is tall.
+                            if player_is_falling && intersection.width() > intersection.height() {
                                 stomp_events.push(StompEvent { enemy: enemy_entity, player: player_entity });
                             } else {
-                                // Not a stomp, so it's a horizontal collision
+                                // Otherwise, it's a horizontal (damaging) collision.
                                 let knockback_x = if player_pos.0.x < enemy_collision.rect.x() as f32 { -5.0 } else { 5.0 };
                                 damage_commands.push(DamageCommand { player: player_entity, knockback_x, position: player_pos.0 });
                             }

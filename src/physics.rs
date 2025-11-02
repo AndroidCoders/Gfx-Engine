@@ -147,7 +147,7 @@ mod tests {
         Config {
             window: WindowConfig { title: "".to_string(), width: 0, height: 0, virtual_width: 0, virtual_height: 0, fullscreen: false, vsync: false, scaling_quality: "".to_string(), camera_tightness: 0.0, camera_slow_zone: 0.0, camera_fast_zone: 0.0, camera_vertical_snap_threshold: 0.0, camera_vertical_tightness: 0.0, camera_falling_tightness: 0.0, camera_falling_velocity_threshold: 0.0 },
             input: InputConfig { left: "".to_string(), right: "".to_string(), jump: "".to_string(), quit: "".to_string(), debug_toggle: "".to_string() },
-            physics: PhysicsConfig { gravity: 0.0, max_speed: 0.0, entity_max_fall_speed: 0.0, acceleration: 0.0, friction: 0.0, jump_strength: 0.0, jump_hold_force: 0.0 },
+            physics: PhysicsConfig { gravity: 0.0, max_speed: 0.0, entity_max_fall_speed: 0.0, acceleration: 0.0, deceleration: 0.0, jump_strength: 0.0, jump_hold_force: 0.0 },
             debug: DebugConfig { show_debug_info: false, debug_draw_collision_boxes: false },
         }
     }

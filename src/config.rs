@@ -141,7 +141,7 @@ pub struct PhysicsConfig {
     pub max_speed: f32,
     pub entity_max_fall_speed: f32,
     pub acceleration: f32,
-    pub friction: f32,
+    pub deceleration: f32,
     pub jump_strength: f32,
     pub jump_hold_force: f32,
 

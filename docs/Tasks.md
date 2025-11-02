@@ -93,6 +93,12 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 - [ ] **1. Create a Level Editor:** Build an in-game or external tool for creating and editing levels.
 - [ ] **2. Implement Debugging Tools:** Create the planned in-game `Benchmarker` and on-screen debug display.
 - [ ] **3. Implement Video Recording:** Add a system for saving gameplay videos using ffmpeg or a similar library.
+- [ ] **4. Implement Cross-Platform Builds and Releases:**
+    - [ ] Set up a CI/CD pipeline (e.g., using GitHub Actions) to automatically build and release binaries for the following platforms:
+        - [ ] **Windows:** Compile to an `.exe` file using a target like `x86_64-pc-windows-gnu`.
+        - [ ] **Linux:** Compile to a standard Linux executable.
+        - [ ] **WebAssembly (WASM):** Compile the demo game to WASM to run in a web browser. This will likely involve using Emscripten to compile SDL3 and `wasm-pack` to package the Rust code.
+    - [ ] Automate the process of creating a GitHub Release with the compiled binaries attached.
 
 ### Phase 8: Engine Hardening & Refactoring (Ongoing/Future)
 

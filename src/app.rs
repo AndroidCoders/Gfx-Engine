@@ -413,8 +413,8 @@ impl App {
             // --- Run systems ---
             input_system.update(&mut self.world, &mut system_context);
             physics_system.update(&mut self.world, &mut system_context);
-            tile_collision_system.update(&mut self.world, &mut system_context);
             interaction_system.update(&mut self.world, &mut system_context);
+            tile_collision_system.update(&mut self.world, &mut system_context);
             player_death_system.update(&mut self.world, &mut system_context);
             coin_collection_system.update(&mut self.world, &mut system_context);
             kill_system.update(&mut self.world, &mut system_context);

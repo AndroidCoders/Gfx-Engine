@@ -34,11 +34,11 @@ impl State for IdleState {
                 is_moving_horizontally = true;
             }
 
-            // Apply friction if not actively moving horizontally
             if !is_moving_horizontally {
-                vel.0.x *= physics_config.friction;
-                if vel.0.x.abs() < 0.1 { // Stop if velocity is very small
-                    vel.0.x = 0.0;
+                if vel.0.x > 0.0 {
+                    vel.0.x = (vel.0.x - physics_config.deceleration).max(0.0);
+                } else if vel.0.x < 0.0 {
+                    vel.0.x = (vel.0.x + physics_config.deceleration).min(0.0);
                 }
             }
 
@@ -105,9 +105,10 @@ impl State for WalkingState {
             }
 
             if !is_moving_horizontally {
-                vel.0.x *= physics_config.friction;
-                if vel.0.x.abs() < 0.1 { // Stop if velocity is very small
-                    vel.0.x = 0.0;
+                if vel.0.x > 0.0 {
+                    vel.0.x = (vel.0.x - physics_config.deceleration).max(0.0);
+                } else if vel.0.x < 0.0 {
+                    vel.0.x = (vel.0.x + physics_config.deceleration).min(0.0);
                 }
             }
 
