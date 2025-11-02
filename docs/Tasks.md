@@ -51,6 +51,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
         - [x] Re-implement lerp-based smoothing to restore damping effect.
         - [ ] Implement "Look-Ahead" (Directional Bias).
         - [ ] Implement "Platform Snap".
+    - [ ] Hide Mouse Cursor in Fullscreen: Call the appropriate SDL3 function to hide the mouse cursor during gameplay.
 - [ ] **3. Content & Progression:**
     - [ ] Implement a Simple Enemy: Add an enemy with basic patrol AI and stomp mechanics.
     - [ ] Implement Level Goal and Progression:

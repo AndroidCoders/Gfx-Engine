@@ -91,7 +91,8 @@ impl App {
 
                 let video_subsystem = sdl_context.video().map_err(|e| e.to_string())?;
 
-        
+                let mut mouse = sdl_context.mouse();
+                mouse.show_cursor(false);
 
                 // Set rendering hints BEFORE creating the renderer
 
