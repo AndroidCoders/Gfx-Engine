@@ -256,3 +256,36 @@ impl State for FallingState {
         "FallingState"
     }
 }
+
+/// The state for when the player is dying.
+
+pub struct DyingState {
+    /// The timer for the death animation.
+    pub timer: f32,
+}
+
+impl State for DyingState {
+    fn enter(&mut self) {
+        // println!("Entering DyingState");
+    }
+
+    fn exit(&mut self) {
+        // println!("Exiting DyingState");
+    }
+
+    fn update_with_context(&mut self, _world: &mut World, _context: &mut SystemContext, _entity: Entity) {
+        self.timer -= 1.0 / 60.0; // Assuming 60 FPS
+    }
+
+    fn transition_with_context(&mut self, world: &mut World, _context: &mut SystemContext, entity: Entity) -> Option<Box<dyn State>> {
+        if self.timer <= 0.0 {
+            world.add_respawn_tag(entity, crate::ecs::component::RespawnTag);
+            return Some(Box::new(IdleState));
+        }
+        None
+    }
+
+    fn get_name(&self) -> &str {
+        "DyingState"
+    }
+}
