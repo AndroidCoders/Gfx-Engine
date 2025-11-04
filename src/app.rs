@@ -64,6 +64,9 @@ pub struct App {
     _virtual_height: u32,
     show_debug_info: bool,
     gold_coin_count: u32,
+    fps: u32,
+    last_frame_time: std::time::Instant,
+    frame_count_for_fps: u32,
 }
 
 impl App {
@@ -366,6 +369,9 @@ impl App {
             _virtual_height: config.window.virtual_height,
             show_debug_info: true,
             gold_coin_count: 0,
+            fps: 0,
+            last_frame_time: std::time::Instant::now(),
+            frame_count_for_fps: 0,
         })
     }
 
@@ -373,6 +379,15 @@ impl App {
     pub fn run(&mut self) -> Result<(), String> {
         'running: loop {
             self.frame_count += 1;
+            self.frame_count_for_fps += 1;
+            let now = std::time::Instant::now();
+            let elapsed = now.duration_since(self.last_frame_time);
+            if elapsed >= std::time::Duration::from_secs(1) {
+                self.fps = self.frame_count_for_fps;
+                self.frame_count_for_fps = 0;
+                self.last_frame_time = now;
+            }
+
             // Process events
             if !self.input_handler.process_events(&mut self.event_pump, &mut self.input_state) {
                 break 'running;
@@ -505,12 +520,13 @@ impl App {
                         let debug_text_color = sdl3::pixels::Color::RGB(255, 255, 255);
                         self.renderer.set_draw_color(debug_text_color);
                         self.renderer.draw_debug_text(&format!("Frame: {}", self.frame_count), 10, 10)?;
-                        self.renderer.draw_debug_text(&format!("Player Pos: ({:.2}, {:.2})", pos.0.x, pos.0.y), 10, 30)?;
-                        self.renderer.draw_debug_text(&format!("Vel: ({:.2}, {:.2})", vel.0.x, vel.0.y), 10, 50)?;
-                        self.renderer.draw_debug_text(&format!("State: {}", state_name), 10, 70)?;
-                        self.renderer.draw_debug_text(&format!("Grounded: {}", is_grounded), 10, 90)?;
-                        self.renderer.draw_debug_text(&format!("Collision Rect: {:?}", collision.rect), 10, 110)?;
-                        self.renderer.draw_debug_text(&format!("Gold: {}", self.gold_coin_count), 10, 130)?;
+                        self.renderer.draw_debug_text(&format!("FPS: {}", self.fps), 10, 30)?;
+                        self.renderer.draw_debug_text(&format!("Player Pos: ({:.2}, {:.2})", pos.0.x, pos.0.y), 10, 50)?;
+                        self.renderer.draw_debug_text(&format!("Vel: ({:.2}, {:.2})", vel.0.x, vel.0.y), 10, 70)?;
+                        self.renderer.draw_debug_text(&format!("State: {}", state_name), 10, 90)?;
+                        self.renderer.draw_debug_text(&format!("Grounded: {}", is_grounded), 10, 110)?;
+                        self.renderer.draw_debug_text(&format!("Collision Rect: {:?}", collision.rect), 10, 130)?;
+                        self.renderer.draw_debug_text(&format!("Gold: {}", self.gold_coin_count), 10, 150)?;
                     }
                 }
             }
