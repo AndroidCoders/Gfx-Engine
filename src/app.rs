@@ -33,6 +33,7 @@ use crate::ecs::{
         input::InputSystem,
         interaction::InteractionSystem,
         kill::KillSystem,
+        level_transition::LevelTransitionSystem,
         physics::PhysicsSystem,
         player_animation::PlayerAnimationSystem,
         respawn::RespawnSystem,
@@ -82,6 +83,7 @@ pub struct App {
     fps: u32,
     last_frame_time: std::time::Instant,
     frame_count_for_fps: u32,
+    next_level: Option<String>,
 }
 
 impl App {
@@ -157,6 +159,7 @@ impl App {
                                                 texture_manager.load(&level.tileset.texture, &level.tileset.texture, &texture_creator)?;
 
                                                 texture_manager.load("assets/graphics/background_blue_sky_with_clouds.png", "bg_sky", &texture_creator)?;
+                                                texture_manager.load("assets/graphics/tiles_goal.png", "goal", &texture_creator)?;
 
                                         
 
@@ -257,6 +260,35 @@ impl App {
                                                                 ),
                                                             });
                                                             world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
+                                                        }
+                                                        "Goal" => {
+                                                            world.add_position(entity, Position(entity_data.position));
+                                                            world.add_renderable(entity, Renderable {
+                                                                width: 32,
+                                                                height: 32,
+                                                                horizontal_offset: 0,
+                                                                vertical_offset: 0,
+                                                                z_index: 100,
+                                                            });
+                                                            let mut goal_animation_controller = AnimationController::new();
+                                                            let animation = crate::animation::Animation {
+                                                                texture_name: "goal".to_string(),
+                                                                frames: vec![sdl3::rect::Rect::new(0, 0, 128, 128)],
+                                                                frame_duration: 1,
+                                                                loops: false,
+                                                            };
+                                                            goal_animation_controller.add_animation("idle".to_string(), animation);
+                                                            goal_animation_controller.set_animation("idle");
+                                                            world.add_animation(entity, Animation { controller: goal_animation_controller });
+                                                            world.add_goal(entity, Goal);
+                                                            world.add_collision(entity, Collision {
+                                                                rect: sdl3::rect::Rect::new(
+                                                                    entity_data.position.x as i32,
+                                                                    entity_data.position.y as i32,
+                                                                    32,
+                                                                    32,
+                                                                ),
+                                                            });
                                                         }
                                                         _ => {}
                                                     }
@@ -389,6 +421,7 @@ impl App {
             fps: 0,
             last_frame_time: std::time::Instant::now(),
             frame_count_for_fps: 0,
+            next_level: None,
         })
     }
 
@@ -431,6 +464,7 @@ impl App {
             let mut invincibility_system = InvincibilitySystem;
             let mut player_death_system = PlayerDeathSystem;
             let mut lifetime_system = LifetimeSystem;
+            let mut level_transition_system = LevelTransitionSystem;
 
             // --- Create a mutable context for systems ---
             let mut system_context = systems::SystemContext {
@@ -440,6 +474,7 @@ impl App {
                 game_config: &self._game_config,
                 audio_sender: &self.audio_manager.event_sender(),
                 gold_coin_count: &mut self.gold_coin_count,
+                next_level: &mut self.next_level,
             };
 
             // --- Run systems ---
@@ -449,6 +484,7 @@ impl App {
             tile_collision_system.update(&mut self.world, &mut system_context);
             player_death_system.update(&mut self.world, &mut system_context);
             coin_collection_system.update(&mut self.world, &mut system_context);
+            level_transition_system.update(&mut self.world, &mut system_context);
             kill_system.update(&mut self.world, &mut system_context);
             death_system.update(&mut self.world, &mut system_context);
             let mut respawn_system_context = systems::RespawnSystemContext {
@@ -463,6 +499,61 @@ impl App {
             player_animation_system.update(&mut self.world, &mut system_context);
             animation_update_system.update(&mut self.world, &mut system_context);
             audio_system.update(&mut self.world, &mut self.audio_manager);
+
+            if let Some(next_level) = self.next_level.clone() {
+                self.level = load_level(&next_level)?;
+                self.world = World::new();
+                self.player_entity = None;
+                self.next_level = None;
+                // Re-create the player entity
+                let player_entity_instance = self.world.create_entity();
+                let player_position = Position(self._game_config.player.start_pos);
+                self.world.add_position(player_entity_instance, player_position);
+                self.world.add_velocity(player_entity_instance, Velocity(Vector2D::default()));
+                self.world.add_renderable(player_entity_instance, Renderable {
+                    width: self._game_config.player.draw_width,
+                    height: self._game_config.player.draw_height,
+                    horizontal_offset: self._game_config.player.horizontal_draw_offset,
+                    vertical_offset: self._game_config.player.vertical_draw_offset,
+                    z_index: 100,
+                });
+                let mut player_animation_controller = AnimationController::new();
+                for (name, anim_config) in &self._game_config.animation {
+                    if !name.starts_with("enemy_spider") && !name.starts_with("gold_coin") {
+                        let mut frames = Vec::new();
+                        for i in 0..anim_config.frame_count {
+                            frames.push(sdl3::rect::Rect::new(
+                                anim_config.start_x + (i * anim_config.frame_width) as i32,
+                                anim_config.start_y,
+                                anim_config.frame_width,
+                                anim_config.frame_height,
+                            ));
+                        }
+                        let animation = crate::animation::Animation {
+                            texture_name: anim_config.texture.clone(),
+                            frames,
+                            frame_duration: anim_config.frame_duration,
+                            loops: anim_config.loops,
+                        };
+                        player_animation_controller.add_animation(name.clone(), animation);
+                    }
+                }
+                self.world.add_animation(player_entity_instance, Animation { controller: player_animation_controller });
+                self.world.add_player_tag(player_entity_instance, PlayerTag);
+                self.world.add_gravity(player_entity_instance, Gravity);
+                self.world.add_collision(player_entity_instance, Collision {
+                    rect: sdl3::rect::Rect::new(
+                        player_position.0.x as i32,
+                        player_position.0.y as i32,
+                        self._game_config.player.width,
+                        self._game_config.player.height,
+                    ),
+                });
+                self.world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
+                self.world.add_health(player_entity_instance, Health { current: 3, max: 3 });
+                self.world.add_direction(player_entity_instance, Directional { direction: Direction::Right });
+                self.player_entity = Some(player_entity_instance);
+            }
 
             // --- Rendering ---
             self.renderer.clear(sdl3::pixels::Color::RGB(0, 0, 0));

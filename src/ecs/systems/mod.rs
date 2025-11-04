@@ -14,6 +14,7 @@ pub mod tile_collision;
 pub mod invincibility;
 pub mod player_death;
 pub mod lifetime;
+pub mod level_transition;
 
 
 
@@ -36,6 +37,7 @@ pub struct SystemContext<'a> {
     pub game_config: &'a GameConfig,
     pub audio_sender: &'a Sender<AudioEvent>,
     pub gold_coin_count: &'a mut u32,
+    pub next_level: &'a mut Option<String>,
 }
 
 pub struct RespawnSystemContext<'a> {

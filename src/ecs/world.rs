@@ -36,6 +36,7 @@ pub struct World {
     pub invincibilities: HashMap<Entity, Invincibility>,
     pub lifetimes: HashMap<Entity, Lifetime>,
     pub directions: HashMap<Entity, Directional>,
+    pub goals: HashMap<Entity, Goal>,
 }
 
 impl World {
@@ -155,5 +156,10 @@ impl World {
     /// Adds a `Directional` component to an entity.
     pub fn add_direction(&mut self, entity: Entity, component: Directional) {
         self.directions.insert(entity, component);
+    }
+
+    /// Adds a `Goal` component to an entity.
+    pub fn add_goal(&mut self, entity: Entity, component: Goal) {
+        self.goals.insert(entity, component);
     }
 }

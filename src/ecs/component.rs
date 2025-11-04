@@ -158,3 +158,8 @@ pub struct Directional {
     pub direction: Direction,
 }
 impl Component for Directional {}
+
+// --- Goal Tag Component ---
+#[derive(Debug, Clone, Copy)]
+pub struct Goal;
+impl Component for Goal {}
