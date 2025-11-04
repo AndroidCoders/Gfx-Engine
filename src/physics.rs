@@ -1,6 +1,24 @@
 // src/physics.rs
 
-//! Contains generic physics and collision detection logic.
+//! This module contains generic physics and collision detection logic for the engine.
+//! 
+//! It provides functions for resolving collisions between entities and the game world.
+//! 
+//! # Examples
+//! 
+//! ```no_run
+//! use crate::ecs::component::{Position, Velocity};
+//! use crate::ecs::systems::SystemContext;
+//! use sdl3::rect::Rect;
+//! 
+//! // Assuming you have a position, velocity, bounds, and context
+//! // let mut pos = Position(Vector2D::new(0.0, 0.0));
+//! // let mut vel = Velocity(Vector2D::new(10.0, 10.0));
+//! // let bounds = Rect::new(0, 0, 32, 32);
+//! // let context: SystemContext = ...;
+//! // resolve_vertical_collisions(&mut pos, &mut vel, bounds, &context);
+//! // resolve_horizontal_collisions(&mut pos, &mut vel, bounds, &context);
+//! ```
 
 use crate::ecs::component::{Position, Velocity};
 use crate::ecs::systems::SystemContext;

@@ -1,13 +1,17 @@
 // src/level.rs
 
-//! Manages loading and representing game levels from Tiled .tmx files.
+//! This module is responsible for loading and representing game levels.
+//!
+//! Levels are created in the Tiled Map Editor and saved as `.tmx` files.
+//! This module parses these files and creates a `Level` struct that can be used by the game engine.
 
 use crate::math::Vector2D;
 use serde::Deserialize;
 use quick_xml::de::from_str;
 
-// --- Internal Engine Structs (Manually populated, no longer derived from file) ---
+// --- Internal Engine Structs ---
 
+/// Represents a tileset used in a level.
 #[derive(Clone)]
 pub struct Tileset {
     pub texture: String,
@@ -15,22 +19,26 @@ pub struct Tileset {
     pub tile_height: u32,
 }
 
+/// Represents the tile map of a level.
 #[derive(Clone)]
 pub struct Map {
     pub tiles: Vec<Vec<u32>>,
 }
 
+/// Represents the collision map of a level.
 #[derive(Clone)]
 pub struct Collision {
     pub tiles: Vec<Vec<u32>>,
 }
 
+/// Represents an entity loaded from the level file.
 #[derive(Clone)]
 pub struct Entity {
     pub r#type: String,
     pub position: Vector2D,
 }
 
+/// Represents a game level, containing the tileset, map, collision data, and entities.
 #[derive(Clone)]
 pub struct Level {
     pub tileset: Tileset,
@@ -40,6 +48,7 @@ pub struct Level {
 }
 
 impl Level {
+    /// Checks if a tile at the given coordinates is solid.
     pub fn is_solid(&self, x: usize, y: usize) -> bool {
         if let Some(row) = self.collision.tiles.get(y) {
             if let Some(&tile_id) = row.get(x) {
@@ -75,6 +84,7 @@ struct TmxData {
     content: String,
 }
 
+/// Represents an object loaded from a TMX object group.
 #[derive(Debug, Deserialize, Clone)]
 pub struct TmxObject {
     #[serde(rename = "@type")]
@@ -96,6 +106,10 @@ struct TmxObjectGroup {
 }
 
 /// Loads a level from a Tiled .tmx file.
+///
+/// # Panics
+///
+/// This function will panic if the TMX file is not found or is invalid.
 pub fn load_level(path: &str) -> Result<Level, String> {
     let tmx_str = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
     let tmx_map: TmxMap = from_str(&tmx_str).map_err(|e| e.to_string())?;

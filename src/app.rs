@@ -1,3 +1,18 @@
+//! This module contains the main application struct, `App`.
+//! 
+//! The `App` struct is responsible for initializing the game, running the main loop, and managing the game state.
+//! 
+//! # Examples
+//! 
+//! ```no_run
+//! use crate::app::App;
+//! 
+//! // Assuming you have an SDL context
+//! // let sdl_context = sdl3::init().unwrap();
+//! // let mut app = App::new(sdl_context).unwrap();
+//! // app.run().unwrap();
+//! ```
+
 use crate::ecs::systems::System;
 use sdl3::EventPump;
 use sdl3::Sdl;

@@ -1,6 +1,25 @@
 // src/renderer.rs
 
-//! Handles all drawing operations for the engine.
+//! This module handles all rendering operations for the game engine.
+//! 
+//! It provides the `Renderer` struct, which encapsulates the SDL3 `WindowCanvas`
+//! and provides methods for drawing shapes, textures, and text.
+//! 
+//! # Examples
+//! 
+//! ```no_run
+//! use sdl3::pixels::Color;
+//! use crate::renderer::Renderer;
+//! use crate::camera::Camera;
+//! use crate::texture_manager::TextureManager;
+//! use crate::level::Level;
+//! 
+//! // Assuming you have a canvas, camera, texture_manager, and level
+//! // let mut renderer = Renderer::new(canvas).unwrap();
+//! // renderer.clear(Color::RGB(0, 0, 0));
+//! // renderer.draw_level(&level, &texture_manager, &camera).unwrap();
+//! // renderer.present();
+//! ```
 
 use sdl3::render::WindowCanvas;
 use sdl3::pixels::Color;

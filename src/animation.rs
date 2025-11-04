@@ -1,6 +1,9 @@
 // src/animation.rs
 
-//! Defines the structures for managing sprite animations.
+//! This module defines the structures for managing sprite animations.
+//! 
+//! It provides an `AnimationController` that can be used to add, set, and update
+//! animations for an entity.
 
 use sdl3::rect::Rect;
 use std::collections::HashMap;
@@ -8,9 +11,13 @@ use std::collections::HashMap;
 /// Represents a single animation clip.
 #[derive(Clone)]
 pub struct Animation {
+    /// The name of the texture used for the animation.
     pub texture_name: String,
+    /// The frames of the animation, represented as rectangles in the texture.
     pub frames: Vec<Rect>,
-    pub frame_duration: u32, // Duration of each frame in game ticks
+    /// The duration of each frame in game ticks.
+    pub frame_duration: u32,
+    /// Whether the animation should loop.
     pub loops: bool,
 }
 
@@ -24,7 +31,7 @@ pub struct AnimationController {
 }
 
 impl AnimationController {
-    /// Creates a new, empty AnimationController.
+    /// Creates a new, empty `AnimationController`.
     pub fn new() -> Self {
         Self {
             animations: HashMap::new(),
@@ -40,6 +47,7 @@ impl AnimationController {
     }
 
     /// Sets the currently playing animation.
+    ///
     /// If the new animation is different from the current one, it resets the frame index and timer.
     pub fn set_animation(&mut self, name: &str) {
         if self.current_animation.as_deref() != Some(name)
@@ -51,6 +59,7 @@ impl AnimationController {
     }
 
     /// Updates the animation timer and advances the frame if necessary.
+    ///
     /// This should be called once per game loop update.
     pub fn update(&mut self) {
         if let Some(current_anim_name) = &self.current_animation
@@ -71,7 +80,8 @@ impl AnimationController {
     }
 
     /// Returns the rectangle of the current animation frame.
-    /// Returns None if no animation is playing.
+    ///
+    /// Returns `None` if no animation is playing.
     pub fn current_frame_rect(&self) -> Option<&Rect> {
         self.current_animation
             .as_ref()

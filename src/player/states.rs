@@ -1,6 +1,9 @@
 // src/player/states.rs
 
-//! Defines the player's specific states and the logic for each state.
+//! This module defines the specific states for the player character.
+//! 
+//! Each state struct (e.g., `IdleState`, `WalkingState`) implements the `State` trait
+//! and contains the logic for the player's behavior and transitions between states.
 
 use crate::state_machine::State;
 use crate::ecs::world::{World, Entity};
@@ -8,6 +11,7 @@ use crate::ecs::systems::SystemContext;
 use crate::input::PlayerAction;
 use crate::audio::AudioEvent;
 
+/// The state for when the player is standing still.
 pub struct IdleState;
 
 impl State for IdleState {
@@ -78,6 +82,8 @@ impl State for IdleState {
         "IdleState"
     }
 }
+
+/// The state for when the player is walking.
 pub struct WalkingState;
 
 impl State for WalkingState {
@@ -148,6 +154,8 @@ impl State for WalkingState {
         "WalkingState"
     }
 }
+
+/// The state for when the player is jumping.
 pub struct JumpingState;
 
 impl State for JumpingState {
@@ -201,6 +209,8 @@ impl State for JumpingState {
         "JumpingState"
     }
 }
+
+/// The state for when the player is falling.
 pub struct FallingState;
 
 impl State for FallingState {

@@ -1,9 +1,14 @@
 // src/camera.rs
 
-//! Defines the camera for viewing the game world.
+//! This module defines the `Camera` struct, which is responsible for controlling the
+//! game's viewpoint.
+//! 
+//! The camera smoothly follows a target (usually the player) and implements features
+//! like a "slow zone" to prevent jitter and a "fast zone" to keep the target on screen.
 
 use crate::math::Vector2D;
 
+/// The `Camera` struct holds the state for the game's camera.
 pub struct Camera {
     pub position: Vector2D,
     #[allow(dead_code)]
@@ -25,6 +30,8 @@ pub struct Camera {
 }
 
 impl Camera {
+    /// Creates a new `Camera`.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(x: f32, y: f32, tightness: f32, virtual_width: f32, virtual_height: f32, map_width: f32, map_height: f32, slow_zone: f32, fast_zone: f32, vertical_snap_threshold: f32, vertical_tightness: f32, camera_falling_tightness: f32, camera_falling_velocity_threshold: f32, entity_max_fall_speed: f32) -> Self {
         Self {
             position: Vector2D::new(x, y),
