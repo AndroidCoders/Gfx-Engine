@@ -306,9 +306,11 @@ impl App {
                                                         game_config.player.height,
                                                     ),
                                                 });
-                                                world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
-                                                world.add_health(player_entity_instance, Health { current: 3, max: 3 });
-                                                let player_entity = Some(player_entity_instance);
+                world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
+                world.add_health(player_entity_instance, Health { current: 3, max: 3 });
+                // Add the Directional component to the player, so we can track which way they are facing.
+                world.add_direction(player_entity_instance, Directional { direction: Direction::Right });
+                let player_entity = Some(player_entity_instance);
 
                                                 // The camera creation needs the player's starting position.
                                                 let player_start_pos = game_config.player.start_pos;

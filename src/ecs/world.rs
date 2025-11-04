@@ -35,6 +35,7 @@ pub struct World {
     pub healths: HashMap<Entity, Health>,
     pub invincibilities: HashMap<Entity, Invincibility>,
     pub lifetimes: HashMap<Entity, Lifetime>,
+    pub directions: HashMap<Entity, Directional>,
 }
 
 impl World {
@@ -149,5 +150,10 @@ impl World {
     /// Adds a `Lifetime` component to an entity.
     pub fn add_lifetime(&mut self, entity: Entity, component: Lifetime) {
         self.lifetimes.insert(entity, component);
+    }
+
+    /// Adds a `Directional` component to an entity.
+    pub fn add_direction(&mut self, entity: Entity, component: Directional) {
+        self.directions.insert(entity, component);
     }
 }

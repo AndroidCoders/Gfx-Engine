@@ -128,8 +128,33 @@ pub struct Invincibility {
 impl Component for Invincibility {}
 
 // --- Lifetime Component ---
+
 #[derive(Debug, Clone, Copy)]
+
 pub struct Lifetime {
+
     pub timer: f32,
+
 }
+
 impl Component for Lifetime {}
+
+
+
+// --- Direction Component ---
+/// Represents the direction an entity is facing.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Direction {
+    /// Facing left.
+    Left,
+    /// Facing right.
+    Right,
+}
+
+/// A component that gives an entity a direction.
+#[derive(Debug, Clone, Copy)]
+pub struct Directional {
+    /// The direction the entity is facing.
+    pub direction: Direction,
+}
+impl Component for Directional {}
