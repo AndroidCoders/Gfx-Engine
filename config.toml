@@ -15,6 +15,7 @@ camera_vertical_snap_threshold = 0.1
 camera_vertical_tightness = 0.1
 camera_falling_tightness = 0.9
 camera_falling_velocity_threshold = 1.0
+camera_lookahead_distance = 100.0
 
 [input]
 left = "Left"
@@ -28,11 +29,12 @@ show_debug_info = true
 debug_draw_collision_boxes = true
 
 [physics]
-gravity = 0.75
+gravity = 0.9
 max_speed = 4.0
 entity_max_fall_speed = 10.0
-acceleration = 0.4
-friction = 0.9
-jump_strength = -8.0
+acceleration = 0.5
+deceleration = 0.5
+
+jump_strength = -9.0
 jump_hold_force = 0.45
-max_jump_time = 20
+max_jump_time = 15

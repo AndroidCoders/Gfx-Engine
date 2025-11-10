@@ -62,6 +62,44 @@ To create a robust and engaging platformer experience, the following gameplay me
 
 *   **Interactive Blocks:** The game levels will include simple interactive elements, such as breakable blocks that the player can hit from below.
 
+### Health and Power-ups
+
+To create a more engaging and challenging experience, the game will feature a health system and collectible items that affect the player's state.
+
+*   **Player Health:** The player will have a health meter (e.g., hearts). Collisions with enemies will decrease the player's health. When health reaches zero, the player loses a life.
+*   **Health Pickups:** Players can replenish their health by collecting "Medical Kits" or "Potions of Health" found in the levels. These could be dropped by defeated enemies or found in treasure chests.
+
+#### Power-Ups, Weapons, and Magical Items Ideas
+
+##### Consumables (Instant Use)
+
+*   **Potion of Health:** A red potion that instantly restores one heart of the player's health.
+*   **Extra Life:** A special item (perhaps a "1-Up" icon) that grants the player an extra life.
+*   **Key:** A key that can be used to unlock a single treasure chest or door.
+
+##### Temporary Power-Ups
+
+*   **Star of Invincibility:** A classic glowing star that grants the player temporary invincibility. The player can defeat enemies by simply touching them, and the game's music could speed up to create a sense of urgency and power.
+*   **Boots of Speed:** Special boots that temporarily increase the player's maximum speed and acceleration, leaving a trail of dust behind them.
+*   **Feather of Flight:** A magical feather that allows the player to perform a double jump or to glide for a short period by holding down the jump button.
+*   **Shield of Protection:** A shimmering shield that orbits the player and protects them from a single instance of damage, shattering on impact.
+
+##### Weapons & Combat Items
+
+*   **Fire Flower:** A flower that allows the player to shoot bouncing fireballs to defeat enemies from a distance.
+*   **Ice Flower:** A variation of the Fire Flower that shoots ice balls, which can temporarily freeze enemies in place, turning them into platforms.
+*   **Sword of Slashing:** A short-range sword that allows the player to perform a quick slash attack. This would introduce a new combat mechanic beyond stomping.
+*   **Hammer of Smashing:** A heavy hammer that can be used to break special blocks or deal extra damage to armored enemies.
+*   **Ninja Star:** A throwable projectile that can be used to defeat enemies from a distance.
+
+**Design Constraint for Weapons:** The player can only hold and use one special weapon at a time. Picking up a new weapon will replace the currently equipped one.
+
+##### Permanent Upgrades (Metroidvania-style)
+
+*   **Climbing Gloves:** Gloves that allow the player to cling to and climb up walls, opening up new vertical paths in the levels.
+*   **Dash Boots:** Boots that grant the player a permanent dash ability, allowing them to cross large gaps or break through certain barriers.
+*   **Goggles of Seeing:** Special goggles that, when activated, reveal hidden platforms, secret passages, or invisible treasures in the level.
+
 ### Camera Design
 
 The camera system is designed to be both smooth and responsive, keeping the player in focus without feeling jarring or restrictive. It is inspired by the camera in classic platformers like "Super Mario World" and is built on the following principles:
@@ -77,6 +115,147 @@ The camera system is designed to be both smooth and responsive, keeping the play
 ## Entity State Management
 
 To manage the behavior of all dynamic entities (including the player and AI enemies), we will implement a **Hierarchical State Machine (HSM)**. This unified pattern provides a robust and scalable foundation for both player control and AI logic. It organizes behavior into distinct states (e.g., `Idle`, `Patrolling`, `Jumping`) and manages the transitions between them. This prevents bugs by ensuring an entity is only in one state at a time, simplifies adding new abilities, and serves as the core driver for the animation system by linking each state directly to its corresponding animation. Our implementation will be a hybrid, supporting both continuous actions within states and instantaneous actions on transitions.
+
+---
+# ECSC Architecture: A Practical Guide (v4)
+
+This guide outlines the architecture and implementation of a topic-based Event Bus, which is the cornerstone of our **ECSC (Entity-Component-System-Concept)** model.
+
+## 1. The Core Data Flow
+
+The ECSC architecture establishes a clear, one-way flow of information:
+
+**Input** -> **Command** -> **System (Concept)** -> **Event** -> **EventConductor**
+
+1.  **Input:** A raw hardware signal (e.g., a key press).
+2.  **Command:** The input is translated into a semantic `Command` representing intent (e.g., `PlayerCommand::Jump`).
+3.  **System (Concept):** A System processes the `Command`, updates the core world state (e.g., changes an entity's velocity), and publishes an `Event`.
+4.  **Event:** An `Event` is a data struct published to the **Event Bus** with a specific **Topic** string, announcing a fact (e.g., topic: `"player.movement.jump"`, data: `PlayerJumpedEvent { ... }`).
+5.  **EventConductor:** An `EventConductor` subscribes to topic patterns (e.g., `"player.movement.*"`) and executes reactive, secondary logic (e.g., playing sounds, updating UI).
+
+## 2. The Topic-Based Event Bus
+
+Instead of subscribing to a specific *type*, conductors subscribe to string-based **topic patterns**. This provides a highly flexible and efficient routing system.
+
+### Topic Naming Convention
+
+To maintain order, we will adopt a consistent naming convention for topics:
+
+**`domain.subject.action`**
+
+*   **`domain`**: The broad area of the game (e.g., `player`, `enemy`, `physics`, `ui`).
+*   **`subject`**: The specific thing being acted upon (e.g., `movement`, `state`, `health`).
+*   **`action`**: The specific action that occurred (e.g., `jump`, `death`, `changed`).
+
+**Examples:**
+*   `player.movement.jump`
+*   `player.state.changed`
+*   `physics.collision.started`
+*   `enemy.health.decreased`
+
+### Wildcard Subscriptions
+
+EventConductors can subscribe to patterns using two wildcards:
+
+*   `*` (asterisk): Matches exactly one word in a topic.
+    *   *Example:* `physics.collision.*` matches `physics.collision.started` but **not** `physics.collision.player.wall`.
+*   `#` (hash): Matches zero or more words at the end of a topic.
+    *   *Example:* `player.#` matches `player.movement.jump` and `player.state.changed`.
+
+### Implementation Details & Examples
+
+Here is a practical look at how the Event Bus can be implemented.
+
+#### The `EventConductor` Trait
+
+First, we define a trait that all our conductors will implement.
+
+```rust
+use std::any::Any;
+
+pub trait EventConductor {
+    /// Called by the EventBus when a subscribed topic is matched.
+    fn on_event(&mut self, topic: &str, event_data: &dyn Any);
+}
+```
+
+#### The `EventBus` Struct
+
+The bus itself manages a list of subscribers for each pattern.
+
+```rust
+use std::collections::HashMap;
+
+pub struct EventBus {
+    // The key is the subscription pattern, e.g., "player.*"
+    subscribers: HashMap<String, Vec<Box<dyn EventConductor>>>,
+}
+
+impl EventBus {
+    pub fn new() -> Self {
+        EventBus { subscribers: HashMap::new() }
+    }
+
+    pub fn subscribe(&mut self, pattern: String, conductor: Box<dyn EventConductor>) {
+        self.subscribers.entry(pattern).or_default().push(conductor);
+    }
+
+    pub fn publish(&mut self, topic: &str, event_data: &dyn Any) {
+        // Iterate over all registered patterns
+        for (pattern, conductors) in &mut self.subscribers {
+            if topic_matches(pattern, topic) {
+                for conductor in conductors {
+                    conductor.on_event(topic, event_data);
+                }
+            }
+        }
+    }
+}
+
+/// Helper function to match a topic against a pattern.
+fn topic_matches(pattern: &str, topic: &str) -> bool {
+    let mut pattern_parts = pattern.split('.');
+    let mut topic_parts = topic.split('.');
+
+    loop {
+        match (pattern_parts.next(), topic_parts.next()) {
+            (Some("#"), _) => return true, // # matches the rest
+            (Some("*"), None) => return false, // * needs a word to match
+            (Some(p), Some(t)) if p == "*" || p == t => continue,
+            (None, None) => return true, // Both ended, it's a match
+            _ => return false, // Any other case is a mismatch
+        }
+    }
+}
+```
+
+#### Example: An `AudioConductor`
+
+This conductor plays a sound whenever any player event occurs.
+
+```rust
+// Define the event data struct
+struct PlayerJumpedEvent { pub player_id: usize }
+
+// The conductor implementation
+struct AudioConductor;
+impl EventConductor for AudioConductor {
+    fn on_event(&mut self, topic: &str, event_data: &dyn Any) {
+        // Use downcast_ref to safely cast the event data to the expected type.
+        if let Some(_event) = event_data.downcast_ref::<PlayerJumpedEvent>() {
+            println!("AudioConductor heard topic '{}': Playing jump sound!", topic);
+            // self.audio_manager.play("jump_sound");
+        }
+    }
+}
+
+// How it would be used:
+// let mut bus = EventBus::new();
+// bus.subscribe("player.movement.jump".to_string(), Box::new(AudioConductor));
+// bus.publish("player.movement.jump", &PlayerJumpedEvent { player_id: 0 });
+```
+
+This structure provides a robust, flexible, and clearly defined system for communication between the different parts of our engine.
 
 ## Implemented Core Features
 
@@ -114,7 +293,7 @@ The following sections outline the high-level direction for future engine and ga
 *   **Spatial Partitioning:** To support large levels efficiently, a uniform grid or similar spatial partitioning system is planned.
 *   **1:1 Pixel Coordinate System:** The engine will be refactored to use a 1:1 pixel-based coordinate system, removing the `PIXEL_SCALE` constant to simplify logic.
 *   **Parallax Scrolling:** The renderer will be extended to support multi-layered parallax backgrounds for a greater sense of depth.
-*   **Interactive Audio:** The audio system will be enhanced to support dynamic soundtracks and sound effects that respond to gameplay events.
+*   **Interactive Audio:** The audio system will be enhanced to support dynamic soundtracks and sound effects that respond to gameplay events. The plan includes a zone-based music system that will trigger crossfades between tracks as the player moves between different areas of the world map.
 
 ### Gameplay Features
 *   **Advanced Camera Mechanics:** The camera will be improved with features like "Look-Ahead" and "Platform Snap."

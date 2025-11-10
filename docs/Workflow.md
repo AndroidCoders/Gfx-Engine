@@ -87,7 +87,7 @@ All new work (features, bugfixes, etc.) must be done on a separate branch. This 
     ```bash
     git commit -m "feat: Add player jump" -m "Implements variable jump height based on button press duration."
     ```
-> **Note:** When using `git commit -m`, it's best to use short, single-line messages. Long or multi-line messages can sometimes be misinterpreted by the shell, especially when using multiple `-m` flags. For automated processes like those in the Gemini CLI, it is crucial to avoid interactive prompts. Therefore, always provide the full commit message directly within the `git commit -m` command, ensuring it is properly quoted to prevent parsing issues.
+> **Note:** When using `git commit -m`, it's best to use short, single-line messages. Long or multi-line messages can sometimes be misinterpreted by the shell, especially when using multiple `-m` flags. For automated processes like those in the Gemini CLI, it is crucial to avoid interactive prompts. Therefore, always provide the full commit message directly within the `git commit -m` command, ensuring it is properly quoted to prevent parsing issues. It is also important to avoid special characters like backticks (`) in commit messages, as they can be interpreted by the shell and cause errors.
 
 ### Automated Testing (Continuous Integration)
 
