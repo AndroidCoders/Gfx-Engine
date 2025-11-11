@@ -6,10 +6,9 @@
 //! assets, preventing redundant loads and providing a simple interface for
 //! accessing textures by a unique identifier.
 
-use sdl3::render::{Texture, TextureCreator};
+use sdl3::render::{Texture, TextureCreator, BlendMode};
 use sdl3::video::WindowContext;
 use sdl3::surface::Surface;
-use sdl3::pixels::PixelFormatEnum;
 use image::ImageReader;
 use std::collections::HashMap;
 use std::path::Path;
@@ -50,11 +49,12 @@ impl TextureManager {
         let path = Path::new(path);
         let image = ImageReader::open(path).map_err(|e| e.to_string())?.decode().map_err(|e| e.to_string())?.to_rgba8();
         let (width, height) = image.dimensions();
-        let mut surface = Surface::new(width, height, PixelFormatEnum::ABGR8888.into()).map_err(|e| e.to_string())?;
+        let mut surface = Surface::new(width, height, sdl3::pixels::PixelFormatEnum::ABGR8888.into()).map_err(|e| e.to_string())?;
         surface.with_lock_mut(|pixels| {
             pixels.copy_from_slice(&image);
         });
-        let texture = texture_creator.create_texture_from_surface(&surface).map_err(|e| e.to_string())?;
+        let mut texture = texture_creator.create_texture_from_surface(&surface).map_err(|e| e.to_string())?;
+        texture.set_blend_mode(BlendMode::Blend);
         self.textures.insert(name.to_string(), texture);
         Ok(())
     }
