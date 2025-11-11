@@ -30,6 +30,9 @@ impl System<SystemContext<'_>> for DeathSystem {
 
         for entity in to_respawn {
             world.add_respawn_tag(entity, RespawnTag);
+            if *context.lives > 0 {
+                *context.lives -= 1;
+            }
         }
     }
 }

@@ -28,10 +28,10 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 
 ### Phase 3: "Super Cat Bros" Demo - Gameplay Polish (Current Sprint)
 
-- [ ] **1. Core Gameplay Feel:**
-    - [ ] Tune Player Controls: Adjust player physics parameters in `config.toml` for a tighter feel.
-    - [ ] Improve Stomping Mechanics: Refine player-enemy collision detection for more accurate stomp registration.
-    - [ ] Tune Player Collision Box: Fine-tune the main character's collision box for better gameplay feel.
+- [x] **1. Core Gameplay Feel:**
+    - [x] Tune Player Controls: Adjust player physics parameters in `config.toml` for a tighter feel.
+    - [x] Improve Stomping Mechanics: Refine player-enemy collision detection for more accurate stomp registration.
+    - [x] Tune Player Collision Box: Fine-tune the main character's collision box for better gameplay feel.
     - [x] Fix player orientation reset glitch.
 - [ ] **2. Player Experience & Feedback:**
     - [x] Improve Player Spawning and Death:
@@ -39,7 +39,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
         - [x] Implement an "angel" death sequence with animation and sound.
         - [x] Implement a respawn animation.
     - [ ] Implement Player Lives and Game Over:
-        - [ ] Display player lives in the debug text.
+        - [x] Display player lives in the debug text.
         - [ ] Implement a "Game Over" screen.
     - [x] Implement Player Health & Damage:
         - [x] Add a `health` component to the player.
@@ -48,12 +48,12 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
         - [ ] Add "Medical Kit" or "Potion of Health" items to the game.
         - [ ] Implement logic for picking up health items to restore player health.
         - [ ] Brainstorm ideas for how health items can appear (e.g., dropped by enemies, in chests).
-    - [ ] Implement Damped Camera Movement:
+    - [x] Implement Damped Camera Movement:
         - [x] Re-implement lerp-based smoothing to restore damping effect.
         - [x] Implement "Look-Ahead" (Directional Bias).
         - [x] Implement "Platform Snap".
     - [x] Hide Mouse Cursor in Fullscreen: Call the appropriate SDL3 function to hide the mouse cursor during gameplay.
-- [ ] **3. Content & Progression:**
+- [x] **3. Content & Progression:**
     - [x] Implement a Simple Enemy: Add an enemy with basic patrol AI and stomp mechanics.
     - [x] Implement Level Goal and Progression:
         - [x] Add a "Goal" object to the level.
@@ -119,7 +119,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 ### Phase 7: Tooling (Future)
 
 - [ ] **1. Create a Level Editor:** Build an in-game or external tool for creating and editing levels.
-- [ ] **2. Implement Debugging Tools:** 
+- [ ] **2. Implement Debugging Tools:**
     - [ ] Create the planned in-game `Benchmarker` and on-screen debug display.
     - [x] Add FPS counter to debug display.
 - [ ] **3. Implement Video Recording:** Add a system for saving gameplay videos using ffmpeg or a similar library.
@@ -149,7 +149,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 - [ ] **4. Refactor for Data-Driven Design:**
     - [ ] Identify and Externalize Hardcoded Values.
     - [ ] Refactor Code to Load from Configuration.
-- [ ] **5. Refactor to a 1:1 Pixel Coordinate System:** 
+- [ ] **5. Refactor to a 1:1 Pixel Coordinate System:**
     - [ ] Remove the `PIXEL_SCALE` constant.
     - [ ] Edit graphics assets to use prescaling (1:2).
 - [ ] **6. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.

@@ -158,6 +158,8 @@ pub struct PlayerConfig {
     pub vertical_draw_offset: i32,
     /// The position where the player respawns after death.
     pub respawn_pos: Vector2D,
+    /// The starting number of lives for the player.
+    pub lives: u32,
 }
 
 /// Represents the world's configuration.

@@ -59,6 +59,8 @@ pub struct SystemContext<'a> {
     pub gold_coin_count: &'a mut u32,
     /// A mutable reference that can be set to trigger a level transition.
     pub next_level: &'a mut Option<String>,
+    /// A mutable reference to the player's lives count.
+    pub lives: &'a mut u32,
 }
 
 /// A specialized context struct for the `RespawnSystem`.

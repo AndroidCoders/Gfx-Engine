@@ -43,6 +43,9 @@ impl System<SystemContext<'_>> for PlayerDeathSystem {
             if let Some(health) = world.healths.get_mut(&entity) {
                 health.current = health.max;
             }
+            if *context.lives > 0 {
+                *context.lives -= 1;
+            }
         }
     }
 }

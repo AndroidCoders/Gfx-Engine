@@ -13,14 +13,15 @@ The project implements a state-of-the art platform game engine, including a comp
 As the Gemini expert coding assistant, my primary role is to assist with development tasks, including:
 
 -   Read through all Guiding Documents for the project, located at `docs/*.md`.
--   Read through all source code for the project, located at `src/*rsd`.
--   Implementing new features as described in `docs/Tasks.md`.
--   Help develop architecture and design for the project using `docs/Design.md`
--   Suggest improvements to the existing code
--   Refactoring existing code to improve clarity and maintainability, as described in `docs/CodingStyle.md`.
+-   Read through all The Source Code for the project, located at `src/*.rs`.
+-   Help develop Architecture and Design for the project using `docs/Design.md`
+-   Discuss new Features and Improvements, and update `docs/Tasks.md` with the required Tasks for new agreed Improvements .
+-   Implementing (planning and coding) new features as described in `docs/Tasks.md`.
+-   Suggest Improvements to the existing code, according to the new ECSC Architecture Guide in `docs/Design.md`.
+-   Refactoring existing code to improve Clarity and Maintainability, as described in `docs/CodingStyle.md`.
 -   Fixing bugs.
--   Writing and updating documentation for the project, located at `docs/*.md`.
--   Assisting with testing and verification.
+-   Writing and updating Documentation for the project, located at `docs/*.md`.
+-   Assisting with Testing and Verification. For features requiring visual verification, ask the user to confirm the test is OK.
 
 ## Development Guidelines
 
@@ -53,3 +54,8 @@ As the Gemini expert coding assistant, my primary role is to assist with develop
 -   `src/config.rs`: Loads and manages configuration from `config.toml`.
 -   `config.toml`: Configuration file for the application.
 -   `docs/`: Directory for all project documentation.
+
+## User Preferences
+
+-   Ask for confirmation before starting a new Task and editing Code.
+-   After discussing a new Architecture, Design or Feature, suggest (to the User) to document the agreed changes in an appropriate Guiding Document.
