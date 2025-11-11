@@ -14,14 +14,14 @@ As the Gemini expert coding assistant, my primary role is to assist with develop
 
 -   Read through all Guiding Documents for the project, located at `docs/*.md`.
 -   Read through all The Source Code for the project, located at `src/*.rs`.
--   Help develop Architecture and Design for the project using `docs/Design.md`
--   Discuss new Features and Improvements, and update `docs/Tasks.md` with the required Tasks for new agreed Improvements .
+-   Help develop Architecture and Design for the project using `docs/Design.md`.
+-   Discuss new Features and Improvements, and update `docs/Tasks.md` with the required Tasks for new agreed Improvements.
 -   Implementing (planning and coding) new features as described in `docs/Tasks.md`.
--   Suggest Improvements to the existing code, according to the new ECSC Architecture Guide in `docs/Design.md`.
+-   Suggest Improvements to the existing code, according to the new ECSC (Entity-Component-System-Context) Architecture Guide in `docs/Design.md`.
 -   Refactoring existing code to improve Clarity and Maintainability, as described in `docs/CodingStyle.md`.
 -   Fixing bugs.
 -   Writing and updating Documentation for the project, located at `docs/*.md`.
--   Assisting with Testing and Verification. For features requiring visual verification, ask the user to confirm the test is OK.
+-   Assisting with Testing and Verification. For features requiring visual verification, ask the user to confirm the test is OK. When identifying relevant tests, look for `tests/` directories or `#[test]` attributes in relevant modules.
 
 ## Development Guidelines
 
@@ -38,6 +38,13 @@ As the Gemini expert coding assistant, my primary role is to assist with develop
 -   Commit messages should follow the Conventional Commits specification.
 -   Pull requests are used to merge changes into the `master` branch.
 
+### Project Conventions
+
+-   **Naming Conventions:** Adhere to Rust's idiomatic naming conventions (e.g., `snake_case` for functions and variables, `PascalCase` for types and enums).
+-   **Error Handling:** Prefer `Result<T, String>` for fallible operations, returning descriptive error messages.
+-   **Documentation:** Use `///` for public API documentation and `//!` for module-level documentation.
+-   **Module Organization:** Modules should ideally focus on a single, well-defined responsibility.
+
 ### Key Commands
 
 -   **Check for errors:** `cargo check`
@@ -45,15 +52,21 @@ As the Gemini expert coding assistant, my primary role is to assist with develop
 -   **Run tests:** `cargo test`
 -   **Build and run:** `cargo run`
 
+### Common Debugging & Troubleshooting
+
+-   **Visual Bugs:** For issues related to rendering or display, investigate `src/renderer.rs` and `src/texture_manager.rs`.
+-   **Game Logic Issues:** For unexpected behavior in game mechanics, examine relevant ECS systems in `src/ecs/systems/` and `src/app.rs`.
+-   **Configuration Problems:** Check `src/config.rs` and `config.toml` for incorrect settings.
+
 ## Key Files
 
--   `src/main.rs`: Application entry point.
--   `src/app.rs`: Main application loop and SDL initialization.
--   `src/game_state.rs`: Manages the state of the application.
--   `src/renderer.rs`: Handles all drawing operations.
--   `src/config.rs`: Loads and manages configuration from `config.toml`.
--   `config.toml`: Configuration file for the application.
--   `docs/`: Directory for all project documentation.
+-   `src/main.rs`: Application entry point, handles initial setup and main loop orchestration.
+-   `src/app.rs`: Main application loop and SDL initialization, manages overall game flow.
+-   `src/game_state.rs`: Manages the state of the application, including game logic and data.
+-   `src/renderer.rs`: Handles all drawing operations, responsible for visual output.
+-   `src/config.rs`: Loads and manages configuration from `config.toml`, providing global settings.
+-   `config.toml`: Configuration file for the application, defining game parameters.
+-   `docs/`: Directory for all project documentation, including design and workflow guides.
 
 ## User Preferences
 
