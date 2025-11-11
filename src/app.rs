@@ -55,6 +55,13 @@ use crate::enemy::states::PatrolState;
 
 use crate::animation::AnimationController;
 
+/// Represents the different states the application can be in.
+#[derive(PartialEq)]
+pub enum AppState {
+    Playing,
+    GameOver,
+}
+
 /// The main application struct, holding all state and context for the game.
 pub struct App {
     /// The application's global configuration, loaded from `config.toml`.
@@ -101,6 +108,12 @@ pub struct App {
     frame_count_for_fps: u32,
     /// If `Some`, triggers a transition to the specified level file.
     next_level: Option<String>,
+    /// The player's current number of lives.
+    lives: u32,
+    /// The current state of the application.
+    state: AppState,
+    /// A timer for the game over screen.
+    game_over_timer: f32,
 }
 
 impl App {
@@ -180,277 +193,299 @@ impl App {
                                                     texture_manager.load(&anim_config.texture, &anim_config.texture, &texture_creator)?;
                                                 }
 
-                                                texture_manager.load(&level.tileset.texture, &level.tileset.texture, &texture_creator)?;
-
-                                                texture_manager.load("assets/graphics/background_blue_sky_with_clouds.png", "bg_sky", &texture_creator)?;
-                                                texture_manager.load("assets/graphics/tiles_goal.png", "goal", &texture_creator)?;
-
-                                        
-
-                                                // Create the world and systems
-                                                let mut world = World::new();
-
-                                                // Create entities from level data
-                                                for entity_data in &level.entities {
-                                                    let entity = world.create_entity();
-                                                    match entity_data.r#type.as_str() {
-                                                        "GoldCoin" => {
-                                                            let coin_config = &game_config.collectible["gold_coin"];
-                                                            world.add_position(entity, Position(entity_data.position));
-                                                            world.add_renderable(entity, Renderable {
-                                                                width: coin_config.draw_width,
-                                                                height: coin_config.draw_height,
-                                                                horizontal_offset: 0,
-                                                                vertical_offset: 0,
-                                                                z_index: 100,
-                                                            });
-                                                            let mut coin_animation_controller = AnimationController::new();
-                                                            if let Some(anim_config) = game_config.animation.get("gold_coin_spin") {
-                                                                let mut frames = Vec::new();
-                                                                for i in 0..anim_config.frame_count {
-                                                                    let padding = anim_config.frame_padding.unwrap_or(0);
-                                                                    frames.push(sdl3::rect::Rect::new(
-                                                                        anim_config.start_x + (i * (anim_config.frame_width + padding)) as i32,
-                                                                        anim_config.start_y,
-                                                                        anim_config.frame_width,
-                                                                        anim_config.frame_height,
-                                                                    ));
-                                                                }
-                                                                let animation = crate::animation::Animation {
-                                                                    texture_name: anim_config.texture.clone(),
-                                                                    frames,
-                                                                    frame_duration: anim_config.frame_duration,
-                                                                    loops: anim_config.loops,
-                                                                };
-                                                                coin_animation_controller.add_animation("gold_coin_spin".to_string(), animation);
-                                                                coin_animation_controller.set_animation("gold_coin_spin");
-                                                            }
-                                                            world.add_animation(entity, Animation { controller: coin_animation_controller });
-                                                            world.add_gold_coin(entity, GoldCoin);
-                                                            world.add_collision(entity, Collision {
-                                                                rect: sdl3::rect::Rect::new(
-                                                                    entity_data.position.x as i32,
-                                                                    entity_data.position.y as i32,
-                                                                    coin_config.width,
-                                                                    coin_config.height,
-                                                                ),
-                                                            });
-                                                        }
-                                                        "EnemySpider" => {
-                                                            let enemy_spider_pos = Position(entity_data.position);
-                                                            let enemy_spider_config = &game_config.enemy["enemy_spider"];
-                                                            world.add_position(entity, enemy_spider_pos);
-                                                            world.add_velocity(entity, Velocity(Vector2D::new(enemy_spider_config.speed, 0.0)));
-                                                            world.add_renderable(entity, Renderable {
-                                                                width: enemy_spider_config.draw_width,
-                                                                height: enemy_spider_config.draw_height,
-                                                                horizontal_offset: 0,
-                                                                vertical_offset: 0,
-                                                                z_index: 100,
-                                                            });
-                                                            let mut enemy_spider_animation_controller = AnimationController::new();
-                                                            for (name, anim_config) in &game_config.animation {
-                                                                if name.starts_with("enemy_spider") {
-                                                                    let mut frames = Vec::new();
-                                                                    for i in 0..anim_config.frame_count {
-                                                                        let padding = anim_config.frame_padding.unwrap_or(0);
-                                                                        frames.push(sdl3::rect::Rect::new(
-                                                                            anim_config.start_x + (i * (anim_config.frame_width + padding)) as i32,
-                                                                            anim_config.start_y,
-                                                                            anim_config.frame_width,
-                                                                            anim_config.frame_height,
-                                                                        ));
-                                                                    }
-                                                                    let animation = crate::animation::Animation {
-                                                                        texture_name: anim_config.texture.clone(),
-                                                                        frames,
-                                                                        frame_duration: anim_config.frame_duration,
-                                                                        loops: anim_config.loops,
-                                                                    };
-                                                                    enemy_spider_animation_controller.add_animation(name.clone(), animation);
-                                                                }
-                                                            }
-                                                            enemy_spider_animation_controller.set_animation("enemy_spider_1");
-                                                            world.add_animation(entity, Animation { controller: enemy_spider_animation_controller });
-                                                            world.add_enemy_tag(entity, EnemyTag);
-                                                            world.add_patrol(entity, Patrol { speed: enemy_spider_config.speed });
-                                                            world.add_gravity(entity, Gravity);
-                                                            world.add_collision(entity, Collision {
-                                                                rect: sdl3::rect::Rect::new(
-                                                                    enemy_spider_pos.0.x as i32,
-                                                                    enemy_spider_pos.0.y as i32,
-                                                                    enemy_spider_config.width,
-                                                                    enemy_spider_config.height,
-                                                                ),
-                                                            });
-                                                            world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
-                                                        }
-                                                        "Goal" => {
-                                                            let goal_config = &game_config.goal;
-                                                            world.add_position(entity, Position(entity_data.position));
-                                                            world.add_renderable(entity, Renderable {
-                                                                width: goal_config.draw_width,
-                                                                height: goal_config.draw_height,
-                                                                horizontal_offset: goal_config.horizontal_draw_offset,
-                                                                vertical_offset: goal_config.vertical_draw_offset,
-                                                                z_index: 100,
-                                                            });
-                                                            let mut goal_animation_controller = AnimationController::new();
-                                                            let animation = crate::animation::Animation {
-                                                                texture_name: "goal".to_string(),
-                                                                frames: vec![sdl3::rect::Rect::new(0, 0, 256, 192)],
-                                                                frame_duration: 1,
-                                                                loops: false,
-                                                            };
-                                                            goal_animation_controller.add_animation("idle".to_string(), animation);
-                                                            goal_animation_controller.set_animation("idle");
-                                                            world.add_animation(entity, Animation { controller: goal_animation_controller });
-                                                            world.add_goal(entity, Goal);
-                                                            world.add_collision(entity, Collision {
-                                                                rect: sdl3::rect::Rect::new(
-                                                                    entity_data.position.x as i32,
-                                                                    entity_data.position.y as i32,
-                                                                    32,
-                                                                    32,
-                                                                ),
-                                                            });
-                                                        }
-                                                        _ => {}
+                                                                                                 texture_manager.load("assets/graphics/background_blue_sky_with_clouds.png", "bg_sky", &texture_creator)?;
+                                                                                                texture_manager.load("assets/graphics/tiles_goal.png", "goal", &texture_creator)?;
+                                                                                                texture_manager.load("assets/graphics/text_game_over_1.png", "game_over_3", &texture_creator)?;
+                                                                                                texture_manager.load(&level.tileset.texture, &level.tileset.texture, &texture_creator)?;
+                                                
+                                                                                        
+                                                
+                                                                                                // Create the world and systems
+                                                                                                let mut world = World::new();
+                                                
+                                                                                                // Create entities from level data
+                                                                                                for entity_data in &level.entities {
+                                                                                                    let entity = world.create_entity();
+                                                                                                    match entity_data.r#type.as_str() {
+                                                                                                        "GoldCoin" => {
+                                                                                                            let coin_config = &game_config.collectible["gold_coin"];
+                                                                                                            world.add_position(entity, Position(entity_data.position));
+                                                                                                            world.add_renderable(entity, Renderable {
+                                                                                                                width: coin_config.draw_width,
+                                                                                                                height: coin_config.draw_height,
+                                                                                                                horizontal_offset: 0,
+                                                                                                                vertical_offset: 0,
+                                                                                                                z_index: 100,
+                                                                                                            });
+                                                                                                            let mut coin_animation_controller = AnimationController::new();
+                                                                                                            if let Some(anim_config) = game_config.animation.get("gold_coin_spin") {
+                                                                                                                let mut frames = Vec::new();
+                                                                                                                for i in 0..anim_config.frame_count {
+                                                                                                                    let padding = anim_config.frame_padding.unwrap_or(0);
+                                                                                                                    frames.push(sdl3::rect::Rect::new(
+                                                                                                                        anim_config.start_x + (i * (anim_config.frame_width + padding)) as i32,
+                                                                                                                        anim_config.start_y,
+                                                                                                                        anim_config.frame_width,
+                                                                                                                        anim_config.frame_height,
+                                                                                                                    ));
+                                                                                                                }
+                                                                                                                let animation = crate::animation::Animation {
+                                                                                                                    texture_name: anim_config.texture.clone(),
+                                                                                                                    frames,
+                                                                                                                    frame_duration: anim_config.frame_duration,
+                                                                                                                    loops: anim_config.loops,
+                                                                                                                };
+                                                                                                                coin_animation_controller.add_animation("gold_coin_spin".to_string(), animation);
+                                                                                                                coin_animation_controller.set_animation("gold_coin_spin");
+                                                                                                            }
+                                                                                                            world.add_animation(entity, Animation { controller: coin_animation_controller });
+                                                                                                            world.add_gold_coin(entity, GoldCoin);
+                                                                                                            world.add_collision(entity, Collision {
+                                                                                                                rect: sdl3::rect::Rect::new(
+                                                                                                                    entity_data.position.x as i32,
+                                                                                                                    entity_data.position.y as i32,
+                                                                                                                    coin_config.width,
+                                                                                                                    coin_config.height,
+                                                                                                                ),
+                                                                                                            });
+                                                                                                        }
+                                                                                                        "EnemySpider" => {
+                                                                                                            let enemy_spider_pos = Position(entity_data.position);
+                                                                                                            let enemy_spider_config = &game_config.enemy["enemy_spider"];
+                                                                                                            world.add_position(entity, enemy_spider_pos);
+                                                                                                            world.add_velocity(entity, Velocity(Vector2D::new(enemy_spider_config.speed, 0.0)));
+                                                                                                            world.add_renderable(entity, Renderable {
+                                                                                                                width: enemy_spider_config.draw_width,
+                                                                                                                height: enemy_spider_config.draw_height,
+                                                                                                                horizontal_offset: 0,
+                                                                                                                vertical_offset: 0,
+                                                                                                                z_index: 100,
+                                                                                                            });
+                                                                                                            let mut enemy_spider_animation_controller = AnimationController::new();
+                                                                                                            for (name, anim_config) in &game_config.animation {
+                                                                                                                if name.starts_with("enemy_spider") {
+                                                                                                                    let mut frames = Vec::new();
+                                                                                                                    for i in 0..anim_config.frame_count {
+                                                                                                                        let padding = anim_config.frame_padding.unwrap_or(0);
+                                                                                                                        frames.push(sdl3::rect::Rect::new(
+                                                                                                                            anim_config.start_x + (i * (anim_config.frame_width + padding)) as i32,
+                                                                                                                            anim_config.start_y,
+                                                                                                                            anim_config.frame_width,
+                                                                                                                            anim_config.frame_height,
+                                                                                                                        ));
+                                                                                                                    }
+                                                                                                                    let animation = crate::animation::Animation {
+                                                                                                                        texture_name: anim_config.texture.clone(),
+                                                                                                                        frames,
+                                                                                                                        frame_duration: anim_config.frame_duration,
+                                                                                                                        loops: anim_config.loops,
+                                                                                                                    };
+                                                                                                                    enemy_spider_animation_controller.add_animation(name.clone(), animation);
+                                                                                                                }
+                                                                                                            }
+                                                                                                            enemy_spider_animation_controller.set_animation("enemy_spider_1");
+                                                                                                            world.add_animation(entity, Animation { controller: enemy_spider_animation_controller });
+                                                                                                            world.add_enemy_tag(entity, EnemyTag);
+                                                                                                            world.add_patrol(entity, Patrol { speed: enemy_spider_config.speed });
+                                                                                                            world.add_gravity(entity, Gravity);
+                                                                                                            world.add_collision(entity, Collision {
+                                                                                                                rect: sdl3::rect::Rect::new(
+                                                                                                                    enemy_spider_pos.0.x as i32,
+                                                                                                                    enemy_spider_pos.0.y as i32,
+                                                                                                                    enemy_spider_config.width,
+                                                                                                                    enemy_spider_config.height,
+                                                                                                                ),
+                                                                                                            });
+                                                                                                            world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
+                                                                                                        }
+                                                                                                        "Goal" => {
+                                                                                                            let goal_config = &game_config.goal;
+                                                                                                            world.add_position(entity, Position(entity_data.position));
+                                                                                                            world.add_renderable(entity, Renderable {
+                                                                                                                width: goal_config.draw_width,
+                                                                                                                height: goal_config.draw_height,
+                                                                                                                horizontal_offset: goal_config.horizontal_draw_offset,
+                                                                                                                vertical_offset: goal_config.vertical_draw_offset,
+                                                                                                                z_index: 100,
+                                                                                                            });
+                                                                                                            let mut goal_animation_controller = AnimationController::new();
+                                                                                                            let animation = crate::animation::Animation {
+                                                                                                                texture_name: "goal".to_string(),
+                                                                                                                frames: vec![sdl3::rect::Rect::new(0, 0, 256, 192)],
+                                                                                                                frame_duration: 1,
+                                                                                                                loops: false,
+                                                                                                            };
+                                                                                                            goal_animation_controller.add_animation("idle".to_string(), animation);
+                                                                                                            goal_animation_controller.set_animation("idle");
+                                                                                                            world.add_animation(entity, Animation { controller: goal_animation_controller });
+                                                                                                            world.add_goal(entity, Goal);
+                                                                                                            world.add_collision(entity, Collision {
+                                                                                                                rect: sdl3::rect::Rect::new(
+                                                                                                                    entity_data.position.x as i32,
+                                                                                                                    entity_data.position.y as i32,
+                                                                                                                    32,
+                                                                                                                    32,
+                                                                                                                ),
+                                                                                                            });
+                                                                                                        }
+                                                                                                        _ => {}
+                                                                                                    }
+                                                                                                }
+                                                
+                                                                                                // Create the player entity
+                                                                                                let player_entity_instance = world.create_entity();
+                                                                                                let player_position = Position(game_config.player.start_pos);
+                                                                                                world.add_position(player_entity_instance, player_position);
+                                                                                                world.add_velocity(player_entity_instance, Velocity(Vector2D::default()));
+                                                                                                world.add_renderable(player_entity_instance, Renderable {
+                                                                                                    width: game_config.player.draw_width,
+                                                                                                    height: game_config.player.draw_height,
+                                                                                                    horizontal_offset: game_config.player.horizontal_draw_offset,
+                                                                                                    vertical_offset: game_config.player.vertical_draw_offset,
+                                                                                                    z_index: 100,
+                                                                                                });
+                                                                                                let mut player_animation_controller = AnimationController::new();
+                                                                                                for (name, anim_config) in &game_config.animation {
+                                                                                                    if !name.starts_with("enemy_spider") && !name.starts_with("gold_coin") {
+                                                                                                        let mut frames = Vec::new();
+                                                                                                        for i in 0..anim_config.frame_count {
+                                                                                                            frames.push(sdl3::rect::Rect::new(
+                                                                                                                anim_config.start_x + (i * anim_config.frame_width) as i32,
+                                                                                                                anim_config.start_y,
+                                                                                                                anim_config.frame_width,
+                                                                                                                anim_config.frame_height,
+                                                                                                            ));
+                                                                                                        }
+                                                                                                        let animation = crate::animation::Animation {
+                                                                                                            texture_name: anim_config.texture.clone(),
+                                                                                                            frames,
+                                                                                                            frame_duration: anim_config.frame_duration,
+                                                                                                            loops: anim_config.loops,
+                                                                                                        };
+                                                                                                        player_animation_controller.add_animation(name.clone(), animation);
+                                                                                                    }
+                                                                                                }
+                                                                                                world.add_animation(player_entity_instance, Animation { controller: player_animation_controller });
+                                                                                                world.add_player_tag(player_entity_instance, PlayerTag);
+                                                                                                world.add_gravity(player_entity_instance, Gravity);
+                                                                                                world.add_collision(player_entity_instance, Collision {
+                                                                                                    rect: sdl3::rect::Rect::new(
+                                                                                                        player_position.0.x as i32,
+                                                                                                        player_position.0.y as i32,
+                                                                                                        game_config.player.width,
+                                                                                                        game_config.player.height,
+                                                                                                    ),
+                                                                                                });
+                                                                world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
+                                                                world.add_health(player_entity_instance, Health { current: 3, max: 3 });
+                                                                // Add the Directional component to the player, so we can track which way they are facing.
+                                                                world.add_direction(player_entity_instance, Directional { direction: Direction::Right });
+                                                                let player_entity = Some(player_entity_instance);
+                                                
+                                                                                                // The camera creation needs the player's starting position.
+                                                                                                let player_start_pos = game_config.player.start_pos;
+                                                
+                                                                                                // Create the camera using world units
+                                                                                                let map_width_in_tiles = level.map.tiles[0].len() as f32;
+                                                                                                let map_height_in_tiles = level.map.tiles.len() as f32;
+                                                                                                let total_map_width = map_width_in_tiles * level.tileset.tile_width as f32;
+                                                                                                let total_map_height = map_height_in_tiles * level.tileset.tile_height as f32;
+                                                
+                                                                                                let virtual_width_in_world = config.window.virtual_width as f32 / crate::config::PIXEL_SCALE;
+                                                                                                let virtual_height_in_world = config.window.virtual_height as f32 / crate::config::PIXEL_SCALE;
+                                                
+                                                                                                // Calculate the center of the player sprite
+                                                                                                let player_center_x = player_start_pos.x + (game_config.player.width as f32 / 2.0);
+                                                                                                let player_center_y = player_start_pos.y + (game_config.player.height as f32 / 2.0);
+                                                
+                                                                                                // Calculate the desired top-left corner of the camera in world units
+                                                                                                let initial_camera_x = player_center_x - (virtual_width_in_world / 2.0);
+                                                                                                let initial_camera_y = player_center_y - (virtual_height_in_world / 2.0);
+                                                
+                                                                                                                                                                                                                                                                                                // Clamp initial camera position to map boundaries
+                                                                                                                                                                                                                                                                                                let _initial_camera_x_clamped = initial_camera_x.clamp(0.0, total_map_width - virtual_width_in_world);
+                                                                                                                                                                                                                                                                                                let _initial_camera_y_clamped = initial_camera_y.clamp(0.0, total_map_height - virtual_height_in_world);                                                
+                                                                                                                                                                                                // Create the camera using world units
+                                                                                                                                                                                                let map_width_in_tiles = level.map.tiles[0].len() as f32;
+                                                                                                                                                                                                let map_height_in_tiles = level.map.tiles.len() as f32;
+                                                                                                                                                                                                let total_map_width = map_width_in_tiles * level.tileset.tile_width as f32;
+                                                                                                                                                                                                let total_map_height = map_height_in_tiles * level.tileset.tile_height as f32;
+                                                                                                                                                
+                                                                                                                                                                                                let virtual_width_in_world = config.window.virtual_width as f32 / crate::config::PIXEL_SCALE;
+                                                                                                                                                                                                let virtual_height_in_world = config.window.virtual_height as f32 / crate::config::PIXEL_SCALE;
+                                                                                                                                                
+                                                                                                                                                                                                // Calculate the center of the player sprite
+                                                                                                                                                                                                let player_center_x = player_start_pos.x + (game_config.player.width as f32 / 2.0);
+                                                                                                                                                                                                let player_center_y = player_start_pos.y + (game_config.player.height as f32 / 2.0);
+                                                                                                                                                
+                                                                                                                                                                                                // Calculate the desired top-left corner of the camera in world units
+                                                                                                                                                                                                let initial_camera_x = player_center_x - (virtual_width_in_world / 2.0);
+                                                                                                                                                                                                let initial_camera_y = player_center_y - (virtual_height_in_world / 2.0);
+                                                                                                                                                
+                                                                                                                                                                                                // Clamp initial camera position to map boundaries
+                                                                                                                                                                                                let _initial_camera_x_clamped = initial_camera_x.clamp(0.0, total_map_width - virtual_width_in_world);
+                                                                                                                                                                                                let _initial_camera_y_clamped = initial_camera_y.clamp(0.0, total_map_height - virtual_height_in_world);
+                                                                                                                                                
+                                                                                                                                                                                                let camera = Camera::new(
+                                                                                                                                                                                                    initial_camera_x,
+                                                                                                                                                                                                    initial_camera_y,
+                                                                                                                                                                                                    config.window.camera_tightness,
+                                                                                                                                                                                                    virtual_width_in_world,
+                                                                                                                                                                                                    virtual_height_in_world,
+                                                                                                                                                                                                    total_map_width,
+                                                                                                                                                                                                    total_map_height,
+                                                                                                                                                                                                    config.window.camera_slow_zone,
+                                                                                                                                                                                                    config.window.camera_fast_zone,
+                                                                                                                                                                                                    config.window.camera_vertical_snap_threshold,
+                                                                                                                                                                                                    config.window.camera_vertical_tightness,
+                                                                                                                                                                                                    config.window.camera_falling_tightness,
+                                                                                                                                                                                                    config.window.camera_falling_velocity_threshold,
+                                                                                                                                                                                                    config.physics.entity_max_fall_speed,
+                                                                                                                                                                                                    config.window.camera_lookahead_distance,
+                                                                                                                                                                                                );
+                                                                                                                                                
+                                                                                                                                                                                                // Create the renderer
+                                                                                                                                                                                                let renderer = Renderer::new(canvas)?;
+                                                                                                                                                
+                                                                                                                                                                                                // Create the event pump
+                                                                                                                                                                                                let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
+                                                                                                                                                
+                                                                                                                                                                                                // Initialize Audio Manager
+                                                                                                                                                                                                let audio_manager = GameAudioManager::new(&game_config.audio)?;
+                                                
+                                                        // Create input handler and state
+                                                        let input_handler = InputHandler::new(config.input.clone());
+                                                        let input_state = InputState::default();
+                                                
+                                                        // Return the new App instance
+                                                        Ok(Self {
+                                                            config: config.clone(),
+                                                            _game_config: game_config.clone(),
+                                                            renderer,
+                                                            event_pump,
+                                                            texture_manager,
+                                                            audio_manager,
+                                                            level,
+                                                            camera,
+                                                            input_handler,
+                                                            input_state,
+                                                            world,
+                                                            player_entity,
+                                                            frame_count: 0,
+                                                            _sdl_context: sdl_context,
+                                                            _virtual_width: config.window.virtual_width,
+                                                            _virtual_height: config.window.virtual_height,
+                                                            show_debug_info: true,
+                                                            gold_coin_count: 0,
+                                                            fps: 0,
+                                                            last_frame_time: std::time::Instant::now(),
+                                                            frame_count_for_fps: 0,
+                                                            next_level: None,
+                                                            lives: game_config.player.lives,
+                                                            state: AppState::Playing,
+                                                            game_over_timer: 0.0,
+                                                        })
                                                     }
-                                                }
-
-                                                // Create the player entity
-                                                let player_entity_instance = world.create_entity();
-                                                let player_position = Position(game_config.player.start_pos);
-                                                world.add_position(player_entity_instance, player_position);
-                                                world.add_velocity(player_entity_instance, Velocity(Vector2D::default()));
-                                                world.add_renderable(player_entity_instance, Renderable {
-                                                    width: game_config.player.draw_width,
-                                                    height: game_config.player.draw_height,
-                                                    horizontal_offset: game_config.player.horizontal_draw_offset,
-                                                    vertical_offset: game_config.player.vertical_draw_offset,
-                                                    z_index: 100,
-                                                });
-                                                let mut player_animation_controller = AnimationController::new();
-                                                for (name, anim_config) in &game_config.animation {
-                                                    if !name.starts_with("enemy_spider") && !name.starts_with("gold_coin") {
-                                                        let mut frames = Vec::new();
-                                                        for i in 0..anim_config.frame_count {
-                                                            frames.push(sdl3::rect::Rect::new(
-                                                                anim_config.start_x + (i * anim_config.frame_width) as i32,
-                                                                anim_config.start_y,
-                                                                anim_config.frame_width,
-                                                                anim_config.frame_height,
-                                                            ));
-                                                        }
-                                                        let animation = crate::animation::Animation {
-                                                            texture_name: anim_config.texture.clone(),
-                                                            frames,
-                                                            frame_duration: anim_config.frame_duration,
-                                                            loops: anim_config.loops,
-                                                        };
-                                                        player_animation_controller.add_animation(name.clone(), animation);
-                                                    }
-                                                }
-                                                world.add_animation(player_entity_instance, Animation { controller: player_animation_controller });
-                                                world.add_player_tag(player_entity_instance, PlayerTag);
-                                                world.add_gravity(player_entity_instance, Gravity);
-                                                world.add_collision(player_entity_instance, Collision {
-                                                    rect: sdl3::rect::Rect::new(
-                                                        player_position.0.x as i32,
-                                                        player_position.0.y as i32,
-                                                        game_config.player.width,
-                                                        game_config.player.height,
-                                                    ),
-                                                });
-                world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
-                world.add_health(player_entity_instance, Health { current: 3, max: 3 });
-                // Add the Directional component to the player, so we can track which way they are facing.
-                world.add_direction(player_entity_instance, Directional { direction: Direction::Right });
-                let player_entity = Some(player_entity_instance);
-
-                                                // The camera creation needs the player's starting position.
-                                                let player_start_pos = game_config.player.start_pos;
-
-                                                // Create the camera using world units
-                                                let map_width_in_tiles = level.map.tiles[0].len() as f32;
-                                                let map_height_in_tiles = level.map.tiles.len() as f32;
-                                                let total_map_width = map_width_in_tiles * level.tileset.tile_width as f32;
-                                                let total_map_height = map_height_in_tiles * level.tileset.tile_height as f32;
-
-                                                let virtual_width_in_world = config.window.virtual_width as f32 / crate::config::PIXEL_SCALE;
-                                                let virtual_height_in_world = config.window.virtual_height as f32 / crate::config::PIXEL_SCALE;
-
-                                                // Calculate the center of the player sprite
-                                                let player_center_x = player_start_pos.x + (game_config.player.width as f32 / 2.0);
-                                                let player_center_y = player_start_pos.y + (game_config.player.height as f32 / 2.0);
-
-                                                // Calculate the desired top-left corner of the camera in world units
-                                                let initial_camera_x = player_center_x - (virtual_width_in_world / 2.0);
-                                                let initial_camera_y = player_center_y - (virtual_height_in_world / 2.0);
-
-                                                // Clamp initial camera position to map boundaries
-                                                let initial_camera_x_clamped = initial_camera_x.clamp(0.0, total_map_width - virtual_width_in_world);
-                                                let initial_camera_y_clamped = initial_camera_y.clamp(0.0, total_map_height - virtual_height_in_world);
-
-                                                let camera = Camera::new(
-                                                    initial_camera_x_clamped,
-                                                    initial_camera_y_clamped,
-                                                    config.window.camera_tightness,
-                                                    virtual_width_in_world,
-                                                    virtual_height_in_world,
-                                                    total_map_width,
-                                                    total_map_height,
-                                                    config.window.camera_slow_zone,
-                                                    config.window.camera_fast_zone,
-                                                    config.window.camera_vertical_snap_threshold,
-                                                    config.window.camera_vertical_tightness,
-                                                    config.window.camera_falling_tightness,
-                                                    config.window.camera_falling_velocity_threshold,
-                                                    config.physics.entity_max_fall_speed,
-                                                    config.window.camera_lookahead_distance,
-                                                );
-
-                                                // Create the renderer
-                                                let renderer = Renderer::new(canvas)?;
-
-                                                // Create the event pump
-                                                let event_pump = sdl_context.event_pump().map_err(|e| e.to_string())?;
-
-                                                // Initialize Audio Manager
-                                                let audio_manager = GameAudioManager::new(&game_config.audio)?;
-
-        // Create input handler and state
-        let input_handler = InputHandler::new(config.input.clone());
-        let input_state = InputState::default();
-
-        // Return the new App instance
-        Ok(Self {
-            config: config.clone(),
-            _game_config: game_config,
-            renderer,
-            event_pump,
-            texture_manager,
-            audio_manager,
-            level,
-            camera,
-            input_handler,
-            input_state,
-            world,
-            player_entity,
-            frame_count: 0,
-            _sdl_context: sdl_context,
-            _virtual_width: config.window.virtual_width,
-            _virtual_height: config.window.virtual_height,
-            show_debug_info: true,
-            gold_coin_count: 0,
-            fps: 0,
-            last_frame_time: std::time::Instant::now(),
-            frame_count_for_fps: 0,
-            next_level: None,
-        })
-    }
-
     /// Runs the main game loop until the user quits.
     ///
     /// The loop follows a standard pattern:
@@ -481,6 +516,32 @@ impl App {
                 self.show_debug_info = !self.show_debug_info;
             }
 
+            if self.lives == 0 {
+                self.state = AppState::GameOver;
+                self.game_over_timer = 3.0; // 3 seconds
+            }
+
+            if self.state == AppState::GameOver {
+                self.renderer.clear(sdl3::pixels::Color::RGB(0, 0, 0));
+                let (w, h) = self.renderer.output_size();
+                let game_over_rect = sdl3::rect::Rect::new(
+                    (w as i32 - 1920) / 2,
+                    (h as i32 - 1080) / 2,
+                    1920,
+                    1080,
+                );
+                self.renderer.copy(&self.texture_manager.get("game_over_3").unwrap(), None, Some(game_over_rect))?;
+                self.renderer.present();
+                self.game_over_timer -= 1.0 / 60.0;
+                if self.game_over_timer <= 0.0 {
+                    // For now, just reset the lives and restart the level
+                    self.lives = self._game_config.player.lives;
+                    self.state = AppState::Playing;
+                    self.next_level = Some("assets/levels/world_1_level_1.tmx".to_string());
+                }
+                continue 'running;
+            }
+
             // --- Create system instances locally ---
             let mut input_system = InputSystem;
             let mut physics_system = PhysicsSystem;
@@ -509,6 +570,7 @@ impl App {
                 audio_sender: &self.audio_manager.event_sender(),
                 gold_coin_count: &mut self.gold_coin_count,
                 next_level: &mut self.next_level,
+                lives: &mut self.lives,
             };
 
             // --- Run systems ---

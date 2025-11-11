@@ -21,7 +21,7 @@
 //! // renderer.present();
 //! ```
 
-use sdl3::render::WindowCanvas;
+use sdl3::render::{WindowCanvas, FRect};
 use sdl3::pixels::Color;
 use crate::level::Level;
 use crate::camera::Camera;
@@ -52,15 +52,8 @@ impl Renderer {
         Ok(Self { canvas })
     }
 
-    /// Draws debug text on the screen at a given position.
-    ///
-    /// Note: This is a temporary debug function and will be replaced.
-    pub fn draw_debug_text(&mut self, text: &str, x: i32, y: i32) -> Result<(), String> {
-        let c_text = CString::new(text).map_err(|e| e.to_string())?;
-        unsafe {
-            SDL_RenderDebugText(self.canvas.raw(), x as f32, y as f32, c_text.as_ptr());
-        }
-        Ok(())
+    pub fn output_size(&self) -> (u32, u32) {
+        self.canvas.output_size().unwrap()
     }
 
     /// Sets the current drawing color for the renderer.
@@ -72,6 +65,14 @@ impl Renderer {
     pub fn clear(&mut self, color: Color) {
         self.canvas.set_draw_color(color);
         self.canvas.clear();
+    }
+
+    pub fn copy(&mut self, texture: &sdl3::render::Texture, src: Option<sdl3::rect::Rect>, dst: Option<sdl3::rect::Rect>) -> Result<(), String> {
+        self.canvas.copy(
+            texture,
+            src.map(|r| FRect::new(r.x as f32, r.y as f32, r.width() as f32, r.height() as f32)),
+            dst.map(|r| FRect::new(r.x as f32, r.y as f32, r.width() as f32, r.height() as f32))
+        ).map_err(|e| e.to_string())
     }
 
     /// Presents the back buffer to the screen, updating what is visible.
@@ -133,6 +134,17 @@ impl Renderer {
                 (size.1 as f32 * crate::config::PIXEL_SCALE) as u32,
             );
             self.canvas.copy(texture, *frame_rect, dest_rect).map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    }
+
+    /// Draws debug text on the screen at a given position.
+    ///
+    /// Note: This is a temporary debug function and will be replaced.
+    pub fn draw_debug_text(&mut self, text: &str, x: i32, y: i32) -> Result<(), String> {
+        let c_text = CString::new(text).map_err(|e| e.to_string())?;
+        unsafe {
+            SDL_RenderDebugText(self.canvas.raw(), x as f32, y as f32, c_text.as_ptr());
         }
         Ok(())
     }
