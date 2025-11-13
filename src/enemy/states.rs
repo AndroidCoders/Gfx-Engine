@@ -44,13 +44,12 @@ impl State for PatrolState {
         let is_grounded = world.is_grounded(entity);
 
         if let Some(vel) = world.velocities.get_mut(&entity)
-            && let Some(pos) = world.positions.get(&entity) {
+            && let Some(pos) = world.positions.get(&entity)
+            && let Some(collision) = world.collisions.get(&entity) {
                 let tile_width = context.level.tileset.tile_width as f32;
                 let tile_height = context.level.tileset.tile_height as f32;
-                // Assuming "enemy_spider" is the default enemy type for now.
-                // TODO: Make this more generic for different enemy types.
-                let enemy_width = context.game_config.enemy["enemy_spider"].width as f32;
-                let enemy_height = context.game_config.enemy["enemy_spider"].height as f32;
+                let enemy_width = collision.rect.width() as f32;
+                let enemy_height = collision.rect.height() as f32;
 
                 let mut should_reverse = false;
 

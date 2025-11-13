@@ -82,31 +82,7 @@ pub struct GameSettings {
     pub start_level: String,
 }
 
-/// Represents the configuration for a collectible item, loaded from `game_config.toml`.
-#[derive(Deserialize, Clone)]
-pub struct CollectibleConfig {
-    /// The width of the collectible's collision box in world units.
-    pub width: u32,
-    /// The height of the collectible's collision box in world units.
-    pub height: u32,
-    /// The width of the collectible's sprite for rendering, in world units.
-    pub draw_width: u32,
-    /// The height of the collectible's sprite for rendering, in world units.
-    pub draw_height: u32,
-}
 
-/// Represents the configuration for the level goal, loaded from `game_config.toml`.
-#[derive(Deserialize, Clone, Default)]
-pub struct GoalConfig {
-    /// The width of the goal's sprite for rendering, in world units.
-    pub draw_width: u32,
-    /// The height of the goal's sprite for rendering, in world units.
-    pub draw_height: u32,
-    /// The vertical rendering offset of the goal's sprite.
-    pub vertical_draw_offset: i32,
-    /// The horizontal rendering offset of the goal's sprite.
-    pub horizontal_draw_offset: i32,
-}
 
 /// Represents the game-specific configuration, loaded from `game_config.toml`.
 #[derive(Deserialize, Clone)]
@@ -115,12 +91,6 @@ pub struct GameConfig {
     pub player: PlayerConfig,
     /// World-specific configuration, like boundaries and death planes.
     pub world: WorldConfig,
-    /// A map of configurations for different enemy types.
-    #[serde(default)]
-    pub enemy: HashMap<String, EnemyConfig>,
-    /// A map of configurations for different collectible types.
-    #[serde(default)]
-    pub collectible: HashMap<String, CollectibleConfig>,
     /// A map of all sprite animations available in the game.
     #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
@@ -133,24 +103,33 @@ pub struct GameConfig {
     /// A map of texture names to their file paths.
     #[serde(default)]
     pub textures: HashMap<String, String>,
-    /// Configuration for the level goal.
+    /// A map of entity prefabs.
     #[serde(default)]
-    pub goal: GoalConfig,
+    pub prefabs: HashMap<String, PrefabConfig>,
 }
 
-/// Represents the configuration for a specific type of enemy.
+/// Represents a prefab for an entity.
 #[derive(Deserialize, Clone)]
-pub struct EnemyConfig {
-    /// The width of the enemy's collision box in world units.
-    pub width: u32,
-    /// The height of the enemy's collision box in world units.
-    pub height: u32,
-    /// The patrol speed of the enemy.
-    pub speed: f32,
-    /// The width of the enemy's sprite for rendering, in world units.
-    pub draw_width: u32,
-    /// The height of the enemy's sprite for rendering, in world units.
-    pub draw_height: u32,
+pub struct PrefabConfig {
+    /// A list of components to add to the entity.
+    pub components: Vec<ComponentConfig>,
+}
+
+/// Represents the configuration for a single component in a prefab.
+#[derive(Deserialize, Clone)]
+#[serde(tag = "type")]
+pub enum ComponentConfig {
+    Position,
+    Velocity { x: f32, y: f32 },
+    Renderable { draw_width: u32, draw_height: u32, z_index: u8, #[serde(default)] horizontal_offset: i32, #[serde(default)] vertical_offset: i32 },
+    Animation { animations: Vec<String>, initial_animation: String },
+    Collision { width: u32, height: u32 },
+    Gravity,
+    Patrol { speed: f32 },
+    EnemyTag,
+    GoldCoin,
+    Goal,
+    StateComponent { initial_state: String },
 }
 
 /// Represents the player's configuration.
