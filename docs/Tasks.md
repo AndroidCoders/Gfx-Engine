@@ -137,6 +137,8 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [ ] Refactor `player/states.rs` Logic.
     - [ ] Improve `level.rs` Loading.
     - [ ] Decompose `ecs/system.rs` Collision System.
+    - [ ] Code refactoring.
+    - [ ] Performance Benchmarking and Optimization.
 - [ ] **2. Implement Robust Error Handling:**
     - [ ] Create a Custom Error Enum.
     - [ ] Implement Error Conversions.
@@ -147,9 +149,29 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [ ] Implement an Input and Movement Test.
     - [ ] Add robust testing for file loading.
 - [ ] **4. Refactor for Data-Driven Design:**
+    - [ ] **Data-driven Tile Collision:**
+        - [ ] Research best practices for defining collision in tile-based platformers (e.g., Super Mario World).
+        - [ ] Add support for defining solid tiles in the `.tsx` tileset file, likely using custom properties.
+        - [ ] Update `level.rs` to parse this collision data from the `.tsx` file instead of using a hardcoded list.
     - [ ] Identify and Externalize Hardcoded Values.
     - [ ] Refactor Code to Load from Configuration.
 - [ ] **5. Refactor to a 1:1 Pixel Coordinate System:**
     - [ ] Remove the `PIXEL_SCALE` constant.
     - [ ] Edit graphics assets to use prescaling (1:2).
 - [ ] **6. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.
+- [ ] **7. Fully Embrace Data-Driven Design:**
+    - [x] **Phase 1: Frame-Rate Independence:**
+        - [x] Calculate `delta_time` in the main loop.
+        - [x] Pass `delta_time` to all systems via the `SystemContext`.
+        - [x] Refactor all timer-based logic to use `delta_time`.
+    - [x] **Phase 2: Externalize Assets and Configs:**
+        - [x] Move hardcoded asset paths from `app.rs` to `game_config.toml`.
+        - [x] Move the `start_level` path to `config.toml`.
+        - [ ] Make the "next level" path a data-driven property in the level files.
+    - [ ] **Phase 3: Externalize Gameplay Values:**
+        - [ ] Move magic numbers for physics (knockback, bounce) and gameplay (invincibility duration, coin value) to `game_config.toml`.
+    - [ ] **Phase 4: Create Entity Prefabs:**
+        - [ ] Refactor enemy states to be generic and not tied to a specific enemy type.
+        - [ ] Expand `game_config.toml` to support full entity prefabs that define all components for an entity type.
+    - [ ] **Phase 5: Data-Driven Sound Events:**
+        - [ ] Move hardcoded sound effect names to `game_config.toml`, associated with the events that trigger them.

@@ -165,7 +165,7 @@ pub fn load_level(path: &str) -> Result<Level, String> {
 
     // Manually define which tiles are solid.
     // TODO: Move this data to a configuration file (e.g., tileset.toml)
-    let solid_tiles: Vec<u32> = vec![34, 35, 36];
+    let solid_tiles: Vec<u32> = vec![4, 5, 8, 15, 26, 34, 35, 36, 38, 41, 49];
     let collision_tiles: Vec<Vec<u32>> = map_tiles.iter()
         .map(|row| {
             row.iter().map(|&tile_id| if solid_tiles.contains(&tile_id) { 1 } else { 0 }).collect()
