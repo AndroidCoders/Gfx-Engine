@@ -15,6 +15,11 @@ lives = 9
 width = 6000.0
 death_plane_y = 1200.0
 
+[textures]
+bg_sky = "assets/graphics/background_blue_sky_with_clouds.png"
+goal = "assets/graphics/tiles_goal.png"
+game_over_3 = "assets/graphics/text_game_over_1.png"
+
 [enemy.enemy_spider]
 width = 16
 height = 16
@@ -144,6 +149,12 @@ player_jump = "assets/sounds/sfx_jump_01.ogg"
 coin_pickup = "assets/sounds/sfx_coin_01.flac"
 player_hit = "assets/sounds/sfx_hit_01.flac"
 enemy_stomp = "assets/sounds/sfx_stomp_01.flac"
+
+[sound_events]
+player_jump = "player_jump"
+player_hit = "player_hit"
+enemy_stomp = "enemy_stomp"
+coin_pickup = "coin_pickup"
 
 [goal]
 draw_width = 64

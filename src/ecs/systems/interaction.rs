@@ -77,7 +77,9 @@ impl System<SystemContext<'_>> for InteractionSystem {
             if let Some(player_vel) = world.velocities.get_mut(&event.player) {
                 player_vel.0.y = -4.0; // Bounce
             }
-            let _ = context.audio_sender.send(AudioEvent::PlaySound("enemy_stomp".to_string()));
+            if let Some(sound_name) = context.game_config.sound_events.get("enemy_stomp") {
+                let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
+            }
         }
 
         // Process damage commands
@@ -92,7 +94,9 @@ impl System<SystemContext<'_>> for InteractionSystem {
                         player_vel.0.y = -command.knockback_x.abs(); // 45-degree knockback
                     }
 
-                    let _ = context.audio_sender.send(AudioEvent::PlaySound("player_hit".to_string()));
+                    if let Some(sound_name) = context.game_config.sound_events.get("player_hit") {
+                        let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
+                    }
 
                     // Spawn explosion entity
                     let explosion_entity = world.create_entity();

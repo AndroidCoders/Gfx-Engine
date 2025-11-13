@@ -30,7 +30,9 @@ impl System<SystemContext<'_>> for CoinCollectionSystem {
         for coin_entity in collected_coins {
             world.add_dead_tag(coin_entity, DeadTag);
             *context.gold_coin_count += 1;
-            let _ = context.audio_sender.send(AudioEvent::PlaySound("coin_pickup".to_string()));
+            if let Some(sound_name) = context.game_config.sound_events.get("coin_pickup") {
+                let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
+            }
         }
     }
 }

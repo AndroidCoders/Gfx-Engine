@@ -23,6 +23,8 @@ pub struct Config {
     pub physics: PhysicsConfig,
     /// Debugging-related settings.
     pub debug: DebugConfig,
+    /// Game-specific settings.
+    pub game: GameSettings,
 }
 
 /// Holds all window-related configuration.
@@ -73,6 +75,12 @@ pub struct DebugConfig {
     pub debug_draw_collision_boxes: bool,
 }
 
+/// Holds game-specific settings from `config.toml`.
+#[derive(Deserialize, Clone)]
+pub struct GameSettings {
+    /// The path to the initial level to load.
+    pub start_level: String,
+}
 
 /// Represents the configuration for a collectible item, loaded from `game_config.toml`.
 #[derive(Deserialize, Clone)]
@@ -119,6 +127,12 @@ pub struct GameConfig {
     /// A map of all audio sound effects.
     #[serde(default)]
     pub audio: HashMap<String, String>,
+    /// A map of sound events to sound names.
+    #[serde(default)]
+    pub sound_events: HashMap<String, String>,
+    /// A map of texture names to their file paths.
+    #[serde(default)]
+    pub textures: HashMap<String, String>,
     /// Configuration for the level goal.
     #[serde(default)]
     pub goal: GoalConfig,

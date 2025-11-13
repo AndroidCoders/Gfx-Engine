@@ -69,7 +69,9 @@ impl State for IdleState {
                 if let Some(vel_mut) = world.velocities.get_mut(&entity) {
                     vel_mut.0.y = physics_config.jump_strength;
                 }
-                let _ = context.audio_sender.send(AudioEvent::PlaySound("player_jump".to_string()));
+                if let Some(sound_name) = context.game_config.sound_events.get("player_jump") {
+                    let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
+                }
                 return Some(Box::new(JumpingState));
             }
             if !world.is_grounded(entity) && vel.0.y > 0.0 {
@@ -146,7 +148,9 @@ impl State for WalkingState {
                 if let Some(vel_mut) = world.velocities.get_mut(&entity) {
                     vel_mut.0.y = physics_config.jump_strength;
                 }
-                let _ = context.audio_sender.send(AudioEvent::PlaySound("player_jump".to_string()));
+                if let Some(sound_name) = context.game_config.sound_events.get("player_jump") {
+                    let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
+                }
                 return Some(Box::new(JumpingState));
             }
             if !world.is_grounded(entity) && vel.0.y > 0.0 {
@@ -294,10 +298,8 @@ impl State for DyingState {
     }
 
     /// Decrements the death animation timer.
-    fn update_with_context(&mut self, _world: &mut World, _context: &mut SystemContext, _entity: Entity) {
-        // Assuming a fixed time step of 60 FPS.
-        // TODO: Use a delta time from the game loop for frame-rate independence.
-        self.timer -= 1.0 / 60.0;
+    fn update_with_context(&mut self, _world: &mut World, context: &mut SystemContext, _entity: Entity) {
+        self.timer -= context.delta_time;
     }
 
     /// Determines if the player should transition to `IdleState` (after death animation)
