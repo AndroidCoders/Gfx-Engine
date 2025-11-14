@@ -12,9 +12,9 @@ The protagonist of our game is a charming and adventurous cat.
 
 The character's animations are defined in `assets/game_config.toml` and use the following sprite sheets:
 
--   **Idle:** `assets/graphics/captain_cat_idle_left.png`, `assets/graphics/captain_cat_idle_right.png`
--   **Walk:** `assets/graphics/captain_cat_walk_left.png`, `assets/graphics/captain_cat_walk_right.png`
--   **Jump:** `assets/graphics/captain_cat_jump_left.png`, `assets/graphics/captain_cat_jump_right.png`
+-   **Idle:** `assets/graphics/cat_idle_left.png`, `assets/graphics/cat_idle_right.png`
+-   **Walk:** `assets/graphics/cat_walk_left.png`, `assets/graphics/cat_walk_right.png`
+-   **Jump:** `assets/graphics/cat_jump_left.png`, `assets/graphics/cat_jump_right.png`
 
 ## Gameplay Mechanics
 

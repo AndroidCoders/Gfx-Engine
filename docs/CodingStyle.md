@@ -1,12 +1,12 @@
-File version: 1.03
+File version: 1.04
 
 **TLDR:**
 This document defines the coding conventions and design principles for the `GfX-Engine` project:
 * Modular design
 * Data-driven design
-* Self-documenting code
+* A "comment-first" philosophy with comprehensive documentation.
+* Clear, descriptive naming for all items.
 * Encapsulation
-* Clear descriptions of objects and functions in comments placed at top of definitions
 
 # Coding Conventions
 
@@ -20,13 +20,30 @@ This document outlines the agreed-upon coding conventions and design principles 
 
 ## Code Style
 
-- **Descriptive Naming**: Functions, variables, and other items should have clear, descriptive names that make the code self-documenting.
+- **Descriptive Naming**: All items, including variables, functions, structs, enums, and file names, must have clear and self-documenting names. Avoid short, cryptic names (e.g., `i`, `n`, `mgr`). Prefer longer, more descriptive names that make the code's purpose immediately obvious (e.g., `player_index`, `font_manager`).
 - **Standard Formatting (`rustfmt`)**: All code will be formatted using the standard `rustfmt` tool to ensure a consistent style.
 - **Linter Suggestions (`clippy`)**: Code should adhere to the recommendations of the `clippy` linter to follow idiomatic Rust practices.
 
-## Documentation
+## Documentation and Commenting
 
-- **High-Level Comments**: Public functions should have a high-level description of their purpose using documentation comments (`///`).
+We adhere to a "comment-first" philosophy. Good comments are crucial for maintainability and collaboration.
+
+- **High-Level Documentation (`///`)**: All public items (functions, structs, enums, etc.) must have high-level doc-comments that explain their purpose and the "why" behind their existence. Follow the best practices outlined in `docs/Documentation.md`.
+
+- **Implementation Comments (`//`)**: Use standard comments to clarify complex, non-obvious, or important parts of an implementation.
+
+- **Placeholder-Driven Development**: Before writing the implementation for a complex function, write out the high-level logic as a series of comments. This "plan" serves as a placeholder, clarifies your thinking, and makes the code easier for others to review and understand.
+
+  ```rust
+  // Example of placeholder-driven development
+  fn process_complex_data(&mut self, data: &Data) {
+      // 1. Validate the incoming data structure.
+      // 2. Find the corresponding entity in the world.
+      // 3. If found, update its state based on the data.
+      // 4. If not found, create a new entity.
+      // 5. Trigger a sound effect for feedback.
+  }
+  ```
 
 ## Error Handling
 

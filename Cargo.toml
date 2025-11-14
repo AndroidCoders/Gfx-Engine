@@ -1,6 +1,6 @@
 [package]
 name = "Gfx-Engine"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
 
@@ -17,6 +17,11 @@ kira = "0.8.0"
 
 [features]
 debug-player = []
+
+[dev-dependencies]
+image = "0.25.1"
+imageproc = "0.25.0"
+rusttype = "0.9.3"
 
 
 
