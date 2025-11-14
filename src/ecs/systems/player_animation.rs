@@ -1,56 +1,35 @@
-//! This system is responsible for updating the player's animation based on their state and direction.
-
-use crate::ecs::component::Direction;
 use crate::ecs::systems::{System, SystemContext};
 use crate::ecs::world::World;
 
-/// The system that updates the player's animation based on their state and direction.
 pub struct PlayerAnimationSystem;
 impl System<SystemContext<'_>> for PlayerAnimationSystem {
-    /// Iterates through all player entities and updates their animation controller.
-    ///
-    /// The animation is determined by the player's current state (e.g., Idle, Walking, Jumping)
-    /// and their facing direction (Left or Right). If a specific animation for the current
-    /// state and direction exists, it is set; otherwise, it defaults to an idle animation.
     fn update(&mut self, world: &mut World, _context: &mut SystemContext) {
-        for entity in world.player_tags.keys() {
-            // Update the player's direction based on their velocity.
-            if let Some(vel) = world.velocities.get(entity) {
-                if vel.0.x < 0.0 {
-                    if let Some(dir) = world.directions.get_mut(entity) {
-                        dir.direction = Direction::Left;
-                    }
-                } else if vel.0.x > 0.0
-                    && let Some(dir) = world.directions.get_mut(entity) {
-                        dir.direction = Direction::Right;
-                    }
-            }
-
-            // Update the player's animation based on their state and direction.
-            if let Some(animation) = world.animations.get_mut(entity)
-                && let Some(state_component) = world.state_components.get(entity) {
+        for (entity, _) in &world.player_tags {
+            if let Some(animation) = world.animations.get_mut(entity) {
+                if let Some(state_component) = world.state_components.get(entity) {
                     let current_state_name = state_component.state_machine.current_state.as_ref().map_or("IdleState", |s| s.get_name());
 
-                    let direction_str = if let Some(dir) = world.directions.get(entity) {
-                        if dir.direction == Direction::Left { "left" } else { "right" }
+                    let direction = if let Some(vel) = world.velocities.get(entity) {
+                        if vel.0.x < 0.0 { "left" } else { "right" }
                     } else {
                         "right"
                     };
 
                     let animation_name = match current_state_name {
-                        "IdleState" => format!("idle_{}", direction_str),
-                        "WalkingState" => format!("walk_{}", direction_str),
-                        "JumpingState" => format!("jump_{}", direction_str),
-                        "FallingState" => format!("fall_{}", direction_str),
-                        _ => format!("idle_{}", direction_str), // Fallback
+                        "IdleState" => format!("idle_{}", direction),
+                        "WalkingState" => format!("walk_{}", direction),
+                        "JumpingState" => format!("jump_{}", direction),
+                        "FallingState" => format!("fall_{}", direction),
+                        _ => format!("idle_{}", direction), // Fallback
                     };
                     
                     if animation.controller.has_animation(&animation_name) {
                         animation.controller.set_animation(&animation_name);
                     } else {
-                        animation.controller.set_animation(&format!("idle_{}", direction_str));
+                        animation.controller.set_animation(&format!("idle_{}", direction));
                     }
                 }
+            }
         }
     }
 }

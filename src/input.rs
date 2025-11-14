@@ -1,6 +1,6 @@
 // src/input.rs
 
-//! Handles user input and translates it into abstract game actions.
+////! Handles user input and translates it into abstract game actions.
 
 use sdl3::EventPump;
 use sdl3::event::Event;
@@ -8,7 +8,7 @@ use sdl3::keyboard::Keycode;
 use std::collections::HashSet;
 use crate::config::InputConfig;
 
-/// Represents the abstract actions a player can take, decoupled from specific keys.
+/// Represents the abstract actions a player can take.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PlayerAction {
     /// Move the player to the left.
@@ -19,20 +19,15 @@ pub enum PlayerAction {
     Jump,
 }
 
-/// Represents abstract actions for debugging, decoupled from specific keys.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DebugAction {
-    /// Toggles the display of on-screen debug information.
     ToggleDebugInfo,
 }
 
-/// Holds the current state of all player and debug actions.
-///
-/// This struct is updated every frame by the `InputHandler` and is read by
-/// various systems to determine how to affect the game world.
+/// Holds the current state of all player actions.
 #[derive(Debug, Default)]
 pub struct InputState {
-    /// A set of all actions that are currently active (i.e., the key is being held down).
+    /// A set of all actions that are currently active (held down).
     active_actions: HashSet<PlayerAction>,
     /// A set of all actions that were just pressed in the current frame.
     just_pressed_actions: HashSet<PlayerAction>,
@@ -47,7 +42,6 @@ impl InputState {
     }
 
     /// Checks if a specific action was just pressed in the current frame.
-    /// This is useful for single-press events like jumping.
     pub fn is_action_just_pressed(&self, action: PlayerAction) -> bool {
         self.just_pressed_actions.contains(&action)
     }
@@ -59,25 +53,19 @@ impl InputState {
 }
 
 /// The main input handler for the game.
-///
-/// It reads the raw SDL event pump and translates keyboard events into
-/// abstract `PlayerAction` and `DebugAction` states based on the provided
-/// `InputConfig`.
 pub struct InputHandler {
     input_config: InputConfig,
 }
 
 impl InputHandler {
-    /// Creates a new `InputHandler` with the given key binding configuration.
+    /// Creates a new `InputHandler` with the given configuration.
     pub fn new(input_config: InputConfig) -> Self {
         Self { input_config }
     }
 
-    /// Processes all pending SDL events for the current frame and updates the `InputState`.
-    ///
-    /// Returns `false` if a quit event is received, `true` otherwise.
+    /// Processes SDL events and updates the `InputState`.
     pub fn process_events(&self, event_pump: &mut EventPump, input_state: &mut InputState) -> bool {
-        // Clear the just-pressed sets at the beginning of each frame.
+        // Clear the just-pressed actions at the beginning of the frame.
         input_state.just_pressed_actions.clear();
         input_state.just_pressed_debug_actions.clear();
 
@@ -101,8 +89,7 @@ impl InputHandler {
         true
     }
 
-    /// Handles a single key event, mapping it to a `PlayerAction` or `DebugAction`
-    /// and updating the `InputState`.
+    /// Handles a single key event and updates the input state.
     fn handle_key_event(&self, keycode: Keycode, input_state: &mut InputState, is_down: bool) {
         let player_action = if keycode.name() == self.input_config.left {
             Some(PlayerAction::MoveLeft)
@@ -132,9 +119,10 @@ impl InputHandler {
             None
         };
 
-        if let Some(action) = debug_action
-            && is_down {
+        if let Some(action) = debug_action {
+            if is_down {
                 input_state.just_pressed_debug_actions.insert(action);
             }
+        }
     }
 }

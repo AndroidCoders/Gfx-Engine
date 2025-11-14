@@ -1,13 +1,8 @@
-//! This system is responsible for removing entities that are marked as "dead".
-
 use crate::ecs::systems::{System, SystemContext};
 use crate::ecs::world::{Entity, World};
 
-/// The system that removes all components from entities marked with a `DeadTag`.
 pub struct KillSystem;
 impl System<SystemContext<'_>> for KillSystem {
-    /// Finds all entities with a `DeadTag` and removes all of their associated
-    /// components from the world, effectively deleting them from the game.
     fn update(&mut self, world: &mut World, _context: &mut SystemContext) {
         let dead_entities: Vec<Entity> = world.dead_tags.keys().copied().collect();
         for entity in dead_entities {

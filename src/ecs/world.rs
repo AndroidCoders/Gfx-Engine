@@ -1,187 +1,120 @@
-//! The core of the Entity-Component-System (ECS) architecture.
-//! 
-//! This module defines the `World`, which is the container for all entities and their
-//! associated components. The `World` provides methods for creating entities and
-//! adding, removing, and accessing components.
-
 use std::collections::HashMap;
 use crate::ecs::component::*;
 
-/// A unique identifier for an entity in the game world.
 pub type Entity = usize;
 
-/// The `World` struct holds all the data for the game state.
-///
-/// It contains HashMaps for each component type, where the key is the `Entity` ID
-/// and the value is the component itself. This structure-of-arrays approach
-/// is a common and efficient way to implement an ECS.
 #[derive(Default)]
 pub struct World {
-    /// The ID to be assigned to the next created entity.
     next_entity_id: usize,
-    /// Storage for all position components.
     pub positions: HashMap<Entity, Position>,
-    /// Storage for all velocity components.
     pub velocities: HashMap<Entity, Velocity>,
-    /// Storage for all renderable components.
     pub renderables: HashMap<Entity, Renderable>,
-    /// Storage for all animation components.
     pub animations: HashMap<Entity, Animation>,
-    /// Storage for all player tag components.
     pub player_tags: HashMap<Entity, PlayerTag>,
-    /// Storage for all gold coin tag components.
     pub gold_coins: HashMap<Entity, GoldCoin>,
-    /// Storage for all enemy tag components.
     pub enemy_tags: HashMap<Entity, EnemyTag>,
-    /// Storage for all dead tag components.
     pub dead_tags: HashMap<Entity, DeadTag>,
-    /// Storage for all patrol components.
     pub patrols: HashMap<Entity, Patrol>,
-    /// Storage for all gravity tag components.
     pub gravity_tags: HashMap<Entity, Gravity>,
-    /// Storage for all collision components.
     pub collisions: HashMap<Entity, Collision>,
-    /// Storage for all grounded tag components.
     pub grounded_tags: HashMap<Entity, Grounded>,
-    /// Storage for all state machine components.
     pub state_components: HashMap<Entity, StateComponent>,
-    /// Storage for all respawn tag components.
     pub respawn_tags: HashMap<Entity, RespawnTag>,
-    /// Storage for all respawn timer components.
     pub respawn_timers: HashMap<Entity, RespawnTimer>,
-    /// Storage for all health components.
     pub healths: HashMap<Entity, Health>,
-    /// Storage for all invincibility components.
     pub invincibilities: HashMap<Entity, Invincibility>,
-    /// Storage for all lifetime components.
     pub lifetimes: HashMap<Entity, Lifetime>,
-    /// Storage for all directional components.
-    pub directions: HashMap<Entity, Directional>,
-    /// Storage for all goal tag components.
-    pub goals: HashMap<Entity, Goal>,
 }
 
 impl World {
-    /// Creates a new, empty `World`.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates a new entity with a unique ID.
     pub fn create_entity(&mut self) -> Entity {
         let entity_id = self.next_entity_id;
         self.next_entity_id += 1;
         entity_id
     }
 
-    /// Adds a `Position` component to an entity.
     pub fn add_position(&mut self, entity: Entity, component: Position) {
         self.positions.insert(entity, component);
     }
 
-    /// Adds a `Velocity` component to an entity.
     pub fn add_velocity(&mut self, entity: Entity, component: Velocity) {
         self.velocities.insert(entity, component);
     }
 
-    /// Adds a `Renderable` component to an entity.
     pub fn add_renderable(&mut self, entity: Entity, component: Renderable) {
         self.renderables.insert(entity, component);
     }
 
-    /// Adds an `Animation` component to an entity.
     pub fn add_animation(&mut self, entity: Entity, component: Animation) {
         self.animations.insert(entity, component);
     }
 
-    /// Adds a `PlayerTag` component to an entity.
     pub fn add_player_tag(&mut self, entity: Entity, component: PlayerTag) {
         self.player_tags.insert(entity, component);
     }
 
-    /// Adds a `Gravity` component to an entity.
     pub fn add_gravity(&mut self, entity: Entity, component: Gravity) {
         self.gravity_tags.insert(entity, component);
     }
 
-    /// Adds a `Collision` component to an entity.
     pub fn add_collision(&mut self, entity: Entity, component: Collision) {
         self.collisions.insert(entity, component);
     }
 
-    /// Adds a `Grounded` component to an entity.
     pub fn add_grounded(&mut self, entity: Entity, component: Grounded) {
         self.grounded_tags.insert(entity, component);
     }
 
-    /// Removes a `Grounded` component from an entity.
     #[allow(dead_code)]
     pub fn remove_grounded(&mut self, entity: Entity) {
         self.grounded_tags.remove(&entity);
     }
 
-    /// Checks if an entity has a `Grounded` component.
     pub fn is_grounded(&self, entity: Entity) -> bool {
         self.grounded_tags.contains_key(&entity)
     }
 
-    /// Adds a `StateComponent` to an entity.
     pub fn add_state_component(&mut self, entity: Entity, component: StateComponent) {
         self.state_components.insert(entity, component);
     }
 
-    /// Adds a `RespawnTag` to an entity.
     pub fn add_respawn_tag(&mut self, entity: Entity, component: RespawnTag) {
         self.respawn_tags.insert(entity, component);
     }
 
-    /// Adds a `RespawnTimer` to an entity.
     pub fn add_respawn_timer(&mut self, entity: Entity, component: RespawnTimer) {
         self.respawn_timers.insert(entity, component);
     }
 
-    /// Adds an `EnemyTag` to an entity.
     pub fn add_enemy_tag(&mut self, entity: Entity, component: EnemyTag) {
         self.enemy_tags.insert(entity, component);
     }
 
-    /// Adds a `Patrol` component to an entity.
     pub fn add_patrol(&mut self, entity: Entity, component: Patrol) {
         self.patrols.insert(entity, component);
     }
 
-    /// Adds a `DeadTag` to an entity.
     pub fn add_dead_tag(&mut self, entity: Entity, component: DeadTag) {
         self.dead_tags.insert(entity, component);
     }
 
-    /// Adds a `GoldCoin` component to an entity.
     pub fn add_gold_coin(&mut self, entity: Entity, component: GoldCoin) {
         self.gold_coins.insert(entity, component);
     }
 
-    /// Adds a `Health` component to an entity.
     pub fn add_health(&mut self, entity: Entity, component: Health) {
         self.healths.insert(entity, component);
     }
 
-    /// Adds an `Invincibility` component to an entity.
     pub fn add_invincibility(&mut self, entity: Entity, component: Invincibility) {
         self.invincibilities.insert(entity, component);
     }
 
-    /// Adds a `Lifetime` component to an entity.
     pub fn add_lifetime(&mut self, entity: Entity, component: Lifetime) {
         self.lifetimes.insert(entity, component);
-    }
-
-    /// Adds a `Directional` component to an entity.
-    pub fn add_direction(&mut self, entity: Entity, component: Directional) {
-        self.directions.insert(entity, component);
-    }
-
-    /// Adds a `Goal` component to an entity.
-    pub fn add_goal(&mut self, entity: Entity, component: Goal) {
-        self.goals.insert(entity, component);
     }
 }

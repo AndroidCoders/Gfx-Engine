@@ -1,44 +1,30 @@
 // src/animation.rs
 
-//! This module defines the structures for managing sprite animations.
-//!
-//! It provides an `AnimationController` that can be used to add, set, and update
-//! animations for an entity.
+//! Defines the structures for managing sprite animations.
 
 use sdl3::rect::Rect;
 use std::collections::HashMap;
 
-/// Represents a single animation clip, composed of a sequence of frames from a texture.
+/// Represents a single animation clip.
 #[derive(Clone)]
 pub struct Animation {
-    /// The name of the texture in the `TextureManager` used for this animation.
     pub texture_name: String,
-    /// A vector of `Rect`s, each defining a single frame on the texture's sprite sheet.
     pub frames: Vec<Rect>,
-    /// The duration of each frame in game ticks (i.e., how many frames to wait before advancing).
-    pub frame_duration: u32,
-    /// Whether the animation should loop back to the beginning after it finishes.
+    pub frame_duration: u32, // Duration of each frame in game ticks
     pub loops: bool,
 }
 
-/// Manages the animations for a single entity.
-///
-/// This controller holds all possible animations for an entity and tracks the
-/// state of the currently playing animation.
+/// Manages the animations for an entity.
 #[derive(Clone)]
 pub struct AnimationController {
-    /// A map of all animations available to the entity, indexed by a unique name.
     animations: HashMap<String, Animation>,
-    /// The name of the currently active animation, if any.
     current_animation: Option<String>,
-    /// The index of the current frame within the active animation's `frames` vector.
     current_frame_index: usize,
-    /// A timer that counts up to the `frame_duration` of the current animation.
     frame_timer: u32,
 }
 
 impl AnimationController {
-    /// Creates a new, empty `AnimationController`.
+    /// Creates a new, empty AnimationController.
     pub fn new() -> Self {
         Self {
             animations: HashMap::new(),
@@ -48,21 +34,13 @@ impl AnimationController {
         }
     }
 
-    /// Adds a new animation clip to the controller.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - A unique name to identify this animation.
-    /// * `animation` - The `Animation` struct to add.
+    /// Adds an animation to the controller.
     pub fn add_animation(&mut self, name: String, animation: Animation) {
         self.animations.insert(name, animation);
     }
 
-    /// Sets the currently playing animation by name.
-    ///
-    /// If the new animation is different from the current one, it resets the
-    /// frame index and timer to start the new animation from the beginning.
-    /// If the animation name does not exist, nothing happens.
+    /// Sets the currently playing animation.
+    /// If the new animation is different from the current one, it resets the frame index and timer.
     pub fn set_animation(&mut self, name: &str) {
         if self.current_animation.as_deref() != Some(name)
             && self.animations.contains_key(name) {
@@ -73,7 +51,6 @@ impl AnimationController {
     }
 
     /// Updates the animation timer and advances the frame if necessary.
-    ///
     /// This should be called once per game loop update.
     pub fn update(&mut self) {
         if let Some(current_anim_name) = &self.current_animation
@@ -86,17 +63,15 @@ impl AnimationController {
                         if animation.loops {
                             self.current_frame_index = 0;
                         } else {
-                            // If the animation doesn't loop, stay on the last frame.
-                            self.current_frame_index = animation.frames.len() - 1;
+                            self.current_frame_index = animation.frames.len() - 1; // Stay on last frame
                         }
                     }
                 }
             }
     }
 
-    /// Returns a reference to the `Rect` of the current animation frame.
-    ///
-    /// Returns `None` if no animation is currently playing or if the frame index is invalid.
+    /// Returns the rectangle of the current animation frame.
+    /// Returns None if no animation is playing.
     pub fn current_frame_rect(&self) -> Option<&Rect> {
         self.current_animation
             .as_ref()
@@ -105,8 +80,6 @@ impl AnimationController {
     }
 
     /// Returns the texture name of the current animation.
-    ///
-    /// Returns `None` if no animation is currently playing.
     pub fn current_texture_name(&self) -> Option<&str> {
         self.current_animation
             .as_ref()
@@ -114,7 +87,7 @@ impl AnimationController {
             .map(|anim| anim.texture_name.as_str())
     }
 
-    /// Checks if an animation with the given name has been added to the controller.
+    /// Checks if an animation with the given name exists.
     pub fn has_animation(&self, name: &str) -> bool {
         self.animations.contains_key(name)
     }

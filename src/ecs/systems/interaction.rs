@@ -1,5 +1,3 @@
-//! This system handles all interactions between the player and enemies.
-
 use crate::ecs::component::{Animation, DeadTag, Invincibility, Lifetime, Position, Renderable};
 use crate::ecs::systems::{System, SystemContext};
 use crate::ecs::world::{Entity, World};
@@ -7,33 +5,20 @@ use crate::animation::AnimationController;
 use crate::math::Vector2D;
 use crate::audio::AudioEvent;
 
-/// An internal event representing the player stomping on an enemy.
 struct StompEvent {
     enemy: Entity,
     player: Entity,
 }
 
-/// An internal command representing the player taking damage from an enemy.
 struct DamageCommand {
     player: Entity,
     knockback_x: f32,
     position: Vector2D,
 }
 
-/// The system responsible for player-enemy interactions.
 pub struct InteractionSystem;
 
 impl System<SystemContext<'_>> for InteractionSystem {
-    /// Detects and resolves collisions between players and enemies.
-    ///
-    /// This system checks for intersections between player and enemy collision boxes.
-    /// Based on the context of the collision (e.g., player velocity), it determines
-    /// whether it's a "stomp" or a "damage" event and processes it accordingly.
-    ///
-    /// - **Stomp:** If the player is falling onto an enemy, the enemy is killed,
-    ///   and the player gets a small bounce.
-    /// - **Damage:** If the player touches an enemy from the side or below, they
-    ///   take damage, get temporary invincibility, and are knocked back.
     fn update(&mut self, world: &mut World, context: &mut SystemContext) {
         let mut stomp_events = Vec::new();
         let mut damage_commands = Vec::new();
@@ -53,20 +38,18 @@ impl System<SystemContext<'_>> for InteractionSystem {
                 world.collisions.get(&player_entity),
             ) {
                 for &enemy_entity in &enemy_entities {
-                    if let Some(enemy_collision) = world.collisions.get(&enemy_entity)
-                        && let Some(intersection) = player_collision.rect.intersection(enemy_collision.rect) {
-                            let player_is_falling = player_vel.0.y > 0.0;
-
-                            // A stomp is a vertical collision where the player is falling.
-                            // We can approximate this by checking if the intersection is wider than it is tall.
-                            if player_is_falling && intersection.width() > intersection.height() {
+                    if let Some(enemy_collision) = world.collisions.get(&enemy_entity) {
+                        if player_collision.rect.has_intersection(enemy_collision.rect) {
+                            // Stomp check
+                            if player_vel.0.y > 0.0 && player_pos.0.y + player_collision.rect.height() as f32 - player_vel.0.y <= enemy_collision.rect.y() as f32 {
                                 stomp_events.push(StompEvent { enemy: enemy_entity, player: player_entity });
                             } else {
-                                // Otherwise, it's a horizontal (damaging) collision.
+                                // Not a stomp, so it's a horizontal collision
                                 let knockback_x = if player_pos.0.x < enemy_collision.rect.x() as f32 { -5.0 } else { 5.0 };
                                 damage_commands.push(DamageCommand { player: player_entity, knockback_x, position: player_pos.0 });
                             }
                         }
+                    }
                 }
             }
         }
@@ -77,15 +60,13 @@ impl System<SystemContext<'_>> for InteractionSystem {
             if let Some(player_vel) = world.velocities.get_mut(&event.player) {
                 player_vel.0.y = -4.0; // Bounce
             }
-            if let Some(sound_name) = context.game_config.sound_events.get("enemy_stomp") {
-                let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
-            }
+            let _ = context.audio_sender.send(AudioEvent::PlaySound("enemy_stomp".to_string()));
         }
 
         // Process damage commands
         for command in damage_commands {
-            if let Some(health) = world.healths.get_mut(&command.player)
-                && health.current > 0 {
+            if let Some(health) = world.healths.get_mut(&command.player) {
+                if health.current > 0 {
                     health.current -= 1;
                     world.add_invincibility(command.player, Invincibility { timer: 1.5 });
 
@@ -94,9 +75,7 @@ impl System<SystemContext<'_>> for InteractionSystem {
                         player_vel.0.y = -command.knockback_x.abs(); // 45-degree knockback
                     }
 
-                    if let Some(sound_name) = context.game_config.sound_events.get("player_hit") {
-                        let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
-                    }
+                    let _ = context.audio_sender.send(AudioEvent::PlaySound("player_hit".to_string()));
 
                     // Spawn explosion entity
                     let explosion_entity = world.create_entity();
@@ -134,6 +113,7 @@ impl System<SystemContext<'_>> for InteractionSystem {
                         world.add_lifetime(explosion_entity, Lifetime { timer: (anim_config.frame_count * anim_config.frame_duration) as f32 / 60.0 });
                     }
                 }
+            }
         }
     }
 }

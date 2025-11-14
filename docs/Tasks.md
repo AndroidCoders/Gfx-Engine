@@ -1,4 +1,4 @@
-File version: 9.02
+File version: 8.00
 
 **TLDR:**
 This document is the **Product Backlog** for the `GfX-Engine` project. It lists all features, improvements, and bug fixes, organized into a prioritized roadmap that guides our Agile development process.
@@ -26,172 +26,571 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 - [x] **1. Implement Multi-Frame Animations:** Extend the animation system to support sprite sheets with multiple frames to create fluid walking cycles.
 - [x] **2. Add Textured World Graphics:** Replace the placeholder level blocks with textured graphics loaded from files.
 
-### Phase 3: "Super Cat Bros" Demo - Gameplay Polish (Current Sprint)
+### Phase 3: Gameplay Polish Sprint (Current)
 
-- [x] **1. Core Gameplay Feel:**
-    - [x] Tune Player Controls: Adjust player physics parameters in `config.toml` for a tighter feel.
-    - [x] Improve Stomping Mechanics: Refine player-enemy collision detection for more accurate stomp registration.
-    - [x] Tune Player Collision Box: Fine-tune the main character's collision box for better gameplay feel.
-    - [x] Fix player orientation reset glitch.
-- [ ] **2. Player Experience & Feedback:**
-    - [x] Improve Player Spawning and Death:
-        - [x] Adjust player start position in `assets/levels/world_1_level_1.tmx`.
-        - [x] Implement an "angel" death sequence with animation and sound.
-        - [x] Implement a respawn animation.
-    - [ ] Implement Player Lives and Game Over:
-        - [x] Display player lives in the debug text.
-        - [ ] Implement a "Game Over" screen.
-    - [x] Implement Player Health & Damage:
-        - [x] Add a `health` component to the player.
-        - [x] Make enemies deal damage on contact.
-        - [x] Display player health (hearts) in the debug text.
-        - [ ] Add "Medical Kit" or "Potion of Health" items to the game.
-        - [ ] Implement logic for picking up health items to restore player health.
-        - [ ] Brainstorm ideas for how health items can appear (e.g., dropped by enemies, in chests).
-    - [x] Implement Damped Camera Movement:
-        - [x] Re-implement lerp-based smoothing to restore damping effect.
-        - [x] Implement "Look-Ahead" (Directional Bias).
-        - [x] Implement "Platform Snap".
-    - [x] Hide Mouse Cursor in Fullscreen: Call the appropriate SDL3 function to hide the mouse cursor during gameplay.
-- [x] **3. Content & Progression:**
-    - [x] Implement a Simple Enemy: Add an enemy with basic patrol AI and stomp mechanics.
-    - [x] Implement Level Goal and Progression:
-        - [x] Add a "Goal" object to the level.
-        - [x] Implement level transitions.
 
-### Phase 4: Architectural Improvements & Core Features (Next Sprint)
 
-- [ ] **1. Implement ECSC Type-Based Event Bus:**
-    - [ ] Create `src/ecs/event.rs` with a generic `EventBus` struct.
-    - [ ] Integrate the `EventBus` into the `World` struct.
-    - [ ] Refactor one system (e.g., `CoinCollectionSystem`) to publish a strongly-typed event instead of using the `mpsc::channel`.
-    - [ ] Create a new `AudioConductorSystem` that listens for the event and plays the sound.
-    - [ ] Update the main loop to clear the event bus each frame.
-- [ ] **2. Refactor `app.rs` into Managers:**
-    - [ ] Create a `SystemManager` to hold all ECS systems and orchestrate their execution.
-    - [ ] Create a `GameStateManager` to handle level loading, transitions, and entity creation/teardown.
-    - [ ] Simplify the `App` struct to delegate most of its responsibilities to these new managers.
-- [ ] **3. Externalize Gameplay Values:**
-    - [ ] Move magic numbers for physics (knockback force, bounce height) and gameplay (invincibility duration, coin value) from source code (`interaction.rs`, etc.) to `game_config.toml`.
-    - [ ] Make the "next level" path a data-driven property in the level files (`.tmx`) instead of being hardcoded in `level_transition.rs`.
-- [ ] **4. Implement Robust Text Rendering:**
-    - [ ] Research and add the `sdl3_ttf` crate to the project.
-    - [ ] Create a `FontManager` to load and manage `.ttf` fonts.
-    - [ ] Create a `Text` component and a `TextSystem` for rendering UI and debug text.
-    - [ ] Replace the temporary `SDL_RenderDebugText` with the new system.
-- [ ] **5. Implement Menu System:** Develop a basic UI system with a title screen and menus (`MainMenu`, `InGame`, `Exit`).
-    - [ ] **Prerequisite:** Implement a robust text rendering system.
-- [ ] **6. Implement Audio Features:**
-    - [ ] **Phase 1: Basic Music Implementation**
-        - [ ] Find and add a freely-licensed music track.
-        - [ ] Enable streaming support in the `kira` crate.
-        - [ ] Update `GameAudioManager` to handle music streaming and looping.
-        - [ ] Add a `[music]` section to `game_config.toml`.
-        - [ ] Start music playback on game launch.
-    - [ ] **Phase 2: Zone-Based Music**
-        - [ ] Design and implement music zones in level data.
-        - [ ] Create a new `MusicSystem` to track player position and trigger music changes.
-        - [ ] Enhance `GameAudioManager` to support crossfading between music tracks.
-- [x] **7. Add Collectible Treasures:**
-    - [x] Add items like Stars and Gold to levels.
+- [ ] **1. Implement Damped Camera Movement:** Improve the camera to follow the player smoothly, enhancing the game's professional feel.
+
+    - [x] Re-implement lerp-based smoothing to restore damping effect.
+    - [ ] Implement Advanced Camera Mechanics:
+        - [ ] Implement "Look-Ahead" (Directional Bias) to show more of the screen in front of the player.
+        - [ ] Implement "Platform Snap" to prevent vertical camera movement during jumps.
+        - [x] Rename camera zones to "Slow Zone" and "Fast Zone" and move their configuration to `config.toml`.
+
+- [x] **2. Implement Basic Sound Effects (using Kira and Event-Driven Audio):** Integrate an audio system for key gameplay events.
+
+    - [x] Add the `kira` crate to `Cargo.toml`.
+
+    - [x] Create an `AudioManager` in `src/audio.rs` that wraps Kira's audio context.
+
+    - [x] Define an `AudioEvent` enum and a channel for sending events.
+
+    - [x] Modify `app.rs` to process `AudioEvent`s and instruct the `AudioManager` to play sounds.
+
+    - [x] In game logic (e.g., `player/state.rs`), emit `AudioEvent`s when specific events occur (e.g., `AudioEvent::PlayerJumped`).
+
+    - [x] Add a sound to the "coin pickup" event (e.g., `assets/sounds/sfx_coin_01.flac`).
+    - [ ] Add a sound to the Player-to-Enemy collision event.
+    - [ ] Add a sound to the Player-stomping-Enemy event.
+
+- [ ] **3. Refactor Physics Logic:** Move physics and collision logic from `player/state.rs` into a generic `physics.rs` module.
+
+- [ ] **4. Implement a Simple Enemy:** Add an enemy with basic patrol AI and stomp mechanics.
+
+
+
+### Phase 4: Core Gameplay Systems (Backlog)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [ ] **1. Implement Menu System:** Develop a basic UI system with a title screen and menus (`MainMenu`, `InGame`, `Exit`).
+
+
+
+
+
+
+
+- [ ] **2. Implement Player Health & Damage:** 
+
+
+
+
+
+
+
+    - [ ] Add a `health` component to the player.
+
+
+
+
+
+
+
+    - [ ] Make enemies deal damage on contact.
+
+
+
+
+
+
+
+    - [ ] Add Health-Up items (Heart, Potion) to levels.
+
+
+
+
+
+
+
+- [ ] **3. Add Collectible Treasures:** 
+
+
+
+
+
+
+
+    - [ ] Add items like Stars and Gold to levels.
+
+
+
+
+
+
+
     - [ ] Implement a scoring system and UI display.
-- [ ] **8. Implement Interactive Blocks:** Create a system for various types of interactive blocks, such as power-up blocks and breakable blocks.
-- [ ] **9. Implement Power-Ups:**
-    - [ ] Design a flexible system for power-ups that can modify the player's state and grant new abilities.
+
+
+
+
+
+
+
+- [ ] **4. Implement Debugging Tools:** Create the planned in-game `Benchmarker` and on-screen debug display.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Phase 5: Player Abilities (Backlog)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [ ] **Implement Power-Ups:** Design a flexible system for power-ups that can modify the player's state and grant new abilities.
+
+
+
+
+
+
+
     - [ ] Add a "Run Fast" power-up.
+
+
+
+
+
+
+
     - [ ] Add a "Shoot" power-up with projectiles.
+
+
+
+
+
+
+
     - [ ] Add a "Fly" power-up.
 
-### Phase 5: Gameplay Expansion (Backlog)
 
-- [ ] **1. Create More Content:**
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Phase 6: Advanced Features & Tooling (Future)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [ ] **1. Implement a Simple In-Game Level Editor.**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Phase 7: Engine Hardening & Polish (Future)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [ ] **1. Implement Robust Error Handling:** Replace `.map_err(|e| e.to_string())` with a dedicated `EngineError` enum for more structured and debuggable error management.
+
+
+
+
+
+
+
+- [ ] **2. Write Comprehensive Tests:** Build out a suite of unit and integration tests to ensure code quality and prevent regressions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Ongoing Tasks
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [ ] **Refactor for Modularity:** Continuously move hard-coded data from source files (`.rs`) into external configuration files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [x] **Redesign to ECS Architecture:** Plan and execute a major refactoring to adopt an Entity-Component-System (ECS) architecture for improved modularity, reusability, and performance.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Phase 8: Engine Refactoring (Future)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [ ] **1. Refactor to a 1:1 Pixel Coordinate System:** Remove the `PIXEL_SCALE` constant and update the renderer, camera, and configuration to work directly in pixel dimensions. This will simplify the logic and make asset integration more intuitive.
+
+
+
+
+
+
+
+### Phase 9: Gameplay Expansion (Backlog)
+
+
+
+
+
+
+
+- [ ] **1. Tune Player Collision Box:** Fine-tune the main character's collision box for better gameplay feel.
+
+
+
+- [ ] **2. Implement Player Lives:** Give the cat 9 lives and handle game over conditions.
+
+
+
+- [ ] **3. Implement Level Progression:** 
+
+
+
     - [ ] Create larger, more complex level maps (50-100% larger).
-    - [x] Create multiple levels (2-3 to start).
-        - [x] Add World Level 2.
-- [ ] **2. Add a Boss Fight:** Design and build a multi-phase boss encounter in a dedicated arena at the end of a level.
-- [ ] **3. Implement a Companion/Sidekick:** Introduce a companion character with unique abilities.
-- [ ] **4. Implement a World Map:** Implement a top-down world map for level selection.
 
-### Phase 6: Advanced Engine Features (Backlog)
+
+
+    - [ ] Implement a system for level start/goal locations.
+
+
+
+    - [ ] Create multiple levels (2-3 to start).
+
+
+
+    - [ ] Implement a top-down world map for level selection.
+
+
+
+- [ ] **4. Add a Boss Fight:** Design and build a multi-phase boss encounter in a dedicated arena at the end of a level.
+
+
+
+- [ ] **5. Implement Interactive Blocks:** Create a system for various types of interactive blocks, such as power-up blocks and breakable blocks.
+
+
+
+- [ ] **6. Implement a Companion/Sidekick:** Introduce a companion character with unique abilities.
+
+
+
+
+
+
+
+### Phase 10: Advanced Engine Features (Backlog)
+
+
+
+
+
+
 
 - [ ] **1. Implement Parallax Scrolling:** Add support for multi-layered, parallax backgrounds to create a sense of depth.
-- [x] **2. Implement Z-Layer Rendering:** Add a z-layer system to control the draw order of entities.
-- [ ] **3. Implement Save/Load System:** Allow players to save and load their progress in the game.
-- [ ] **4. Add Support for Sloped Surfaces:** Enhance the physics engine to correctly handle player and object interaction with sloped terrain.
-- [ ] **5. Implement Spatial Partitioning:** Implement a Uniform Grid (e.g., 32x32 tile chunks) spatial partitioning system to efficiently manage large levels.
-- [ ] **6. Implement Interactive Audio:** Create a system for dynamic music and sound effects that respond to gameplay events.
-- [ ] **7. Implement Scripting Engine:** Integrate a scripting language for flexible gameplay logic and `EventConductor` implementation.
-    - [ ] **Phase 1: Core Integration:**
-        - [ ] Research and select initial scripting library (primary candidate: **Rhai**; alternative: **Lua** via `mlua`).
-        - [ ] Add the chosen library as a dependency.
-        - [ ] Create a `ScriptingManager` to load and run a simple "hello world" script.
-        - [ ] Expose a basic engine API to the script (e.g., a `print()` function).
-    - [ ] **Phase 2: ECSC Integration:**
-        - [ ] Design a way for scripts to register as `EventConductors`.
-        - [ ] Allow scripts to subscribe to Event Bus topics.
-        - [ ] Expose the `EventBus.publish()` function to the scripting environment.
-        - [ ] Refactor one `EventConductor` (e.g., for coin collection audio) into a script as a proof-of-concept.
-    - [ ] **Phase 3: API Expansion:**
-        - [ ] Expose more of the game world to the scripting API (e.g., get/set entity components).
-        - [ ] Document the scripting API for designers.
 
-### Phase 7: Tooling (Future)
+
+
+- [ ] **2. Implement Interactive Audio:** Create a system for dynamic music and sound effects that respond to gameplay events.
+
+- [ ] **3. Implement Z-Layer Rendering:** Add a z-layer system to control the draw order of entities.
+    - [ ] Add a `z_index` field to the `Renderable` component.
+    - [ ] Refactor the rendering loop in `app.rs` to sort entities by `z_index` before drawing.
+    - [ ] Assign `z_index` values to Player, Enemies, and Effects.
+
+
+
+- [ ] **3. Implement Save/Load System:** Allow players to save and load their progress in the game.
+
+
+
+- [ ] **4. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.
+
+
+
+- [ ] **5. Implement Spatial Partitioning:** Implement a Uniform Grid (e.g., 32x32 tile chunks) spatial partitioning system to efficiently manage large levels.
+
+
+
+- [ ] **6. Add Support for Sloped Surfaces:** Enhance the physics engine to correctly handle player and object interaction with sloped terrain.
+
+
+
+
+
+
+
+### Phase 11: Tooling and Polish (Backlog)
+
+
+
+
+
+
 
 - [ ] **1. Create a Level Editor:** Build an in-game or external tool for creating and editing levels.
-- [ ] **2. Implement Debugging Tools:**
-    - [ ] Create the planned in-game `Benchmarker` and on-screen debug display.
-    - [ ] Replace the temporary debug text renderer with the new `sdl3_ttf` based system.
-    - [x] Add FPS counter to debug display.
-- [ ] **3. Implement Video Recording:** Add a system for saving gameplay videos using ffmpeg or a similar library.
-- [ ] **4. Implement Cross-Platform Builds and Releases:**
-    - [ ] Set up a CI/CD pipeline (e.g., using GitHub Actions) to automatically build and release binaries for the following platforms:
-        - [ ] **Windows:** Compile to an `.exe` file using a target like `x86_64-pc-windows-gnu`.
-        - [ ] **Linux:** Compile to a standard Linux executable.
-        - [ ] **WebAssembly (WASM):** Compile the demo game to WASM to run in a web browser. This will likely involve using Emscripten to compile SDL3 and `wasm-pack` to package the Rust code.
-    - [ ] Automate the process of creating a GitHub Release with the compiled binaries attached.
 
-### Phase 8: Engine Hardening & Refactoring (Ongoing/Future)
 
-- [ ] **1. Refactor for Maintainability:**
-    - [ ] Refactor `player/states.rs` Logic.
-    - [ ] Improve `level.rs` Loading.
-    - [ ] Decompose `ecs/system.rs` Collision System.
-    - [ ] Code refactoring.
-    - [ ] Performance Benchmarking and Optimization.
-- [ ] **2. Implement Robust Error Handling:**
-    - [ ] Create a Custom Error Enum.
-    - [ ] Implement Error Conversions.
-    - [ ] Refactor for Robust Error Handling.
-- [ ] **3. Write Comprehensive Tests:**
-    - [ ] Create a Core Integration Test.
-    - [ ] Add a Level Loading Test.
-    - [ ] Implement an Input and Movement Test.
-    - [ ] Add robust testing for file loading.
-- [ ] **4. Refactor for Data-Driven Design:**
-    - [ ] **Data-driven Tile Collision:**
-        - [ ] In the Tiled editor, add a custom boolean property (e.g., `solid: true`) to the tiles in the `.tsx` tileset file to mark them as collidable.
-        - [ ] Research and add a Rust crate for parsing XML/TSX files (e.g., `xml-rs` or `quick-xml`).
-        - [ ] Update `level.rs` to parse the `.tsx` file, read the custom properties for each tile, and dynamically build the list of solid tile IDs.
-        - [ ] Remove the hardcoded `solid_tiles` vector.
-    - [ ] **Data-driven Scripting for Complex Logic:**
-        - [ ] In Tiled, add a custom string property (e.g., `on_collide_script: "scripts/one_way_platform.rhai"`) to tiles or objects that require complex collision logic.
-        - [ ] In the collision system, if this property exists, hand off the event to the scripting engine instead of using the default solid/non-solid check.
-    - [ ] Identify and Externalize Hardcoded Values.
-    - [ ] Refactor Code to Load from Configuration.
-- [ ] **5. Refactor to a 1:1 Pixel Coordinate System:**
-    - [ ] Remove the `PIXEL_SCALE` constant.
-    - [ ] Edit graphics assets to use prescaling (1:2).
-- [ ] **6. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.
-- [ ] **7. Continue Data-Driven Refactoring:**
-    - [x] **Phase 1: Frame-Rate Independence:**
-        - [x] Calculate `delta_time` in the main loop.
-        - [x] Pass `delta_time` to all systems via the `SystemContext`.
-        - [x] Refactor all timer-based logic to use `delta_time`.
-    - [x] **Phase 2: Externalize Assets and Configs:**
-        - [x] Move hardcoded asset paths from `app.rs` to `game_config.toml`.
-        - [x] Move the `start_level` path to `config.toml`.
-    - [x] **Phase 4: Create Entity Prefabs:**
-        - [x] Refactor enemy states to be generic and not tied to a specific enemy type.
-        - [x] Expand `game_config.toml` to support full entity prefabs that define all components for an entity type.
-    - [x] **Phase 5: Data-Driven Sound Events:**
-        - [x] Move hardcoded sound effect names to `game_config.toml`, associated with the events that trigger them.
+
+- [ ] **2. Implement Video Recording:** Add a system for saving gameplay videos using ffmpeg or a similar library.
+
+
+
+
+
+
+
+### Phase 12: Code Refactoring Candidates
+
+
+
+
+
+
+
+- [ ] **1. Refactor `app.rs` Initialization:**
+
+
+
+    - **Problem:** The `App::new()` function is excessively large and complex.
+
+
+
+    - **Suggestion:** Break down the initialization process into smaller, focused functions or builders.
+
+
+
+    - **Suggestion:** Move entity creation to a data-driven system.
+
+
+
+
+
+
+
+- [ ] **2. Refactor `player/states.rs` Logic:**
+
+
+
+    - **Problem:** Significant code duplication exists between `IdleState` and `WalkingState`.
+
+
+
+    - **Suggestion:** Consolidate duplicated logic into a shared function or a base state to improve code reuse.
+
+
+
+
+
+
+
+- [ ] **3. Improve `level.rs` Loading:**
+
+
+
+    - **Problem:** TMX file parsing is manual, incomplete, and uses hardcoded values.
+
+
+
+    - **Suggestion:** Integrate a dedicated TMX parsing crate to handle level loading dynamically and robustly.
+
+
+
+
+
+
+
+- [ ] **4. Decompose `ecs/system.rs` Collision System:**
+
+
+
+    - **Problem:** The `CollisionSystem` is becoming a "god object" handling all collision types.
+
+
+
+    - **Suggestion:** Break it down into smaller, specialized systems (e.g., `PlayerEnemyCollisionSystem`, `TileCollisionSystem`) for better modularity.
+
+
+
+
+
+
+
+### Phase 13: Engine Hardening (Backlog)
+
+- [ ] **1. Implement Robust Error Handling:**
+    - [ ] **1.1. Create a Custom Error Enum:** Create a new `src/error.rs` file and define a comprehensive `EngineError` enum.
+    - [ ] **1.2. Implement Error Conversions:** Implement the `From` trait for standard error types to allow for clean and easy conversion into our custom `EngineError` using the `?` operator.
+    - [ ] **1.3. Refactor for Robust Error Handling:** Refactor the existing code, replacing all instances of `.map_err(|e| e.to_string())` with our new, more structured `EngineError`.
+- [ ] **2. Write Comprehensive Tests:**
+    - [ ] **2.1. Create a Core Integration Test:** Add a new integration test that initializes the main `App`, runs the game loop for a number of frames, and asserts that no panics occur.
+    - [ ] **2.2. Add a Level Loading Test:** Create a test to verify that a level is loaded correctly, and that all expected entities (player, enemies, etc.) are created in the ECS world.
+    - [ ] **2.3. Implement an Input and Movement Test:** Write a test to simulate player input and confirm that the player character's position and state change as expected.
+- [ ] **3. Refactor for Data-Driven Design:**
+    - [ ] **3.1. Identify and Externalize Hardcoded Values:** Systematically search the codebase for hardcoded values (such as file paths, magic numbers, etc.) and move them into the appropriate configuration files (`config.toml` or `assets/game_config.toml`).
+    - [ ] **3.2. Refactor Code to Load from Configuration:** Modify the source code to load these newly externalized values at runtime, further strengthening the data-driven design.
+
+
+
+

@@ -16,7 +16,6 @@ docs/Design.md: Design & Architecture.
 docs/CodingStyle.md: Coding Conventions & Development Guidelines.
 docs/Workflow.md: Development Workflow with GitHub.
 docs/Testing.md: Testing Strategy.
-docs/MasterMerge.md: Master Branch Merge Workflow.
 
 src/main.rs: Main application entry point.
 src/app.rs: Initializes SDL, creates the window, and runs the main application loop.

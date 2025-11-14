@@ -1,55 +1,31 @@
 # assets/game_config.toml
 
 [player]
-start_pos = { x = 80.0, y = 700.0 }
+start_pos = { x = 300.0, y = 500.0 }
 width = 24
 height = 26
 draw_width = 80
 draw_height = 64
 horizontal_draw_offset = -28
 vertical_draw_offset = -22
-respawn_pos = { x = 80.0, y = 700.0 }
-lives = 9
+respawn_pos = { x = 300.0, y = 500.0 }
 
 [world]
 width = 6000.0
 death_plane_y = 1200.0
 
-[textures]
-bg_sky = "assets/graphics/background_blue_sky_with_clouds.png"
-goal = "assets/graphics/tiles_goal.png"
-game_over_3 = "assets/graphics/text_game_over_1.png"
+[enemy.enemy_spider]
+width = 16
+height = 16
+speed = 1.0
+draw_width = 16
+draw_height = 16
 
-[prefabs.GoldCoin]
-components = [
-    { type = "Position" },
-    { type = "Renderable", draw_width = 16, draw_height = 16, z_index = 100 },
-    { type = "Animation", animations = ["gold_coin_spin"], initial_animation = "gold_coin_spin" },
-    { type = "Collision", width = 16, height = 16 },
-    { type = "GoldCoin" }
-]
-
-[prefabs.EnemySpider]
-components = [
-    { type = "Position" },
-    { type = "Velocity", x = 1.0, y = 0.0 },
-    { type = "Renderable", draw_width = 16, draw_height = 16, z_index = 100 },
-    { type = "Animation", animations = ["enemy_spider_1", "enemy_spider_2", "enemy_spider_3"], initial_animation = "enemy_spider_1" },
-    { type = "Collision", width = 16, height = 16 },
-    { type = "Gravity" },
-    { type = "Patrol", speed = 1.0 },
-    { type = "EnemyTag" },
-    { type = "StateComponent", initial_state = "PatrolState" }
-]
-
-[prefabs.Goal]
-components = [
-    { type = "Position" },
-    { type = "Renderable", draw_width = 64, draw_height = 48, z_index = 100, horizontal_offset = -16, vertical_offset = -16 },
-    { type = "Animation", animations = ["goal_idle"], initial_animation = "goal_idle" },
-    { type = "Collision", width = 32, height = 32 },
-    { type = "Goal" }
-]
+[collectible.gold_coin]
+width = 16
+height = 16
+draw_width = 16
+draw_height = 16
 
 [animation.idle_left]
 texture = "assets/graphics/cat_idle_left.png"
@@ -162,30 +138,8 @@ frame_count = 12
 frame_duration = 6
 loops = false
 
-[animation.goal_idle]
-texture = "assets/graphics/tiles_goal.png"
-start_x = 0
-start_y = 0
-frame_width = 256
-frame_height = 192
-frame_count = 1
-frame_duration = 1
-loops = false
-
 [audio]
 player_jump = "assets/sounds/sfx_jump_01.ogg"
 coin_pickup = "assets/sounds/sfx_coin_01.flac"
 player_hit = "assets/sounds/sfx_hit_01.flac"
 enemy_stomp = "assets/sounds/sfx_stomp_01.flac"
-
-[sound_events]
-player_jump = "player_jump"
-player_hit = "player_hit"
-enemy_stomp = "enemy_stomp"
-coin_pickup = "coin_pickup"
-
-[goal]
-draw_width = 64
-draw_height = 48
-vertical_draw_offset = -16
-horizontal_draw_offset = -16

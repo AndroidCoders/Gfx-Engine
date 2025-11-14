@@ -1,9 +1,3 @@
-//! # Gfx-Engine
-//! 
-//! A 2D pixel-art game engine built with Rust and SDL3.
-//! 
-//! This crate contains the main entry point and core modules for the Gfx-Engine.
-
 mod app;
 mod animation;
 mod config;
