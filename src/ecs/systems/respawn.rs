@@ -1,9 +1,20 @@
+//! This system handles the respawning of entities.
+
 use crate::ecs::component::RespawnTimer;
 use crate::ecs::systems::{RespawnSystemContext, System};
 use crate::ecs::world::{Entity, World};
 
+/// The system responsible for processing entity respawns.
 pub struct RespawnSystem;
 impl System<RespawnSystemContext<'_>> for RespawnSystem {
+    /// Finds all entities with a `RespawnTag` and resets their state.
+    ///
+    /// For each entity to respawn, it:
+    /// 1. Removes the `RespawnTag`.
+    /// 2. Resets the entity's position to the configured respawn point.
+    /// 3. Snaps the camera to the new respawn position.
+    /// 4. Resets the entity's velocity to zero.
+    /// 5. Adds a `RespawnTimer` component to grant temporary invincibility.
     fn update(&mut self, world: &mut World, context: &mut RespawnSystemContext) {
         let respawn_pos = context.game_config.player.respawn_pos;
 
@@ -15,8 +26,7 @@ impl System<RespawnSystemContext<'_>> for RespawnSystem {
             if let Some(pos) = world.positions.get_mut(&entity) {
                 pos.0 = respawn_pos;
                 // Reset camera position
-                context.camera.position.x = respawn_pos.x - (context.camera.virtual_width / 2.0);
-                context.camera.position.y = respawn_pos.y - (context.camera.virtual_height / 2.0);
+                context.camera.snap_to(respawn_pos);
             }
             if let Some(vel) = world.velocities.get_mut(&entity) {
                 vel.0.x = 0.0;
