@@ -11,12 +11,10 @@ impl System<SystemContext<'_>> for RespawnTimerSystem {
     /// It decrements the timer for each entity. If an entity's timer reaches
     /// zero, the `RespawnTimer` component is removed, indicating the end
     /// of the respawn invincibility period.
-    fn update(&mut self, world: &mut World, _context: &mut SystemContext) {
+    fn update(&mut self, world: &mut World, context: &mut SystemContext) {
         let mut to_remove = Vec::new();
         for (entity, timer) in world.respawn_timers.iter_mut() {
-            // Assuming a fixed time step of 60 FPS for simplicity for now.
-            // TODO: A better approach would be to use a delta time from the game loop for frame-rate independence.
-            timer.timer -= 1.0 / 60.0;
+            timer.timer -= context.delta_time;
             if timer.timer <= 0.0 {
                 to_remove.push(*entity);
             }

@@ -72,3 +72,27 @@ As the Gemini expert coding assistant, my primary role is to assist with develop
 
 -   Ask for confirmation before starting a new Task and editing Code.
 -   After discussing a new Architecture, Design or Feature, suggest (to the User) to document the agreed changes in an appropriate Guiding Document.
+
+---
+## Session Notes (2025-11-12)
+
+**Goal:** Make the `Gfx-Engine` project more data-driven by removing hardcoded values from the source code.
+
+**Branch:** `refactor/data-driven-improvements`
+
+**Progress:**
+-   **Frame-Rate Independence:**
+    -   [x] Calculated `delta_time` in the main loop (`app.rs`).
+    -   [x] Passed `delta_time` to all systems via the `SystemContext`.
+    -   [x] Refactored all timer-based logic to use `delta_time`, making it frame-rate independent.
+-   **Externalized Assets and Configs:**
+    -   [x] Moved the hardcoded `start_level` path from `app.rs` to `config.toml`.
+    -   [x] Moved hardcoded texture paths (`bg_sky`, `goal`, `game_over_3`) from `app.rs` to `assets/game_config.toml`.
+    -   [x] Refactored `app.rs` to load these assets using the new configuration values.
+
+**Next Steps:**
+-   Continue with the "Fully Embrace Data-Driven Design" plan from `docs/Tasks.md`.
+-   Externalize game logic parameters (e.g., player health, knockback force) to config files.
+-   Externalize sound effect names.
+-   Refactor the enemy state machine to be generic and not tied to a specific enemy type.
+-   Create a comprehensive entity prefab system in the configuration files.

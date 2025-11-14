@@ -61,6 +61,8 @@ pub struct SystemContext<'a> {
     pub next_level: &'a mut Option<String>,
     /// A mutable reference to the player's lives count.
     pub lives: &'a mut u32,
+    /// The time elapsed since the last frame, in seconds.
+    pub delta_time: f32,
 }
 
 /// A specialized context struct for the `RespawnSystem`.

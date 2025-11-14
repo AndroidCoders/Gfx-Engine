@@ -1,4 +1,4 @@
-File version: 9.01
+File version: 9.02
 
 **TLDR:**
 This document is the **Product Backlog** for the `GfX-Engine` project. It lists all features, improvements, and bug fixes, organized into a prioritized roadmap that guides our Agile development process.
@@ -59,9 +59,29 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
         - [x] Add a "Goal" object to the level.
         - [x] Implement level transitions.
 
-### Phase 4: Core Engine Features (Next Sprint)
+### Phase 4: Architectural Improvements & Core Features (Next Sprint)
 
-- [ ] **1. Implement Audio Features:**
+- [ ] **1. Implement ECSC Type-Based Event Bus:**
+    - [ ] Create `src/ecs/event.rs` with a generic `EventBus` struct.
+    - [ ] Integrate the `EventBus` into the `World` struct.
+    - [ ] Refactor one system (e.g., `CoinCollectionSystem`) to publish a strongly-typed event instead of using the `mpsc::channel`.
+    - [ ] Create a new `AudioConductorSystem` that listens for the event and plays the sound.
+    - [ ] Update the main loop to clear the event bus each frame.
+- [ ] **2. Refactor `app.rs` into Managers:**
+    - [ ] Create a `SystemManager` to hold all ECS systems and orchestrate their execution.
+    - [ ] Create a `GameStateManager` to handle level loading, transitions, and entity creation/teardown.
+    - [ ] Simplify the `App` struct to delegate most of its responsibilities to these new managers.
+- [ ] **3. Externalize Gameplay Values:**
+    - [ ] Move magic numbers for physics (knockback force, bounce height) and gameplay (invincibility duration, coin value) from source code (`interaction.rs`, etc.) to `game_config.toml`.
+    - [ ] Make the "next level" path a data-driven property in the level files (`.tmx`) instead of being hardcoded in `level_transition.rs`.
+- [ ] **4. Implement Robust Text Rendering:**
+    - [ ] Research and add the `sdl3_ttf` crate to the project.
+    - [ ] Create a `FontManager` to load and manage `.ttf` fonts.
+    - [ ] Create a `Text` component and a `TextSystem` for rendering UI and debug text.
+    - [ ] Replace the temporary `SDL_RenderDebugText` with the new system.
+- [ ] **5. Implement Menu System:** Develop a basic UI system with a title screen and menus (`MainMenu`, `InGame`, `Exit`).
+    - [ ] **Prerequisite:** Implement a robust text rendering system.
+- [ ] **6. Implement Audio Features:**
     - [ ] **Phase 1: Basic Music Implementation**
         - [ ] Find and add a freely-licensed music track.
         - [ ] Enable streaming support in the `kira` crate.
@@ -72,12 +92,11 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
         - [ ] Design and implement music zones in level data.
         - [ ] Create a new `MusicSystem` to track player position and trigger music changes.
         - [ ] Enhance `GameAudioManager` to support crossfading between music tracks.
-- [ ] **2. Implement Menu System:** Develop a basic UI system with a title screen and menus (`MainMenu`, `InGame`, `Exit`).
-- [x] **3. Add Collectible Treasures:**
+- [x] **7. Add Collectible Treasures:**
     - [x] Add items like Stars and Gold to levels.
     - [ ] Implement a scoring system and UI display.
-- [ ] **4. Implement Interactive Blocks:** Create a system for various types of interactive blocks, such as power-up blocks and breakable blocks.
-- [ ] **5. Implement Power-Ups:**
+- [ ] **8. Implement Interactive Blocks:** Create a system for various types of interactive blocks, such as power-up blocks and breakable blocks.
+- [ ] **9. Implement Power-Ups:**
     - [ ] Design a flexible system for power-ups that can modify the player's state and grant new abilities.
     - [ ] Add a "Run Fast" power-up.
     - [ ] Add a "Shoot" power-up with projectiles.
@@ -121,6 +140,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 - [ ] **1. Create a Level Editor:** Build an in-game or external tool for creating and editing levels.
 - [ ] **2. Implement Debugging Tools:**
     - [ ] Create the planned in-game `Benchmarker` and on-screen debug display.
+    - [ ] Replace the temporary debug text renderer with the new `sdl3_ttf` based system.
     - [x] Add FPS counter to debug display.
 - [ ] **3. Implement Video Recording:** Add a system for saving gameplay videos using ffmpeg or a similar library.
 - [ ] **4. Implement Cross-Platform Builds and Releases:**
@@ -133,7 +153,6 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 ### Phase 8: Engine Hardening & Refactoring (Ongoing/Future)
 
 - [ ] **1. Refactor for Maintainability:**
-    - [ ] Refactor `app.rs` Initialization.
     - [ ] Refactor `player/states.rs` Logic.
     - [ ] Improve `level.rs` Loading.
     - [ ] Decompose `ecs/system.rs` Collision System.
@@ -150,16 +169,20 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [ ] Add robust testing for file loading.
 - [ ] **4. Refactor for Data-Driven Design:**
     - [ ] **Data-driven Tile Collision:**
-        - [ ] Research best practices for defining collision in tile-based platformers (e.g., Super Mario World).
-        - [ ] Add support for defining solid tiles in the `.tsx` tileset file, likely using custom properties.
-        - [ ] Update `level.rs` to parse this collision data from the `.tsx` file instead of using a hardcoded list.
+        - [ ] In the Tiled editor, add a custom boolean property (e.g., `solid: true`) to the tiles in the `.tsx` tileset file to mark them as collidable.
+        - [ ] Research and add a Rust crate for parsing XML/TSX files (e.g., `xml-rs` or `quick-xml`).
+        - [ ] Update `level.rs` to parse the `.tsx` file, read the custom properties for each tile, and dynamically build the list of solid tile IDs.
+        - [ ] Remove the hardcoded `solid_tiles` vector.
+    - [ ] **Data-driven Scripting for Complex Logic:**
+        - [ ] In Tiled, add a custom string property (e.g., `on_collide_script: "scripts/one_way_platform.rhai"`) to tiles or objects that require complex collision logic.
+        - [ ] In the collision system, if this property exists, hand off the event to the scripting engine instead of using the default solid/non-solid check.
     - [ ] Identify and Externalize Hardcoded Values.
     - [ ] Refactor Code to Load from Configuration.
 - [ ] **5. Refactor to a 1:1 Pixel Coordinate System:**
     - [ ] Remove the `PIXEL_SCALE` constant.
     - [ ] Edit graphics assets to use prescaling (1:2).
 - [ ] **6. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.
-- [ ] **7. Fully Embrace Data-Driven Design:**
+- [ ] **7. Continue Data-Driven Refactoring:**
     - [x] **Phase 1: Frame-Rate Independence:**
         - [x] Calculate `delta_time` in the main loop.
         - [x] Pass `delta_time` to all systems via the `SystemContext`.
@@ -167,11 +190,8 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [x] **Phase 2: Externalize Assets and Configs:**
         - [x] Move hardcoded asset paths from `app.rs` to `game_config.toml`.
         - [x] Move the `start_level` path to `config.toml`.
-        - [ ] Make the "next level" path a data-driven property in the level files.
-    - [ ] **Phase 3: Externalize Gameplay Values:**
-        - [ ] Move magic numbers for physics (knockback, bounce) and gameplay (invincibility duration, coin value) to `game_config.toml`.
-    - [ ] **Phase 4: Create Entity Prefabs:**
-        - [ ] Refactor enemy states to be generic and not tied to a specific enemy type.
-        - [ ] Expand `game_config.toml` to support full entity prefabs that define all components for an entity type.
-    - [ ] **Phase 5: Data-Driven Sound Events:**
-        - [ ] Move hardcoded sound effect names to `game_config.toml`, associated with the events that trigger them.
+    - [x] **Phase 4: Create Entity Prefabs:**
+        - [x] Refactor enemy states to be generic and not tied to a specific enemy type.
+        - [x] Expand `game_config.toml` to support full entity prefabs that define all components for an entity type.
+    - [x] **Phase 5: Data-Driven Sound Events:**
+        - [x] Move hardcoded sound effect names to `game_config.toml`, associated with the events that trigger them.

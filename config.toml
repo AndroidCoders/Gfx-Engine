@@ -34,7 +34,9 @@ max_speed = 4.0
 entity_max_fall_speed = 10.0
 acceleration = 0.5
 deceleration = 0.5
-
 jump_strength = -9.0
 jump_hold_force = 0.45
 max_jump_time = 15
+
+[game]
+start_level = "assets/levels/world_1_level_1.tmx"

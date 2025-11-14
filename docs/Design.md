@@ -1,4 +1,4 @@
-File version: 2.02
+File version: 2.03
 
 **TLDR:**
 This document outlines the architecture and components of the `GfX-Engine`:
@@ -9,6 +9,10 @@ This document outlines the architecture and components of the `GfX-Engine`:
 ## Architecture
 
 The engine's core architecture is built around the **Entity-Component-System (ECS)** pattern. This enhances modularity, reusability, and performance by strictly separating data (Components), logic (Systems), and entities (IDs). The engine follows a data-driven design, where configuration is loaded from external `.toml` files and assets are loaded from the `assets/` directory.
+
+The long-term vision is to evolve this into a full **ECSC (Entity-Component-System-Concept)** architecture, where systems are fully decoupled and communicate via a central, type-based **Event Bus**. This will make the engine even more modular and easier to maintain.
+
+**Architectural Priority:** The implementation of a **Type-Based Event Bus** is the highest priority architectural improvement. It is the foundational step toward the ECSC model and will provide immediate benefits by decoupling systems, improving code clarity, and simplifying the implementation of new features. The detailed plan for this is outlined in the "ECSC Implementation Plan" section below.
 
 ## Components
 
@@ -115,6 +119,91 @@ The camera system is designed to be both smooth and responsive, keeping the play
 ## Entity State Management
 
 To manage the behavior of all dynamic entities (including the player and AI enemies), we will implement a **Hierarchical State Machine (HSM)**. This unified pattern provides a robust and scalable foundation for both player control and AI logic. It organizes behavior into distinct states (e.g., `Idle`, `Patrolling`, `Jumping`) and manages the transitions between them. This prevents bugs by ensuring an entity is only in one state at a time, simplifies adding new abilities, and serves as the core driver for the animation system by linking each state directly to its corresponding animation. Our implementation will be a hybrid, supporting both continuous actions within states and instantaneous actions on transitions.
+
+## Data-Driven World Design
+
+A core principle of the engine is to empower designers to build and modify the game world without altering the core engine code. This is achieved by defining world elements—collision, entity properties, and even entity behavior—directly in the data files, primarily the Tiled map editor (`.tmx` and `.tsx` files) and configuration files (`.toml`).
+
+### Data-Driven Collision
+
+To move away from hardcoded collision logic, the engine will read collision information directly from the Tiled tileset file (`.tsx`).
+
+1.  **Defining Collision in Tiled:** In the Tiled editor, tiles in a tileset can be assigned **Custom Properties**. We will establish a convention where a custom boolean property named `solid` is used to mark a tile as a physical barrier.
+
+2.  **Engine Implementation:** The `level.rs` module will be responsible for parsing the `.tsx` file, identifying which tile IDs have the `solid` property set to `true`, and building a dynamic collision map for the level. This eliminates the need for hardcoded lists of tile IDs in the source code.
+
+### Scripting and Extensibility
+
+For behaviors that are too complex for simple properties (like one-way platforms or special item effects), the engine will support external scripting. This is the ultimate expression of data-driven design, allowing for dynamic logic without recompiling the engine.
+
+This feature is tracked in the product backlog under **Phase 6: "Implement Scripting Engine"**.
+
+#### The Prefab and Scripting Model
+
+The data-driven model extends from simple properties to full behavioral scripts. An entity's prefab or a tile's properties in Tiled can include a `script` property that points to a script file.
+
+**Example: Scripted Tile in Tiled**
+
+A one-way platform tile could have the following custom properties set in the Tiled editor:
+*   `solid`: `false` (so it's not treated as a standard wall)
+*   `on_collide_script`: `"scripts/one_way_platform.rhai"` (a string pointing to the logic file)
+
+**Example: Prefab with a Script**
+
+The `EnemySpider` prefab in `assets/game_config.toml` could be simplified by offloading its AI to a script:
+
+```toml
+[prefabs.EnemySpider]
+# This new property points to a script file that defines the enemy's logic.
+script = "scripts/enemy/patrol.rhai" 
+
+components = [
+    { type = "Position" },
+    { type = "Velocity", x = 1.0, y = 0.0 },
+    { type = "Renderable", draw_width = 16, draw_height = 16, z_index = 100 },
+    { type = "Collision", width = 16, height = 16 },
+    { type = "Gravity" },
+    { type = "EnemyTag" }
+]
+```
+
+#### Example: Behavior Script
+
+The `patrol.rhai` script would contain the logic that is currently implemented in Rust state machine files (like `src/enemy/states.rs`). The scripting language **Rhai** is a good candidate because its syntax is very similar to Rust.
+
+```rust
+// In assets/scripts/enemy/patrol.rhai
+
+// The engine would call this function every frame for this entity.
+fn on_update(entity) {
+    // Get the entity's velocity component
+    let vel = entity.get_velocity();
+
+    // If the enemy has stopped, make it start moving again.
+    if vel.x == 0.0 {
+        vel.x = 1.0;
+        entity.set_velocity(vel); // Save the change
+    }
+
+    // Check for walls or ledges and reverse direction
+    if should_reverse_direction(entity) {
+        vel.x = -vel.x;
+        entity.set_velocity(vel);
+    }
+}
+```
+
+#### Implementation Overview
+
+1.  **Integrate a Scripting Library:** Add a crate like `rhai` to the `Cargo.toml` dependencies.
+2.  **Create a `ScriptingManager`:** This manager will be responsible for loading, compiling, and running the scripts.
+3.  **Create "Bindings":** Expose a safe subset of the engine's functionality to the scripting environment. This includes functions for getting and setting component data (e.g., `entity.get_velocity()`, `entity.set_velocity()`) and interacting with the world (e.g., `world.spawn_entity("explosion")`).
+
+#### Benefits
+
+*   **Rapid Prototyping:** Change complex AI, item, or quest logic in seconds without waiting for the engine to recompile.
+*   **Behavioral Variety:** Create many unique enemies from a single base type just by assigning them different scripts.
+*   **Clear Separation of Concerns:** The high-performance "core" of the engine (rendering, physics) remains in fast, compiled Rust, while the more dynamic, high-level gameplay logic lives in flexible script files.
 
 ---
 # ECSC Architecture: A Practical Guide (v4)
@@ -288,11 +377,13 @@ To facilitate robust testing and optimization, the following systems are planned
 The following sections outline the high-level direction for future engine and gameplay features. The detailed tasks and priorities for these items are managed in the **Product Backlog** (`docs/Tasks.md`).
 
 ### Core Engine Enhancements
+*   **Refactor `app.rs` into Managers:** To improve modularity and clarify responsibilities, the `app.rs` file will be refactored. Its logic will be split into a `SystemManager` (for orchestrating ECS system updates) and a `GameStateManager` (for handling level transitions, entity creation, and overall game state like menus or game over screens).
 *   **Menu System:** A generic menu system will be required to manage application states (e.g., Main Menu, Options, In-Game).
+*   **Robust Text Rendering:** The temporary debug text renderer will be replaced with a full-featured system using a library like `sdl3_ttf`. This is a prerequisite for the menu system and enhanced UI.
 *   **Enhanced Debugging Tools:** To facilitate robust testing and optimization, we plan to add an in-game profiler and more detailed on-screen debug displays.
 *   **Spatial Partitioning:** To support large levels efficiently, a uniform grid or similar spatial partitioning system is planned.
 *   **1:1 Pixel Coordinate System:** The engine will be refactored to use a 1:1 pixel-based coordinate system, removing the `PIXEL_SCALE` constant to simplify logic.
-*   **Parallax Scrolling:** The renderer will be extended to support multi-layered parallax backgrounds for a greater sense of depth.
+*   **Parallax Scrolling:** The renderer will be extended to support multi-layered parallax backgrounds for a greater sense of depth. This can be achieved by assigning different `z_index` values to background layers and applying a scroll factor based on that `z_index` when calculating the draw position relative to the camera. Layers with a higher `z_index` (further away) will scroll slower than layers with a lower `z_index`.
 *   **Interactive Audio:** The audio system will be enhanced to support dynamic soundtracks and sound effects that respond to gameplay events. The plan includes a zone-based music system that will trigger crossfades between tracks as the player moves between different areas of the world map.
 
 ### Gameplay Features
@@ -322,3 +413,61 @@ To ensure consistency and prevent bugs, the engine uses a strict separation betw
 *   **Screen Pixels (Final Resolution):** This is the actual resolution of the player's monitor.
     *   **Behavior:** The engine takes the rendered `1920x1080` Virtual Resolution canvas and scales it to fit the player's screen.
     *   **Aspect Ratio:** The 16:9 aspect ratio is always preserved. If the screen's aspect ratio is different, black bars will be added (pillarboxing or letterboxing). This guarantees that the game's appearance and gameplay are identical on all displays.
+
+---
+# ECSC Implementation Plan: Type-Based Event Bus
+
+This section outlines a concrete plan for implementing a type-based event bus as a pragmatic first step towards the full ECSC architecture.
+
+### Summary: Improving ECS with a Type-Based Event Bus
+
+**Goal:** To better align with the ECSC (Entity-Component-System-Concept) architecture by implementing a type-based event bus. This will decouple systems from each other, making the code more modular, easier to maintain, and more performant.
+
+**What It Is:** Instead of systems calling each other directly or using low-level channels, they will communicate through high-level, strongly-typed events.
+1.  A **System** (e.g., `CoinCollectionSystem`) will detect a game event and *publish* a corresponding event struct (e.g., `CoinCollectedEvent`) to a central `EventBus` resource in the `World`.
+2.  A **Conductor** (which is just another system, e.g., `AudioConductorSystem`) will *read* those events from the `EventBus` each frame and perform reactive, secondary logic (like playing a sound or updating the score).
+3.  At the end of the frame, all events are cleared from the bus.
+
+**Why It's an Improvement:**
+*   **Decoupling:** The `CoinCollectionSystem` no longer needs to know about the audio system. It simply announces that a coin was collected. Any number of other systems can then react to that event without the original system's knowledge.
+*   **Clarity:** This creates a clear, one-way data flow (`System` -> `Event` -> `Conductor`) that is easy to follow and debug.
+*   **Performance:** It's faster than the topic-based bus described in `docs/Design.md` because it uses Rust's type system for event routing, avoiding runtime string matching and dynamic type casting.
+*   **Pragmatism:** It's a significant and practical step towards the ideal ECSC architecture that can be implemented incrementally.
+
+---
+
+### Action Plan for Implementation
+
+Here is a step-by-step guide for how we can implement this feature in a future session.
+
+**Step 1: Create the Core Event Bus Module**
+1.  Create a new file: `src/ecs/event.rs`.
+2.  Inside this file, define a generic `EventBus` struct that can store and retrieve events based on their type. A good approach is to use a `HashMap` that maps a `TypeId` to a `Vec<Box<dyn Any>>`.
+3.  Implement two key methods on the `EventBus`:
+    *   `publish<T: 'static>(&mut self, event: T)`: Adds an event to the correct queue.
+    *   `read<T: 'static>(&self) -> impl Iterator<Item = &T>`: Allows a system to read all events of a specific type for the current frame.
+
+**Step 2: Integrate the Event Bus into the `World`**
+1.  In `src/ecs/world.rs`, add the `EventBus` as a public field to the `World` struct: `pub event_bus: EventBus`.
+2.  Initialize it in `World::new()`.
+3.  Add a `clear_events()` method to `World` that clears all event queues in the `event_bus`.
+
+**Step 3: Define and Publish the First Event**
+1.  In `src/ecs/event.rs`, define our first event struct: `pub struct CoinCollectedEvent;`.
+2.  In `src/ecs/systems/coin_collection.rs`, modify the `CoinCollectionSystem`. Instead of sending a message to the `audio_sender`, it will now publish the new event: `world.event_bus.publish(CoinCollectedEvent);`.
+
+**Step 4: Create a "Conductor" System to Consume the Event**
+1.  Create a new system file: `src/ecs/systems/audio_conductor.rs`.
+2.  Define a new `AudioConductorSystem` struct.
+3.  In its `update` method, it will read events from the bus:
+    ```rust
+    for _event in world.event_bus.read::<CoinCollectedEvent>() {
+        // Send the sound command to the audio manager via the context
+        let _ = context.audio_sender.send(AudioEvent::PlaySound("coin_pickup".to_string()));
+    }
+    ```
+
+**Step 5: Update the Main Application Loop**
+1.  In `app.rs`, remove the direct call to the `AudioSystem`.
+2.  Add the new `AudioConductorSystem` to the list of systems that are run each frame.
+3.  At the end of the main update phase (after all systems have run), call `self.world.clear_events()` to prepare the bus for the next frame.
