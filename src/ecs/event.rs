@@ -1,10 +1,27 @@
 //! This module defines the type-based event bus for the ECSC architecture.
 
+use crate::ecs::world::Entity;
+use crate::math::Vector2D;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 /// An event published when the player collects a gold coin.
 pub struct CoinCollectedEvent;
+
+/// An event published when the player stomps on an enemy.
+#[derive(Clone, Copy)]
+pub struct PlayerStompedEnemyEvent {
+    pub player: Entity,
+    pub enemy: Entity,
+}
+
+/// An event published when the player takes damage from an enemy.
+#[derive(Clone, Copy)]
+pub struct PlayerTookDamageEvent {
+    pub player: Entity,
+    pub knockback_x: f32,
+    pub position: Vector2D,
+}
 
 /// A type-based event bus for decoupled communication between systems.
 ///

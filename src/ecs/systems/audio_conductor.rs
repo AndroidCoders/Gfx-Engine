@@ -4,7 +4,7 @@
 //! them into audio commands, such as playing a sound effect. This decouples the
 //! systems that generate game events from the audio system itself.
 
-use crate::ecs::event::CoinCollectedEvent;
+use crate::ecs::event::{CoinCollectedEvent, PlayerStompedEnemyEvent, PlayerTookDamageEvent};
 use crate::ecs::systems::{System, SystemContext};
 use crate::ecs::world::World;
 use crate::audio::AudioEvent;
@@ -22,6 +22,20 @@ impl System<SystemContext<'_>> for AudioConductorSystem {
         for _ in world.event_bus.read::<CoinCollectedEvent>() {
             if let Some(sound_name) = context.game_config.sound_events.get("coin_pickup") {
                 // The actual sound played is determined by the data in game_config.toml
+                let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
+            }
+        }
+
+        // Read PlayerStompedEnemyEvents and play a sound for each one.
+        for _ in world.event_bus.read::<PlayerStompedEnemyEvent>() {
+            if let Some(sound_name) = context.game_config.sound_events.get("enemy_stomp") {
+                let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
+            }
+        }
+
+        // Read PlayerTookDamageEvents and play a sound for each one.
+        for _ in world.event_bus.read::<PlayerTookDamageEvent>() {
+            if let Some(sound_name) = context.game_config.sound_events.get("player_hit") {
                 let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
             }
         }
