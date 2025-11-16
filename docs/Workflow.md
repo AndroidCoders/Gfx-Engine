@@ -54,6 +54,37 @@ A task or feature is considered **"Done"** only when it meets all of the followi
 - Any relevant documentation (`docs/`, code comments) has been updated.
 - The changes have been reviewed and approved by at least one other team member via a Pull Request.
 
+## AI-Assisted Development Workflow
+
+To maximize the effectiveness and safety of using Large Language Model (LLM) assistants (like Gemini), we adopt a specific, highly iterative workflow. The goal is to break down large tasks into a series of small, verifiable, and atomic changes. This minimizes risk and makes the development process faster and more reliable.
+
+This workflow is a practical application of Test-Driven Development (TDD) principles.
+
+The core loop is: **Edit -> Test -> Commit**.
+
+1.  **Define a Small, Atomic Goal:** Start with a clear and minimal objective.
+    *   *Bad:* "Implement the inventory system."
+    *   *Good:* "Add a `PlayerInventory` component to the player entity."
+
+2.  **Edit (The Smallest Possible Change):** The assistant makes a single, focused change to the codebase to work towards the goal. This could be adding a new function, refactoring a single loop, or modifying one data structure.
+
+3.  **Test (Verify the Change):** Immediately after the edit, run the core suite of automated checks to ensure nothing has broken. This is the most critical step.
+    ```bash
+    # 1. Does it compile?
+    cargo check
+    # 2. Does it meet style guidelines?
+    cargo clippy
+    # 3. Does it still work as expected?
+    cargo test
+    ```
+    If any of these checks fail, the assistant must fix the issue before proceeding. For features that require visual confirmation, `cargo run` is used for manual testing.
+
+4.  **Commit (Save the Progress):** Once the small change is verified, commit it to the feature branch with a clear, conventional commit message. This creates a safe checkpoint to return to.
+
+5.  **Repeat:** Return to step 1 to tackle the next small part of the larger feature.
+
+By following this loop, we ensure that the project is always in a working state and that any errors introduced by the LLM are caught immediately and are easy to fix, as they can only have come from the most recent small change.
+
 ## Technical Workflow
 
 The following technical practices support our Agile workflow.

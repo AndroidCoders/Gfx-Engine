@@ -23,12 +23,33 @@ These are small, fast tests that verify a single piece of code (like a function 
 *   **Purpose:** To test individual algorithms, logic, and boundary conditions.
 *   **Example:** Testing a physics calculation, a state transition, or a configuration parsing function.
 
+#### System Unit Tests
+
+For our ECSC architecture, every ECS System should have a corresponding unit test. The methodology is as follows:
+1.  **Setup:** Create a mock `World` and a mock `SystemContext`.
+2.  **Arrange:** Populate the `World` with the specific entities and components required for the test case.
+3.  **Act:** Create an instance of the system under test and call its `update()` method, passing in the mock `World` and `SystemContext`.
+4.  **Assert:** Inspect the state of the `World` after the system has run and assert that the components were modified as expected.
+
+This approach provides a perfect, isolated sandbox for verifying a system's logic, which is ideal for an AI-assisted, test-driven workflow.
+
 ### 2. Integration Tests (The Middle)
 
 These tests verify that different modules of the engine work together correctly. They are larger than unit tests and test a complete "slice" of functionality.
 
 *   **Purpose:** To find bugs at the boundaries between components (e.g., does the `InputSystem` correctly cause a state change in the `Player` that the `AnimationSystem` then uses to play the right animation?).
 *   **Example:** A test that creates a `World`, adds entities, runs the systems for a few frames, and then asserts that the state of the `World` is correct.
+
+#### Event Integration Tests
+
+To verify our event-driven architecture, we create integration tests that confirm the entire chain of cause and effect for a given event.
+
+1.  **Setup:** Create a `World` with an `EventBus`.
+2.  **Arrange:** Populate the `World` with the necessary entities and publish a specific event to the `EventBus` (e.g., `PlayerStompedEnemyEvent`).
+3.  **Act:** Run the relevant "conductor" systems (e.g., `AudioConductorSystem`, `ScoreSystem`).
+4.  **Assert:** Check that the correct downstream effects have occurred. For example, assert that the `AudioSystem` received a `PlaySound` command or that the player's score component was incremented.
+
+This ensures that when a new event or listener is added, it integrates correctly with the rest of the engine without causing unintended side effects.
 
 ### 3. End-to-End & Playtesting (The Peak)
 

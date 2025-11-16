@@ -53,6 +53,20 @@ We adhere to a "comment-first" philosophy. Good comments are crucial for maintai
 
 - **Externalized Configuration**: All global configuration values and constants (e.g., screen dimensions, colors, physics parameters) should be defined in `config.toml` and loaded at application startup. This allows for easy modification of application behavior without recompilation.
 
+### No Magic Numbers
+
+To support our data-driven design goals, the use of "magic numbers" (hardcoded, unnamed numerical or string literals) in the application logic is strictly discouraged.
+
+- **Bad:** `velocity.x = 5.0;`
+- **Bad:** `if level_name == "world_1_level_2" { ... }`
+
+Instead, these values must be defined in a configuration file (`config.toml`, `game_config.toml`, etc.) and accessed through the `Config` struct.
+
+- **Good:** `velocity.x = context.config.physics.max_speed;`
+- **Good:** `if level_name == context.game_config.levels.level_2_path { ... }`
+
+This practice makes the code more readable, easier to maintain, and allows for rapid tuning of game parameters without recompiling the engine. It is also a critical enabler for the AI-assisted workflow, as it turns many potential code-editing tasks into simple, safe data-entry tasks for the LLM.
+
 ## Development Philosophy: The Pragmatic Programmer
 
 We follow the principles outlined in "The Pragmatic Programmer" to guide our

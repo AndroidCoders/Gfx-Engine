@@ -218,6 +218,34 @@ fn on_update(entity) {
 *   **Clear Separation of Concerns:** The high-performance "core" of the engine (rendering, physics) remains in fast, compiled Rust, while the more dynamic, high-level gameplay logic lives in flexible script files.
 
 ---
+# Architecture for AI Collaboration
+
+To facilitate effective and safe collaboration with Large Language Model (LLM) assistants, the engine's architecture is intentionally designed to be as "atomic" and modular as possible. The goal is to enable a workflow where an assistant can make small, isolated, and verifiable changes, rather than large, risky ones. This is achieved through three core principles:
+
+### 1. Hyper-Specific Systems
+
+Instead of large, monolithic systems that handle many responsibilities, we favor breaking logic down into many small systems, each with a single, clearly defined purpose.
+
+*   **Principle:** A system should do one thing and do it well. For example, instead of a single `PhysicsSystem`, we might have a `GravitySystem`, a `MovementSystem`, and a `CollisionSystem`.
+*   **LLM Benefit:** This provides a very small and focused "blast radius" for any change. An assistant tasked with "adjusting gravity" only needs to understand and modify the tiny `GravitySystem`, which is much safer than it attempting to parse a multi-hundred-line `PhysicsSystem`.
+
+### 2. Event-Driven Communication
+
+The **Type-Based Event Bus** is the primary mechanism for communication between systems. Systems should not call each other directly. Instead, a system should perform its core logic and then publish an event to announce what has happened.
+
+*   **Principle:** Systems are decoupled. A system that causes an action (e.g., `InteractionSystem` detecting a stomp) does not need to know about the systems that react to it (e.g., `AudioConductorSystem`, `ScoreSystem`).
+*   **LLM Benefit:** This allows for purely additive and non-destructive changes. To add a new feature, an assistant can be instructed to "create a new system that listens for `PlayerStompedEnemyEvent` and creates a particle effect." The assistant doesn't need to find and modify any existing code; it simply adds a new, isolated file, which is a very low-risk operation.
+
+### 3. Data-Driven Entities (Prefabs)
+
+As much as possible, the *definition* of game objects should live in data files (`.toml`), not in Rust code. The code should describe behaviors, while the data should describe the objects that have those behaviors.
+
+*   **Principle:** Create a robust "prefab" system where an entity's components are defined in a configuration file. This includes its physics properties, renderable assets, and even what AI scripts it should use.
+*   **LLM Benefit:** This transforms many coding tasks into simple data entry tasks. "Create a new fast enemy" becomes "copy the `Goomba` prefab, rename it to `SpeedyGoomba`, and change its `max_speed` value." This is a trivial and extremely safe modification for an LLM to perform, as it requires no logical reasoning about Rust code.
+
+By adhering to these principles, we create a codebase that is not only clean and maintainable for human developers but is also perfectly structured for the small, iterative, and test-verified workflow used by AI coding assistants.
+
+---
 # ECSC Architecture: A Practical Guide (v4)
 
 This guide outlines the architecture and implementation of a topic-based Event Bus, which is the cornerstone of our **ECSC (Entity-Component-System-Concept)** model.

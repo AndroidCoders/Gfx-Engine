@@ -75,25 +75,31 @@ As the Gemini expert coding assistant, my primary role is to assist with develop
 -   Keep the Guiding Documents in `docs/` synchronized with the source code. After implementing changes, review and update the documentation accordingly.
 
 ---
-## Session Notes (2025-11-12)
+## Session Notes (2025-11-16)
 
-**Goal:** Make the `Gfx-Engine` project more data-driven by removing hardcoded values from the source code.
+**Goal:** Refactor the game engine to use a type-based event bus, decoupling systems according to the ECSC (Entity-Component-System-Concept) architecture.
 
-**Branch:** `refactor/data-driven-improvements`
+**Branch:** `refactor/ecsc-event-bus`
 
 **Progress:**
--   **Frame-Rate Independence:**
-    -   [x] Calculated `delta_time` in the main loop (`app.rs`).
-    -   [x] Passed `delta_time` to all systems via the `SystemContext`.
-    -   [x] Refactored all timer-based logic to use `delta_time`, making it frame-rate independent.
--   **Externalized Assets and Configs:**
-    -   [x] Moved the hardcoded `start_level` path from `app.rs` to `config.toml`.
-    -   [x] Moved hardcoded texture paths (`bg_sky`, `goal`, `game_over_3`) from `app.rs` to `assets/game_config.toml`.
-    -   [x] Refactored `app.rs` to load these assets using the new configuration values.
+-   **Event Bus Implementation:**
+    -   [x] Created a generic, type-based `EventBus` in `src/ecs/event.rs`.
+    -   [x] Integrated the `EventBus` into the main `World` struct.
+    -   [x] Added a `world.clear_events()` call at the end of the main loop to clear events each frame.
+-   **Coin Collection Refactoring:**
+    -   [x] Defined a `CoinCollectedEvent`.
+    -   [x] Created a new `AudioConductorSystem` to listen for audio-related events.
+    -   [x] Refactored `CoinCollectionSystem` to publish a `CoinCollectedEvent` instead of directly calling the audio manager.
+    -   [x] Updated `AudioConductorSystem` to play a sound upon receiving a `CoinCollectedEvent`.
+-   **Interaction Refactoring:**
+    -   [x] Defined `PlayerStompedEnemyEvent` and `PlayerTookDamageEvent`.
+    -   [x] Refactored `InteractionSystem` to publish these events instead of directly triggering audio.
+    -   [x] Updated `AudioConductorSystem` to handle the new events and play the appropriate sounds.
+-   **Jump Mechanic Refactoring:**
+    -   [x] Defined a `PlayerJumpEvent`.
+    -   [x] Created a new `PlayerControlSystem` to handle jump logic.
+    -   [x] Refactored `InputSystem` to publish a `PlayerJumpEvent` instead of directly manipulating the player's velocity.
 
 **Next Steps:**
--   Continue with the "Fully Embrace Data-Driven Design" plan from `docs/Tasks.md`.
--   Externalize game logic parameters (e.g., player health, knockback force) to config files.
--   Externalize sound effect names.
--   Refactor the enemy state machine to be generic and not tied to a specific enemy type.
--   Create a comprehensive entity prefab system in the configuration files.
+-   Continue the ECSC refactoring for other game logic.
+-   Merge the `refactor/ecsc-event-bus` branch into `master` when the user is ready.
