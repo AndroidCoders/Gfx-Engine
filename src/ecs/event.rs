@@ -23,6 +23,12 @@ pub struct PlayerTookDamageEvent {
     pub position: Vector2D,
 }
 
+/// An event published when the player presses the jump button.
+#[derive(Clone, Copy)]
+pub struct PlayerJumpEvent {
+    pub player: Entity,
+}
+
 /// A type-based event bus for decoupled communication between systems.
 ///
 /// The `EventBus` allows systems to publish event structs without needing to

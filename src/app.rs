@@ -37,6 +37,7 @@ use crate::ecs::{
         level_transition::LevelTransitionSystem,
         physics::PhysicsSystem,
         player_animation::PlayerAnimationSystem,
+        player_control::PlayerControlSystem,
         respawn::RespawnSystem,
         respawn_timer::RespawnTimerSystem,
         state_machine::StateMachineSystem,
@@ -504,6 +505,7 @@ impl App {
 
             // --- Create system instances locally ---
             let mut input_system = InputSystem;
+            let mut player_control_system = PlayerControlSystem;
             let mut physics_system = PhysicsSystem;
             let mut tile_collision_system = TileCollisionSystem;
             let mut interaction_system = InteractionSystem;
@@ -537,6 +539,7 @@ impl App {
 
             // --- Run systems ---
             input_system.update(&mut self.world, &mut system_context);
+            player_control_system.update(&mut self.world, &mut system_context);
             physics_system.update(&mut self.world, &mut system_context);
             interaction_system.update(&mut self.world, &mut system_context);
             tile_collision_system.update(&mut self.world, &mut system_context);
