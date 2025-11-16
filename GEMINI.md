@@ -72,6 +72,7 @@ As the Gemini expert coding assistant, my primary role is to assist with develop
 
 -   Ask for confirmation before starting a new Task and editing Code.
 -   After discussing a new Architecture, Design or Feature, suggest (to the User) to document the agreed changes in an appropriate Guiding Document.
+-   Keep the Guiding Documents in `docs/` synchronized with the source code. After implementing changes, review and update the documentation accordingly.
 
 ---
 ## Session Notes (2025-11-12)

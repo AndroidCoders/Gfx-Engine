@@ -40,7 +40,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
         - [x] Implement a respawn animation.
     - [ ] Implement Player Lives and Game Over:
         - [x] Display player lives in the debug text.
-        - [ ] Implement a "Game Over" screen.
+        - [x] Implement a "Game Over" screen.
     - [x] Implement Player Health & Damage:
         - [x] Add a `health` component to the player.
         - [x] Make enemies deal damage on contact.
@@ -70,6 +70,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 - [ ] **2. Refactor `app.rs` into Managers:**
     - [ ] Create a `SystemManager` to hold all ECS systems and orchestrate their execution.
     - [ ] Create a `GameStateManager` to handle level loading, transitions, and entity creation/teardown.
+    - [ ] Create a `PlayerFactory` or similar mechanism to centralize player entity creation and avoid code duplication during level transitions.
     - [ ] Simplify the `App` struct to delegate most of its responsibilities to these new managers.
 - [ ] **3. Externalize Gameplay Values:**
     - [ ] Move magic numbers for physics (knockback force, bounce height) and gameplay (invincibility duration, coin value) from source code (`interaction.rs`, etc.) to `game_config.toml`.
@@ -181,8 +182,11 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 - [ ] **5. Refactor to a 1:1 Pixel Coordinate System:**
     - [ ] Remove the `PIXEL_SCALE` constant.
     - [ ] Edit graphics assets to use prescaling (1:2).
-- [ ] **6. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.
-- [ ] **7. Continue Data-Driven Refactoring:**
+- [ ] **6. Refactor Enemy AI for Generic Behavior:**
+    - [ ] Design and implement reusable AI 'sensor' components (e.g., `WallSensor`, `LedgeSensor`).
+    - [ ] Update `PatrolState` to use sensor components instead of hardcoded detection logic.
+- [ ] **7. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.
+- [ ] **8. Continue Data-Driven Refactoring:**
     - [x] **Phase 1: Frame-Rate Independence:**
         - [x] Calculate `delta_time` in the main loop.
         - [x] Pass `delta_time` to all systems via the `SystemContext`.
