@@ -2,6 +2,7 @@
 
 pub mod animation_update;
 pub mod audio;
+pub mod audio_conductor;
 pub mod coin_collection;
 pub mod death;
 pub mod input;

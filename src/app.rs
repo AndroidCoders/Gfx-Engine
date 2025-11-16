@@ -28,6 +28,7 @@ use crate::ecs::{
     systems::{self,
         animation_update::AnimationUpdateSystem,
         audio::AudioSystem,
+        audio_conductor::AudioConductorSystem,
         coin_collection::CoinCollectionSystem,
         death::DeathSystem,
         input::InputSystem,
@@ -279,11 +280,8 @@ impl App {
                                                                                                                     world.add_goal(entity, Goal);
                                                                                                                 }
                                                                                                                 ComponentConfig::StateComponent { initial_state } => {
-                                                                                                                    match initial_state.as_str() {
-                                                                                                                        "PatrolState" => {
-                                                                                                                            world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
-                                                                                                                        }
-                                                                                                                        _ => {}
+                                                                                                                    if initial_state == "PatrolState" {
+                                                                                                                        world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
                                                                                                                     }
                                                                                                                 }
                                                                                                             }
@@ -492,7 +490,7 @@ impl App {
                     1920,
                     1080,
                 );
-                self.renderer.copy(&self.texture_manager.get("game_over_3").unwrap(), None, Some(game_over_rect))?;
+                self.renderer.copy(self.texture_manager.get("game_over_3").unwrap(), None, Some(game_over_rect))?;
                 self.renderer.present();
                 self.game_over_timer -= self.delta_time;
                 if self.game_over_timer <= 0.0 {
@@ -515,6 +513,7 @@ impl App {
             let mut animation_update_system = AnimationUpdateSystem;
             let mut state_machine_system = StateMachineSystem;
             let mut audio_system = AudioSystem;
+            let mut audio_conductor_system = AudioConductorSystem;
             let mut death_system = DeathSystem;
             let mut respawn_system = RespawnSystem;
             let mut respawn_timer_system = RespawnTimerSystem;
@@ -557,7 +556,16 @@ impl App {
             state_machine_system.update(&mut self.world, &mut system_context);
             player_animation_system.update(&mut self.world, &mut system_context);
             animation_update_system.update(&mut self.world, &mut system_context);
+
+            // --- Event-based Systems ---
+            audio_conductor_system.update(&mut self.world, &mut system_context);
+
+            // --- Final Systems ---
+            // The audio system processes events sent by conductors
             audio_system.update(&mut self.world, &mut self.audio_manager);
+
+            // Clear all events at the end of the frame
+            self.world.clear_events();
 
             if let Some(next_level) = self.next_level.clone() {
                 self.level = load_level(&next_level)?;

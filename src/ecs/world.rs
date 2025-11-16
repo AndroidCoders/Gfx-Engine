@@ -6,6 +6,7 @@
 
 use std::collections::HashMap;
 use crate::ecs::component::*;
+use crate::ecs::event::EventBus;
 
 /// A unique identifier for an entity in the game world.
 pub type Entity = usize;
@@ -19,6 +20,8 @@ pub type Entity = usize;
 pub struct World {
     /// The ID to be assigned to the next created entity.
     next_entity_id: usize,
+    /// The event bus for decoupled system communication.
+    pub event_bus: EventBus,
     /// Storage for all position components.
     pub positions: HashMap<Entity, Position>,
     /// Storage for all velocity components.
@@ -65,6 +68,11 @@ impl World {
     /// Creates a new, empty `World`.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Clears all events from the event bus.
+    pub fn clear_events(&mut self) {
+        self.event_bus.clear_events();
     }
 
     /// Creates a new entity with a unique ID.
