@@ -508,3 +508,12 @@ Here is a step-by-step guide for how we can implement this feature in a future s
 1.  In `app.rs`, remove the direct call to the `AudioSystem`.
 2.  Add the new `AudioConductorSystem` to the list of systems that are run each frame.
 3.  At the end of the main update phase (after all systems have run), call `self.world.clear_events()` to prepare the bus for the next frame.
+
+### Future Refactoring Candidates
+Beyond the initial implementation, the following systems are prime candidates for being refactored to use the event bus, further decoupling the engine architecture:
+
+*   **Player Death:** A `PlayerDeathSystem` can publish a `PlayerDiedEvent`. This allows multiple, unrelated systems (audio, game state, UI, effects) to react to the player's death without being tightly coupled.
+*   **Level Transition:** A `LevelTransitionSystem` can publish a `LevelCompleteEvent`. The core `App` or a `GameFlowSystem` can then listen for this event to handle the complex logic of loading the next level.
+*   **Enemy Death:** Similar to player death, an `InteractionSystem` can publish an `EnemyDefeatedEvent`, allowing `ScoreSystem`, `AudioConductorSystem`, and `EffectsSystem` to react independently.
+*   **Player Movement Input:** The `InputSystem` can translate raw key presses into `MoveCommand` events. This decouples the input hardware from the player physics and allows other systems (like AI or networking) to control characters by publishing the same events.
+*   **Player Animation State:** The `PlayerAnimationSystem` can become a pure listener that reacts to state-change events like `PlayerLandedEvent` or `PlayerJumpedEvent`, rather than polling the player's components every frame. This simplifies the animation logic significantly.

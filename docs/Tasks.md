@@ -62,11 +62,16 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 ### Phase 4: Architectural Improvements & Core Features (Next Sprint)
 
 - [ ] **1. Implement ECSC Type-Based Event Bus:**
-    - [ ] Create `src/ecs/event.rs` with a generic `EventBus` struct.
-    - [ ] Integrate the `EventBus` into the `World` struct.
-    - [ ] Refactor one system (e.g., `CoinCollectionSystem`) to publish a strongly-typed event instead of using the `mpsc::channel`.
-    - [ ] Create a new `AudioConductorSystem` that listens for the event and plays the sound.
-    - [ ] Update the main loop to clear the event bus each frame.
+    - [x] Create `src/ecs/event.rs` with a generic `EventBus` struct.
+    - [x] Integrate the `EventBus` into the `World` struct.
+    - [x] Refactor `CoinCollectionSystem` and `InteractionSystem` to publish strongly-typed events.
+    - [x] Create an `AudioConductorSystem` that listens for audio-related events.
+    - [x] Update the main loop to clear the event bus each frame.
+    - [ ] Refactor **Player Death** logic to publish a `PlayerDiedEvent` and have other systems react to it.
+    - [ ] Refactor **Level Transition** logic to publish a `LevelCompleteEvent`.
+    - [ ] Refactor **Enemy Death** logic to publish an `EnemyDefeatedEvent`.
+    - [ ] Refactor **Player Input** to publish `MoveCommand` events.
+    - [ ] Refactor **Player Animation** to be driven by state-change events like `PlayerLandedEvent`.
 - [ ] **2. Refactor `app.rs` into Managers:**
     - [ ] Create a `SystemManager` to hold all ECS systems and orchestrate their execution.
     - [ ] Create a `GameStateManager` to handle level loading, transitions, and entity creation/teardown.
