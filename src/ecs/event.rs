@@ -29,6 +29,12 @@ pub struct PlayerJumpEvent {
     pub player: Entity,
 }
 
+/// An event published when the player's health reaches zero.
+#[derive(Clone, Copy)]
+pub struct PlayerDiedEvent {
+    pub player: Entity,
+}
+
 /// A type-based event bus for decoupled communication between systems.
 ///
 /// The `EventBus` allows systems to publish event structs without needing to

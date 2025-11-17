@@ -31,6 +31,7 @@ use crate::ecs::{
         audio_conductor::AudioConductorSystem,
         coin_collection::CoinCollectionSystem,
         death::DeathSystem,
+        game_flow::GameFlowSystem,
         input::InputSystem,
         interaction::InteractionSystem,
         kill::KillSystem,
@@ -44,6 +45,7 @@ use crate::ecs::{
         tile_collision::TileCollisionSystem,
         invincibility::InvincibilitySystem,
         player_death::PlayerDeathSystem,
+        player_death_transition::PlayerDeathTransitionSystem,
         lifetime::LifetimeSystem,
     },
     component::*,
@@ -521,6 +523,8 @@ impl App {
             let mut respawn_timer_system = RespawnTimerSystem;
             let mut invincibility_system = InvincibilitySystem;
             let mut player_death_system = PlayerDeathSystem;
+            let mut game_flow_system = GameFlowSystem;
+            let mut player_death_transition_system = PlayerDeathTransitionSystem;
             let mut lifetime_system = LifetimeSystem;
             let mut level_transition_system = LevelTransitionSystem;
 
@@ -544,6 +548,10 @@ impl App {
             interaction_system.update(&mut self.world, &mut system_context);
             tile_collision_system.update(&mut self.world, &mut system_context);
             player_death_system.update(&mut self.world, &mut system_context);
+            // --- Systems that react to player death ---
+            game_flow_system.update(&mut self.world, &mut system_context);
+            player_death_transition_system.update(&mut self.world, &mut system_context);
+            
             coin_collection_system.update(&mut self.world, &mut system_context);
             level_transition_system.update(&mut self.world, &mut system_context);
             kill_system.update(&mut self.world, &mut system_context);
