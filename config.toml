@@ -39,4 +39,4 @@ jump_hold_force = 0.45
 max_jump_time = 15
 
 [game]
-start_level = "assets/levels/world_1_level_1.tmx"
+start_level = "assets/levels/world_1_level_1/level.tmx"

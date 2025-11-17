@@ -84,13 +84,77 @@ impl Level {
     }
 }
 
+// --- Structs for Deserializing TSX XML ---
+
+#[derive(Debug, Deserialize)]
+struct TmxProperty {
+    #[serde(rename = "@name")]
+    name: String,
+    #[serde(rename = "@type")]
+    property_type: String,
+    #[serde(rename = "@value")]
+    value: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct TmxProperties {
+    #[serde(rename = "property", default)]
+    properties: Vec<TmxProperty>,
+}
+
+#[derive(Debug, Deserialize)]
+struct TmxTile {
+    #[serde(rename = "@id")]
+    id: u32,
+    properties: Option<TmxProperties>,
+}
+
+#[derive(Debug, Deserialize)]
+struct TmxImage {
+    #[serde(rename = "@source")]
+    #[allow(dead_code)]
+    source: String,
+}
+
+#[derive(Debug, Deserialize)]
+enum TmxTilesetContent {
+    #[serde(rename = "image")]
+    Image(TmxImage),
+    #[serde(rename = "tile")]
+    Tile(TmxTile),
+}
+
+#[derive(Debug, Deserialize)]
+struct TmxTileset {
+    #[serde(rename = "@name")]
+    #[allow(dead_code)]
+    name: String,
+    #[serde(rename = "@tilewidth")]
+    tile_width: u32,
+    #[serde(rename = "@tileheight")]
+    tile_height: u32,
+    #[serde(rename = "$value")]
+    content: Vec<TmxTilesetContent>,
+}
+
 // --- Structs for Deserializing TMX XML ---
+
+#[derive(Debug, Deserialize)]
+struct TmxTilesetRef {
+    #[serde(rename = "@firstgid")]
+    #[allow(dead_code)]
+    firstgid: u32,
+    #[serde(rename = "@source")]
+    source: String,
+}
 
 /// Represents the top-level `<map>` element in a TMX file.
 #[derive(Debug, Deserialize)]
 struct TmxMap {
     #[serde(rename = "@width")]
     width: u32,
+    #[serde(rename = "tileset", default)]
+    tilesets: Vec<TmxTilesetRef>,
     #[serde(rename = "layer", default)]
     tile_layers: Vec<TmxLayer>,
     #[serde(rename = "objectgroup", default)]
@@ -163,21 +227,50 @@ pub fn load_level(path: &str) -> Result<Level, String> {
         .map(|chunk| chunk.to_vec())
         .collect();
 
-    // Manually define which tiles are solid.
-    // TODO: Move this data to a configuration file (e.g., tileset.toml)
-    let solid_tiles: Vec<u32> = vec![4, 5, 8, 15, 26, 34, 35, 36, 38, 41, 49];
+    // --- Parse Tileset Data (TSX) ---
+    let tileset_ref = tmx_map.tilesets.first().ok_or("No <tileset> reference found in TMX file")?;
+    let tmx_path = std::path::Path::new(path);
+    let tsx_path = tmx_path.parent().unwrap_or_else(|| std::path::Path::new("")).join(&tileset_ref.source);
+    
+    let tsx_str = std::fs::read_to_string(&tsx_path).map_err(|e| format!("Failed to read TSX file at {:?}: {}", tsx_path, e))?;
+    let tmx_tileset: TmxTileset = from_str(&tsx_str).map_err(|e| format!("Failed to parse TSX file: {}", e))?;
+
+    let mut solid_tiles = std::collections::HashSet::new();
+    let mut image_source = "".to_string();
+
+    for item in tmx_tileset.content {
+        match item {
+            TmxTilesetContent::Image(image) => {
+                // Construct path relative to the TSX file's location
+                let image_path = tsx_path.parent().unwrap_or_else(|| std::path::Path::new("")).join(image.source);
+                image_source = image_path.to_string_lossy().to_string();
+            }
+            TmxTilesetContent::Tile(tile) => {
+                if let Some(properties) = tile.properties {
+                    for prop in properties.properties {
+                        if prop.name == "solid" && prop.property_type == "bool" && prop.value == "true" {
+                            // The GID in the TMX is 1-indexed and includes the `firstgid`.
+                            // The ID in the TSX is 0-indexed.
+                            solid_tiles.insert(tile.id + tileset_ref.firstgid);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Create Engine-Specific Structs ---
+
     let collision_tiles: Vec<Vec<u32>> = map_tiles.iter()
         .map(|row| {
             row.iter().map(|&tile_id| if solid_tiles.contains(&tile_id) { 1 } else { 0 }).collect()
         })
         .collect();
 
-    // Manually define the tileset based on our known file structure
-    // TODO: Parse the .tsx file to get this information dynamically
     let tileset = Tileset {
-        texture: "assets/graphics/tileset_1_outside.png".to_string(),
-        tile_width: 32,
-        tile_height: 32,
+        texture: image_source,
+        tile_width: tmx_tileset.tile_width,
+        tile_height: tmx_tileset.tile_height,
     };
 
     // Parse object layers to create entity templates
