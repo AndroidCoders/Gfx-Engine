@@ -20,9 +20,11 @@ impl System<SystemContext<'_>> for LevelTransitionSystem {
                 if let Some(player_collision) = world.collisions.get(&player_entity)
                     && let Some(goal_collision) = world.collisions.get(&goal_entity)
                         && player_collision.rect.has_intersection(goal_collision.rect) {
-                            // Trigger level transition by setting the path to the next level file.
-                            // TODO: Make the next level path data-driven instead of hardcoded.
-                            *context.next_level = Some("assets/levels/world_1_level_2.tmx".to_string());
+                            // Check if the goal entity has a NextLevel component
+                            if let Some(next_level_comp) = world.next_levels.get(&goal_entity) {
+                                // Trigger level transition using the path from the component.
+                                *context.next_level = Some(next_level_comp.0.clone());
+                            }
                         }
             }
         }

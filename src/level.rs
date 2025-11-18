@@ -45,6 +45,8 @@ pub struct Entity {
     pub r#type: String,
     /// The initial position of the entity in world coordinates.
     pub position: Vector2D,
+    /// A map of custom properties for the entity.
+    pub properties: std::collections::HashMap<String, String>,
 }
 
 /// Represents a complete game level.
@@ -86,8 +88,8 @@ impl Level {
 
 // --- Structs for Deserializing TSX XML ---
 
-#[derive(Debug, Deserialize)]
-struct TmxProperty {
+#[derive(Debug, Deserialize, Clone)]
+pub struct TmxProperty {
     #[serde(rename = "@name")]
     name: String,
     #[serde(rename = "@type")]
@@ -96,8 +98,8 @@ struct TmxProperty {
     value: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct TmxProperties {
+#[derive(Debug, Deserialize, Clone)]
+pub struct TmxProperties {
     #[serde(rename = "property", default)]
     properties: Vec<TmxProperty>,
 }
@@ -188,6 +190,8 @@ pub struct TmxObject {
     /// The y-coordinate of the object in pixels.
     #[serde(rename = "@y")]
     pub y: f32,
+    /// An optional block of custom properties for the object.
+    pub properties: Option<TmxProperties>,
 }
 
 /// Represents an `<objectgroup>` in a TMX file, used for placing entities.
@@ -277,9 +281,17 @@ pub fn load_level(path: &str) -> Result<Level, String> {
     let mut entities = Vec::new();
     for object_group in &tmx_map.object_groups {
         for object in &object_group.objects {
+            let mut properties = std::collections::HashMap::new();
+            if let Some(props) = &object.properties {
+                for prop in &props.properties {
+                    properties.insert(prop.name.clone(), prop.value.clone());
+                }
+            }
+
             entities.push(Entity {
                 r#type: object.r#type.clone(),
                 position: Vector2D::new(object.x, object.y),
+                properties,
             });
         }
     }

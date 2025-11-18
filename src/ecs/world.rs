@@ -62,6 +62,8 @@ pub struct World {
     pub directions: HashMap<Entity, Directional>,
     /// Storage for all goal tag components.
     pub goals: HashMap<Entity, Goal>,
+    /// Storage for all next level components.
+    pub next_levels: HashMap<Entity, NextLevel>,
 }
 
 impl World {
@@ -191,5 +193,10 @@ impl World {
     /// Adds a `Goal` component to an entity.
     pub fn add_goal(&mut self, entity: Entity, component: Goal) {
         self.goals.insert(entity, component);
+    }
+
+    /// Adds a `NextLevel` component to an entity.
+    pub fn add_next_level(&mut self, entity: Entity, component: NextLevel) {
+        self.next_levels.insert(entity, component);
     }
 }

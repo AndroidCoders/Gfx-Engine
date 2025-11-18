@@ -153,3 +153,8 @@ impl Component for Directional {}
 #[derive(Debug, Clone, Copy)]
 pub struct Goal;
 impl Component for Goal {}
+
+/// A component that stores the path to the next level.
+#[derive(Debug, Clone)]
+pub struct NextLevel(pub String);
+impl Component for NextLevel {}

@@ -290,6 +290,11 @@ impl App {
                                                                                                             }
                                                                                                         }
                                                                                                     }
+
+                                                                                                    // Check for and add NextLevel component from TMX properties
+                                                                                                    if let Some(next_level_path) = entity_data.properties.get("next_level") {
+                                                                                                        world.add_next_level(entity, NextLevel(next_level_path.clone()));
+                                                                                                    }
                                                                                                 }
                                                 
                                                                                                 // Create the player entity
