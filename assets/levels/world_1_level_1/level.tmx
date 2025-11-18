@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="120" height="40" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="21">
- <tileset firstgid="1" source="tileset.tsx"/>
+ <tileset firstgid="1" source="../../world1/tileset.tsx"/>
  <layer id="1" name="Tile Layer 1" width="120" height="40">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -55,7 +55,7 @@
   <object id="17" type="GoldCoin" x="1793" y="639" width="32" height="32"/>
   <object id="8" type="Goal" x="3700" y="736" width="64" height="64">
    <properties>
-    <property name="next_level" type="string" value="assets/levels/world_1_level_2.tmx"/>
+    <property name="next_level" type="string" value="assets/levels/world_1_level_2/level.tmx"/>
    </properties>
   </object>
   <object id="10" type="GoldCoin" x="862" y="700" width="32" height="32"/>

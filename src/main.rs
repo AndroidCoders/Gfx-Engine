@@ -31,8 +31,9 @@ use app::App;
 ///
 /// A `Result` indicating success (`()`) or an error (`String`).
 fn main() -> Result<(), String> {
-    // Initialize SDL
+    // Initialize SDL and other subsystems
     let sdl_context = sdl3::init().map_err(|e| e.to_string())?;
+    let video_subsystem = sdl_context.video().map_err(|e| e.to_string())?;
 
     let mut app = App::new(sdl_context).map_err(|e| e.to_string())?;
     app.run()

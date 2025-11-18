@@ -247,7 +247,9 @@ pub fn load_level(path: &str) -> Result<Level, String> {
             TmxTilesetContent::Image(image) => {
                 // Construct path relative to the TSX file's location
                 let image_path = tsx_path.parent().unwrap_or_else(|| std::path::Path::new("")).join(image.source);
-                image_source = image_path.to_string_lossy().to_string();
+                let canonical_path = std::fs::canonicalize(&image_path)
+                    .map_err(|e| format!("Failed to canonicalize path {:?}: {}", image_path, e))?;
+                image_source = canonical_path.to_string_lossy().to_string();
             }
             TmxTilesetContent::Tile(tile) => {
                 if let Some(properties) = tile.properties {
