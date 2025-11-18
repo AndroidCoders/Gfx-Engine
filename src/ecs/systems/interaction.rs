@@ -50,7 +50,8 @@ impl System<SystemContext<'_>> for InteractionSystem {
                                 stomp_events.push(PlayerStompedEnemyEvent { enemy: enemy_entity, player: player_entity });
                             } else {
                                 // Otherwise, it's a horizontal (damaging) collision.
-                                let knockback_x = if player_pos.0.x < enemy_collision.rect.x() as f32 { -5.0 } else { 5.0 };
+                                let knockback_force = context.game_config.gameplay.damage_knockback_force;
+                                let knockback_x = if player_pos.0.x < enemy_collision.rect.x() as f32 { -knockback_force } else { knockback_force };
                                 damage_commands.push(PlayerTookDamageEvent { player: player_entity, knockback_x, position: player_pos.0 });
                             }
                         }
@@ -62,7 +63,7 @@ impl System<SystemContext<'_>> for InteractionSystem {
         for event in stomp_events {
             world.add_dead_tag(event.enemy, DeadTag);
             if let Some(player_vel) = world.velocities.get_mut(&event.player) {
-                player_vel.0.y = -4.0; // Bounce
+                player_vel.0.y = context.game_config.gameplay.stomp_bounce_velocity; // Bounce
             }
             world.event_bus.publish(event);
         }
@@ -72,7 +73,7 @@ impl System<SystemContext<'_>> for InteractionSystem {
             if let Some(health) = world.healths.get_mut(&command.player)
                 && health.current > 0 {
                     health.current -= 1;
-                    world.add_invincibility(command.player, Invincibility { timer: 1.5 });
+                    world.add_invincibility(command.player, Invincibility { timer: context.game_config.gameplay.damage_invincibility_duration });
 
                     if let Some(player_vel) = world.velocities.get_mut(&command.player) {
                         player_vel.0.x = command.knockback_x;

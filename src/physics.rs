@@ -204,9 +204,10 @@ mod tests {
     fn test_vertical_collision_stops_fall() {
         let level = create_test_level_with_floor();
         let config = create_test_config();
-        let game_config = GameConfig { 
-            player: PlayerConfig { start_pos: Vector2D::default(), width: 32, height: 32, draw_width: 32, draw_height: 32, horizontal_draw_offset: 0, vertical_draw_offset: 0, respawn_pos: Vector2D::default(), lives: 3 }, 
-            world: WorldConfig { width: 0.0, death_plane_y: 0.0 }, 
+        let game_config = GameConfig {
+            player: PlayerConfig { start_pos: Vector2D::default(), width: 32, height: 32, draw_width: 32, draw_height: 32, horizontal_draw_offset: 0, vertical_draw_offset: 0, respawn_pos: Vector2D::default(), lives: 3, max_health: 3 }, 
+            world: WorldConfig { width: 0.0, death_plane_y: 0.0 },
+            gameplay: Default::default(),
             animation: HashMap::new(), 
             audio: HashMap::new(),
             sound_events: HashMap::new(),
@@ -246,9 +247,10 @@ mod tests {
     fn test_horizontal_collision_stops_movement() {
         let level = create_test_level_with_wall();
         let config = create_test_config();
-        let game_config = GameConfig { 
-            player: PlayerConfig { start_pos: Vector2D::default(), width: 32, height: 32, draw_width: 32, draw_height: 32, horizontal_draw_offset: 0, vertical_draw_offset: 0, respawn_pos: Vector2D::default(), lives: 3 }, 
-            world: WorldConfig { width: 0.0, death_plane_y: 0.0 }, 
+        let game_config = GameConfig {
+            player: PlayerConfig { start_pos: Vector2D::default(), width: 32, height: 32, draw_width: 32, draw_height: 32, horizontal_draw_offset: 0, vertical_draw_offset: 0, respawn_pos: Vector2D::default(), lives: 3, max_health: 3 }, 
+            world: WorldConfig { width: 0.0, death_plane_y: 0.0 },
+            gameplay: Default::default(),
             animation: HashMap::new(), 
             audio: HashMap::new(),
             sound_events: HashMap::new(),

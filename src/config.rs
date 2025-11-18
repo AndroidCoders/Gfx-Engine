@@ -91,6 +91,9 @@ pub struct GameConfig {
     pub player: PlayerConfig,
     /// World-specific configuration, like boundaries and death planes.
     pub world: WorldConfig,
+    /// Gameplay values
+    #[serde(default)]
+    pub gameplay: GameplayConfig,
     /// A map of all sprite animations available in the game.
     #[serde(default)]
     pub animation: HashMap<String, AnimationConfig>,
@@ -153,6 +156,8 @@ pub struct PlayerConfig {
     pub respawn_pos: Vector2D,
     /// The starting number of lives for the player.
     pub lives: u32,
+    /// The player's maximum health.
+    pub max_health: u32,
 }
 
 /// Represents the world's configuration.
@@ -163,6 +168,37 @@ pub struct WorldConfig {
     pub width: f32,
     /// The y-coordinate below which an entity is considered to have fallen out of the world.
     pub death_plane_y: f32,
+}
+
+/// Holds gameplay-related configuration values.
+#[derive(Deserialize, Clone)]
+#[serde(default)]
+pub struct GameplayConfig {
+    /// The upward velocity applied to the player after stomping an enemy.
+    pub stomp_bounce_velocity: f32,
+    /// The horizontal force applied to the player when they take damage.
+    pub damage_knockback_force: f32,
+    /// The duration in seconds of the player's invincibility after taking damage.
+    pub damage_invincibility_duration: f32,
+    /// The duration in seconds of the player's invincibility after respawning.
+    pub respawn_invincibility_duration: f32,
+    /// The duration in seconds of the game over screen.
+    pub game_over_duration: f32,
+    /// The texture to display on the game over screen.
+    pub game_over_texture: String,
+}
+
+impl Default for GameplayConfig {
+    fn default() -> Self {
+        Self {
+            stomp_bounce_velocity: -4.0,
+            damage_knockback_force: 5.0,
+            damage_invincibility_duration: 1.5,
+            respawn_invincibility_duration: 2.0,
+            game_over_duration: 3.0,
+            game_over_texture: "game_over_3".to_string(),
+        }
+    }
 }
 
 

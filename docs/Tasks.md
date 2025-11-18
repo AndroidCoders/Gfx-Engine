@@ -78,8 +78,20 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [ ] Create a `PlayerFactory` or similar mechanism to centralize player entity creation and avoid code duplication during level transitions.
     - [ ] Simplify the `App` struct to delegate most of its responsibilities to these new managers.
 - [ ] **3. Externalize Gameplay Values:**
-    - [ ] Move magic numbers for physics (knockback force, bounce height) and gameplay (invincibility duration, coin value) from source code (`interaction.rs`, etc.) to `game_config.toml`.
-    - [ ] Make the "next level" path a data-driven property in the level files (`.tmx`) instead of being hardcoded in `level_transition.rs`.
+    - [ ] **`level_transition.rs`**: Make the "next level" path a data-driven property in the level files (`.tmx`) instead of being hardcoded.
+        - [ ] Currently hardcoded to `"assets/levels/world_1_level_2.tmx"`.
+    - [ ] **`interaction.rs`**: Move physics and gameplay values to `game_config.toml`.
+        - [ ] Player knockback force on damage (currently `5.0`).
+        - [ ] Player bounce velocity after stomping an enemy (currently `-4.0`).
+        - [ ] Player invincibility duration after damage (currently `1.5` seconds).
+        - [ ] Explosion effect properties (size, offset, z-index).
+        - [ ] Explosion lifetime calculation (currently assumes 60 FPS).
+    - [ ] **`respawn.rs`**: Move respawn grace period to `game_config.toml`.
+        - [ ] Currently hardcoded to `2.0` seconds.
+    - [ ] **`app.rs`**: Move game flow values to `game_config.toml`.
+        - [ ] Game over screen duration (currently `3.0` seconds).
+        - [ ] Player's starting and maximum health (currently `3`).
+        - [ ] Game over texture name (currently `"game_over_3"`).
 - [ ] **4. Implement Robust Text Rendering:**
     - [ ] Research and add the `sdl3_ttf` crate to the project.
     - [ ] Create a `FontManager` to load and manage `.ttf` fonts.

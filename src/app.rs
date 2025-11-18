@@ -337,7 +337,7 @@ impl App {
                                                                                                     ),
                                                                                                 });
                                                                 world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
-                                                                world.add_health(player_entity_instance, Health { current: 3, max: 3 });
+world.add_health(player_entity_instance, Health { current: game_config.player.max_health, max: game_config.player.max_health });
                                                                 // Add the Directional component to the player, so we can track which way they are facing.
                                                                 world.add_direction(player_entity_instance, Directional { direction: Direction::Right });
                                                                 let player_entity = Some(player_entity_instance);
@@ -481,7 +481,7 @@ impl App {
 
             if self.lives == 0 {
                 self.state = AppState::GameOver;
-                self.game_over_timer = 3.0; // 3 seconds
+                self.game_over_timer = self._game_config.gameplay.game_over_duration;
             }
 
             if self.state == AppState::GameOver {
@@ -493,7 +493,7 @@ impl App {
                     1920,
                     1080,
                 );
-                self.renderer.copy(self.texture_manager.get("game_over_3").unwrap(), None, Some(game_over_rect))?;
+                self.renderer.copy(self.texture_manager.get(&self._game_config.gameplay.game_over_texture).unwrap(), None, Some(game_over_rect))?;
                 self.renderer.present();
                 self.game_over_timer -= self.delta_time;
                 if self.game_over_timer <= 0.0 {
@@ -628,7 +628,7 @@ impl App {
                     ),
                 });
                 self.world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
-                self.world.add_health(player_entity_instance, Health { current: 3, max: 3 });
+                self.world.add_health(player_entity_instance, Health { current: self._game_config.player.max_health, max: self._game_config.player.max_health });
                 self.world.add_direction(player_entity_instance, Directional { direction: Direction::Right });
                 self.player_entity = Some(player_entity_instance);
 
