@@ -138,6 +138,22 @@ pub fn resolve_horizontal_collisions(
             vel.0.x = 0.0;
         }
     }
+
+    // --- World boundary collision ---
+    let map_width_in_tiles = context.level.map.tiles[0].len() as f32;
+    let map_width = map_width_in_tiles * tile_width;
+
+    // Left boundary
+    if pos.0.x < 0.0 {
+        pos.0.x = 0.0;
+        vel.0.x = 0.0;
+    }
+
+    // Right boundary
+    if pos.0.x + scaled_bounds_width > map_width {
+        pos.0.x = map_width - scaled_bounds_width;
+        vel.0.x = 0.0;
+    }
 }
 
 #[cfg(test)]
@@ -281,7 +297,7 @@ mod tests {
 
         resolve_horizontal_collisions(&mut pos, &mut vel, bounds, &context);
 
-        assert_eq!(pos.0.x, -1.0, "Player should be positioned just to the left of the wall");
+        assert_eq!(pos.0.x, 0.0, "Player should be positioned at the world boundary after collision");
         assert_eq!(vel.0.x, 0.0, "Player horizontal velocity should be zero after collision");
     }
 }
