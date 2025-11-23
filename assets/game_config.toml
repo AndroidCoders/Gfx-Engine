@@ -10,6 +10,7 @@ horizontal_draw_offset = -28
 vertical_draw_offset = -22
 respawn_pos = { x = 80.0, y = 700.0 }
 lives = 9
+max_health = 3
 
 [world]
 width = 6000.0
@@ -189,3 +190,11 @@ draw_width = 64
 draw_height = 48
 vertical_draw_offset = -16
 horizontal_draw_offset = -16
+
+[gameplay]
+stomp_bounce_velocity = -4.0
+damage_knockback_force = 5.0
+damage_invincibility_duration = 1.5
+respawn_invincibility_duration = 2.0
+game_over_duration = 3.0
+game_over_texture = "game_over_3"

@@ -32,7 +32,11 @@ The engine is composed of several modules within the `src/` directory:
 
 ## Game Loop
 
-To ensure a stable and smooth visual experience, we use a **fixed-timestep game loop** with **VSync enabled**. These parameters are configurable via `config.toml`. This approach decouples the game logic from the rendering rate, providing a consistent animation speed on all hardware.
+To ensure frame-rate independent movement and logic, the engine uses a **variable timestep loop**.
+
+-   **Delta Time:** On each iteration of the main loop, the time elapsed since the last frame (`delta_time`) is calculated.
+-   **System Updates:** This `delta_time` value is passed to all relevant systems (e.g., `PhysicsSystem`, `InvincibilitySystem`), allowing them to scale their updates accordingly. For example, movement is calculated as `velocity * delta_time`.
+-   **VSync:** VSync can be enabled in `config.toml` to synchronize rendering with the display's refresh rate, which helps to prevent screen tearing.
 
 ## Rendering Pipeline
 
@@ -120,6 +124,14 @@ The camera system is designed to be both smooth and responsive, keeping the play
 
 To manage the behavior of all dynamic entities (including the player and AI enemies), we will implement a **Hierarchical State Machine (HSM)**. This unified pattern provides a robust and scalable foundation for both player control and AI logic. It organizes behavior into distinct states (e.g., `Idle`, `Patrolling`, `Jumping`) and manages the transitions between them. This prevents bugs by ensuring an entity is only in one state at a time, simplifies adding new abilities, and serves as the core driver for the animation system by linking each state directly to its corresponding animation. Our implementation will be a hybrid, supporting both continuous actions within states and instantaneous actions on transitions.
 
+### Generic AI with a Sensor-Based Approach
+
+To make enemy AI more modular and reusable, the specific detection logic (e.g., for walls or ledges) should be extracted from individual states like `PatrolState`. Instead, we can create generic **sensor components** that can be attached to any entity.
+
+-   **Sensor Components:** These would be simple, reusable components like `WallSensor` or `LedgeSensor`. Each sensor's corresponding system would be responsible for a single detection task (e.g., checking for a wall immediately in front of the entity) and adding a corresponding tag component (e.g., `WallDetected`) to the entity if the condition is met.
+-   **State Machine Logic:** The entity's state machine (e.g., `PatrolState`) would then become much simpler. Instead of performing the detection logic itself, it would just check for the presence of the `WallDetected` or `LedgeDetected` components to decide whether to change its behavior (e.g., reverse direction).
+-   **Data-Driven Behavior:** This approach allows for the creation of diverse and complex AI behaviors in a data-driven way. By mixing and matching different sensor components in an enemy's prefab in `game_config.toml`, we can create new types of enemies without writing new state machine code.
+
 ## Data-Driven World Design
 
 A core principle of the engine is to empower designers to build and modify the game world without altering the core engine code. This is achieved by defining world elements—collision, entity properties, and even entity behavior—directly in the data files, primarily the Tiled map editor (`.tmx` and `.tsx` files) and configuration files (`.toml`).
@@ -204,6 +216,34 @@ fn on_update(entity) {
 *   **Rapid Prototyping:** Change complex AI, item, or quest logic in seconds without waiting for the engine to recompile.
 *   **Behavioral Variety:** Create many unique enemies from a single base type just by assigning them different scripts.
 *   **Clear Separation of Concerns:** The high-performance "core" of the engine (rendering, physics) remains in fast, compiled Rust, while the more dynamic, high-level gameplay logic lives in flexible script files.
+
+---
+# Architecture for AI Collaboration
+
+To facilitate effective and safe collaboration with Large Language Model (LLM) assistants, the engine's architecture is intentionally designed to be as "atomic" and modular as possible. The goal is to enable a workflow where an assistant can make small, isolated, and verifiable changes, rather than large, risky ones. This is achieved through three core principles:
+
+### 1. Hyper-Specific Systems
+
+Instead of large, monolithic systems that handle many responsibilities, we favor breaking logic down into many small systems, each with a single, clearly defined purpose.
+
+*   **Principle:** A system should do one thing and do it well. For example, instead of a single `PhysicsSystem`, we might have a `GravitySystem`, a `MovementSystem`, and a `CollisionSystem`.
+*   **LLM Benefit:** This provides a very small and focused "blast radius" for any change. An assistant tasked with "adjusting gravity" only needs to understand and modify the tiny `GravitySystem`, which is much safer than it attempting to parse a multi-hundred-line `PhysicsSystem`.
+
+### 2. Event-Driven Communication
+
+The **Type-Based Event Bus** is the primary mechanism for communication between systems. Systems should not call each other directly. Instead, a system should perform its core logic and then publish an event to announce what has happened.
+
+*   **Principle:** Systems are decoupled. A system that causes an action (e.g., `InteractionSystem` detecting a stomp) does not need to know about the systems that react to it (e.g., `AudioConductorSystem`, `ScoreSystem`).
+*   **LLM Benefit:** This allows for purely additive and non-destructive changes. To add a new feature, an assistant can be instructed to "create a new system that listens for `PlayerStompedEnemyEvent` and creates a particle effect." The assistant doesn't need to find and modify any existing code; it simply adds a new, isolated file, which is a very low-risk operation.
+
+### 3. Data-Driven Entities (Prefabs)
+
+As much as possible, the *definition* of game objects should live in data files (`.toml`), not in Rust code. The code should describe behaviors, while the data should describe the objects that have those behaviors.
+
+*   **Principle:** Create a robust "prefab" system where an entity's components are defined in a configuration file. This includes its physics properties, renderable assets, and even what AI scripts it should use.
+*   **LLM Benefit:** This transforms many coding tasks into simple data entry tasks. "Create a new fast enemy" becomes "copy the `Goomba` prefab, rename it to `SpeedyGoomba`, and change its `max_speed` value." This is a trivial and extremely safe modification for an LLM to perform, as it requires no logical reasoning about Rust code.
+
+By adhering to these principles, we create a codebase that is not only clean and maintainable for human developers but is also perfectly structured for the small, iterative, and test-verified workflow used by AI coding assistants.
 
 ---
 # ECSC Architecture: A Practical Guide (v4)
@@ -355,21 +395,19 @@ The engine currently has the following core features implemented:
 *   **Input System:** A data-driven input system is in place.
 *   **Texture Management:** A `TextureManager` for loading and managing textures.
 *   **Renderer:** Can draw sprites and level geometry.
-*   **Level Loading:** A basic level loading system from `.toml` files.
-*   **Camera:** A damped camera that smoothly follows the player.
-*   **Physics:** Basic physics, including gravity, jumping, and collision detection.
+*   **Level Loading:** A basic level loading system from `.tmx` files.
+*   **Advanced Camera:** A damped camera that smoothly follows the player, featuring look-ahead, platform snapping, and slow/fast zones.
+*   **Physics:** Basic physics, including gravity, jumping, and tile-based collision detection.
 *   **Player Movement:** Player movement (left/right) and sprite flipping.
 *   **Animation:** A state-driven, multi-frame sprite animation system.
 *   **Audio:** An event-driven audio system using the `kira` crate.
+*   **Z-Layer Rendering:** A `z_index` component allows for controlling the draw order of entities.
 
 ## Debugging and Profiling
 
 To facilitate robust testing and optimization, the following systems are planned:
-
 *   **In-Game Benchmarking:** A real-time, in-game profiler (`Benchmarker.rs`) will be created to monitor and display key performance metrics such as frame time, FPS, and time spent in the update and render loops.
-
 *   **On-Screen Display and Logging:** A comprehensive debug system (`debug.rs`) will be implemented. It will render key data (e.g., player coordinates, state) on-screen for video analysis and simultaneously record verbose, high-resolution data to a log file. A shared timestamp or frame number will link the video frames to the log entries.
-
 *   **Programmatic Video Capture:** To enable automated analysis and capture hard-to-reproduce bugs, the engine will integrate programmatic video recording. This will be achieved by using a Rust wrapper for the `ffmpeg` library (such as `ffmpeg-next`), allowing the engine to start and stop video capture from within the code.
 
 ## Architectural Roadmap
@@ -387,7 +425,6 @@ The following sections outline the high-level direction for future engine and ga
 *   **Interactive Audio:** The audio system will be enhanced to support dynamic soundtracks and sound effects that respond to gameplay events. The plan includes a zone-based music system that will trigger crossfades between tracks as the player moves between different areas of the world map.
 
 ### Gameplay Features
-*   **Advanced Camera Mechanics:** The camera will be improved with features like "Look-Ahead" and "Platform Snap."
 *   **Advanced Physics and Terrain:** The physics engine will be enhanced to handle more complex terrain, such as sloped surfaces.
 *   **Interactive World Elements:** The engine will support a variety of interactive blocks, such as power-up blocks and breakable blocks.
 *   **Flexible Power-Up System:** A system will be designed to allow for power-ups that modify player state and grant new abilities.
@@ -407,8 +444,8 @@ To ensure consistency and prevent bugs, the engine uses a strict separation betw
     *   **Purpose:** It provides a consistent rendering target, independent of the player's actual screen resolution.
 
 *   **`PIXEL_SCALE`:** This is a global scaling factor used by the renderer.
-    *   **Definition:** A constant value (e.g., `2.0`) that determines how many screen pixels are used to draw a single World Unit onto the Virtual Resolution canvas.
-    *   **Example:** With a `PIXEL_SCALE` of `2.0`, a 32x32 World Unit sprite is rendered as a 64x64 pixel image on the internal virtual canvas.
+    *   **Definition:** A constant value (e.g., `4.0`) that determines how many screen pixels are used to draw a single World Unit onto the Virtual Resolution canvas.
+    *   **Example:** With a `PIXEL_SCALE` of `4.0`, a 32x32 World Unit sprite is rendered as a 128x128 pixel image on the internal virtual canvas.
 
 *   **Screen Pixels (Final Resolution):** This is the actual resolution of the player's monitor.
     *   **Behavior:** The engine takes the rendered `1920x1080` Virtual Resolution canvas and scales it to fit the player's screen.
@@ -429,7 +466,7 @@ This section outlines a concrete plan for implementing a type-based event bus as
 3.  At the end of the frame, all events are cleared from the bus.
 
 **Why It's an Improvement:**
-*   **Decoupling:** The `CoinCollectionSystem` no longer needs to know about the audio system. It simply announces that a coin was collected. Any number of other systems can then react to that event without the original system's knowledge.
+*   **Decoupling:** The `CoinCollectionSystem` no longer needs to know about the audio system or the UI. It simply announces that a coin was collected by publishing a `CoinCollectedEvent`. Any number of other systems can then react to that event without the original system's knowledge. For example, an `AudioConductor` can listen for the event to play a sound, and a `ScoreSystem` can listen for it to update the player's score.
 *   **Clarity:** This creates a clear, one-way data flow (`System` -> `Event` -> `Conductor`) that is easy to follow and debug.
 *   **Performance:** It's faster than the topic-based bus described in `docs/Design.md` because it uses Rust's type system for event routing, avoiding runtime string matching and dynamic type casting.
 *   **Pragmatism:** It's a significant and practical step towards the ideal ECSC architecture that can be implemented incrementally.
@@ -471,3 +508,12 @@ Here is a step-by-step guide for how we can implement this feature in a future s
 1.  In `app.rs`, remove the direct call to the `AudioSystem`.
 2.  Add the new `AudioConductorSystem` to the list of systems that are run each frame.
 3.  At the end of the main update phase (after all systems have run), call `self.world.clear_events()` to prepare the bus for the next frame.
+
+### Future Refactoring Candidates
+Beyond the initial implementation, the following systems are prime candidates for being refactored to use the event bus, further decoupling the engine architecture:
+
+*   **Player Death:** A `PlayerDeathSystem` can publish a `PlayerDiedEvent`. This allows multiple, unrelated systems (audio, game state, UI, effects) to react to the player's death without being tightly coupled.
+*   **Level Transition:** A `LevelTransitionSystem` can publish a `LevelCompleteEvent`. The core `App` or a `GameFlowSystem` can then listen for this event to handle the complex logic of loading the next level.
+*   **Enemy Death:** Similar to player death, an `InteractionSystem` can publish an `EnemyDefeatedEvent`, allowing `ScoreSystem`, `AudioConductorSystem`, and `EffectsSystem` to react independently.
+*   **Player Movement Input:** The `InputSystem` can translate raw key presses into `MoveCommand` events. This decouples the input hardware from the player physics and allows other systems (like AI or networking) to control characters by publishing the same events.
+*   **Player Animation State:** The `PlayerAnimationSystem` can become a pure listener that reacts to state-change events like `PlayerLandedEvent` or `PlayerJumpedEvent`, rather than polling the player's components every frame. This simplifies the animation logic significantly.

@@ -28,20 +28,24 @@ use crate::ecs::{
     systems::{self,
         animation_update::AnimationUpdateSystem,
         audio::AudioSystem,
+        audio_conductor::AudioConductorSystem,
         coin_collection::CoinCollectionSystem,
         death::DeathSystem,
+        game_flow::GameFlowSystem,
         input::InputSystem,
         interaction::InteractionSystem,
         kill::KillSystem,
         level_transition::LevelTransitionSystem,
         physics::PhysicsSystem,
         player_animation::PlayerAnimationSystem,
+        player_control::PlayerControlSystem,
         respawn::RespawnSystem,
         respawn_timer::RespawnTimerSystem,
         state_machine::StateMachineSystem,
         tile_collision::TileCollisionSystem,
         invincibility::InvincibilitySystem,
         player_death::PlayerDeathSystem,
+        player_death_transition::PlayerDeathTransitionSystem,
         lifetime::LifetimeSystem,
     },
     component::*,
@@ -279,15 +283,17 @@ impl App {
                                                                                                                     world.add_goal(entity, Goal);
                                                                                                                 }
                                                                                                                 ComponentConfig::StateComponent { initial_state } => {
-                                                                                                                    match initial_state.as_str() {
-                                                                                                                        "PatrolState" => {
-                                                                                                                            world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
-                                                                                                                        }
-                                                                                                                        _ => {}
+                                                                                                                    if initial_state == "PatrolState" {
+                                                                                                                        world.add_state_component(entity, StateComponent { state_machine: StateMachine::new(PatrolState) });
                                                                                                                     }
                                                                                                                 }
                                                                                                             }
                                                                                                         }
+                                                                                                    }
+
+                                                                                                    // Check for and add NextLevel component from TMX properties
+                                                                                                    if let Some(next_level_path) = entity_data.properties.get("next_level") {
+                                                                                                        world.add_next_level(entity, NextLevel(next_level_path.clone()));
                                                                                                     }
                                                                                                 }
                                                 
@@ -336,7 +342,7 @@ impl App {
                                                                                                     ),
                                                                                                 });
                                                                 world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
-                                                                world.add_health(player_entity_instance, Health { current: 3, max: 3 });
+world.add_health(player_entity_instance, Health { current: game_config.player.max_health, max: game_config.player.max_health });
                                                                 // Add the Directional component to the player, so we can track which way they are facing.
                                                                 world.add_direction(player_entity_instance, Directional { direction: Direction::Right });
                                                                 let player_entity = Some(player_entity_instance);
@@ -480,7 +486,7 @@ impl App {
 
             if self.lives == 0 {
                 self.state = AppState::GameOver;
-                self.game_over_timer = 3.0; // 3 seconds
+                self.game_over_timer = self._game_config.gameplay.game_over_duration;
             }
 
             if self.state == AppState::GameOver {
@@ -492,7 +498,7 @@ impl App {
                     1920,
                     1080,
                 );
-                self.renderer.copy(&self.texture_manager.get("game_over_3").unwrap(), None, Some(game_over_rect))?;
+                self.renderer.copy(self.texture_manager.get(&self._game_config.gameplay.game_over_texture).unwrap(), None, Some(game_over_rect))?;
                 self.renderer.present();
                 self.game_over_timer -= self.delta_time;
                 if self.game_over_timer <= 0.0 {
@@ -506,6 +512,7 @@ impl App {
 
             // --- Create system instances locally ---
             let mut input_system = InputSystem;
+            let mut player_control_system = PlayerControlSystem;
             let mut physics_system = PhysicsSystem;
             let mut tile_collision_system = TileCollisionSystem;
             let mut interaction_system = InteractionSystem;
@@ -515,11 +522,14 @@ impl App {
             let mut animation_update_system = AnimationUpdateSystem;
             let mut state_machine_system = StateMachineSystem;
             let mut audio_system = AudioSystem;
+            let mut audio_conductor_system = AudioConductorSystem;
             let mut death_system = DeathSystem;
             let mut respawn_system = RespawnSystem;
             let mut respawn_timer_system = RespawnTimerSystem;
             let mut invincibility_system = InvincibilitySystem;
             let mut player_death_system = PlayerDeathSystem;
+            let mut game_flow_system = GameFlowSystem;
+            let mut player_death_transition_system = PlayerDeathTransitionSystem;
             let mut lifetime_system = LifetimeSystem;
             let mut level_transition_system = LevelTransitionSystem;
 
@@ -538,10 +548,15 @@ impl App {
 
             // --- Run systems ---
             input_system.update(&mut self.world, &mut system_context);
+            player_control_system.update(&mut self.world, &mut system_context);
             physics_system.update(&mut self.world, &mut system_context);
             interaction_system.update(&mut self.world, &mut system_context);
             tile_collision_system.update(&mut self.world, &mut system_context);
             player_death_system.update(&mut self.world, &mut system_context);
+            // --- Systems that react to player death ---
+            game_flow_system.update(&mut self.world, &mut system_context);
+            player_death_transition_system.update(&mut self.world, &mut system_context);
+            
             coin_collection_system.update(&mut self.world, &mut system_context);
             level_transition_system.update(&mut self.world, &mut system_context);
             kill_system.update(&mut self.world, &mut system_context);
@@ -557,7 +572,16 @@ impl App {
             state_machine_system.update(&mut self.world, &mut system_context);
             player_animation_system.update(&mut self.world, &mut system_context);
             animation_update_system.update(&mut self.world, &mut system_context);
+
+            // --- Event-based Systems ---
+            audio_conductor_system.update(&mut self.world, &mut system_context);
+
+            // --- Final Systems ---
+            // The audio system processes events sent by conductors
             audio_system.update(&mut self.world, &mut self.audio_manager);
+
+            // Clear all events at the end of the frame
+            self.world.clear_events();
 
             if let Some(next_level) = self.next_level.clone() {
                 self.level = load_level(&next_level)?;
@@ -609,7 +633,7 @@ impl App {
                     ),
                 });
                 self.world.add_state_component(player_entity_instance, StateComponent { state_machine: StateMachine::new(IdleState) });
-                self.world.add_health(player_entity_instance, Health { current: 3, max: 3 });
+                self.world.add_health(player_entity_instance, Health { current: self._game_config.player.max_health, max: self._game_config.player.max_health });
                 self.world.add_direction(player_entity_instance, Directional { direction: Direction::Right });
                 self.player_entity = Some(player_entity_instance);
 

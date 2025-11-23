@@ -1,24 +1,10 @@
 //! This system handles all interactions between the player and enemies.
 
 use crate::ecs::component::{Animation, DeadTag, Invincibility, Lifetime, Position, Renderable};
+use crate::ecs::event::{PlayerStompedEnemyEvent, PlayerTookDamageEvent};
 use crate::ecs::systems::{System, SystemContext};
 use crate::ecs::world::{Entity, World};
 use crate::animation::AnimationController;
-use crate::math::Vector2D;
-use crate::audio::AudioEvent;
-
-/// An internal event representing the player stomping on an enemy.
-struct StompEvent {
-    enemy: Entity,
-    player: Entity,
-}
-
-/// An internal command representing the player taking damage from an enemy.
-struct DamageCommand {
-    player: Entity,
-    knockback_x: f32,
-    position: Vector2D,
-}
 
 /// The system responsible for player-enemy interactions.
 pub struct InteractionSystem;
@@ -31,9 +17,10 @@ impl System<SystemContext<'_>> for InteractionSystem {
     /// whether it's a "stomp" or a "damage" event and processes it accordingly.
     ///
     /// - **Stomp:** If the player is falling onto an enemy, the enemy is killed,
-    ///   and the player gets a small bounce.
+    ///   the player gets a small bounce, and a `PlayerStompedEnemyEvent` is published.
     /// - **Damage:** If the player touches an enemy from the side or below, they
-    ///   take damage, get temporary invincibility, and are knocked back.
+    ///   take damage, get temporary invincibility, are knocked back, and a
+    ///   `PlayerTookDamageEvent` is published.
     fn update(&mut self, world: &mut World, context: &mut SystemContext) {
         let mut stomp_events = Vec::new();
         let mut damage_commands = Vec::new();
@@ -60,11 +47,12 @@ impl System<SystemContext<'_>> for InteractionSystem {
                             // A stomp is a vertical collision where the player is falling.
                             // We can approximate this by checking if the intersection is wider than it is tall.
                             if player_is_falling && intersection.width() > intersection.height() {
-                                stomp_events.push(StompEvent { enemy: enemy_entity, player: player_entity });
+                                stomp_events.push(PlayerStompedEnemyEvent { enemy: enemy_entity, player: player_entity });
                             } else {
                                 // Otherwise, it's a horizontal (damaging) collision.
-                                let knockback_x = if player_pos.0.x < enemy_collision.rect.x() as f32 { -5.0 } else { 5.0 };
-                                damage_commands.push(DamageCommand { player: player_entity, knockback_x, position: player_pos.0 });
+                                let knockback_force = context.game_config.gameplay.damage_knockback_force;
+                                let knockback_x = if player_pos.0.x < enemy_collision.rect.x() as f32 { -knockback_force } else { knockback_force };
+                                damage_commands.push(PlayerTookDamageEvent { player: player_entity, knockback_x, position: player_pos.0 });
                             }
                         }
                 }
@@ -75,11 +63,9 @@ impl System<SystemContext<'_>> for InteractionSystem {
         for event in stomp_events {
             world.add_dead_tag(event.enemy, DeadTag);
             if let Some(player_vel) = world.velocities.get_mut(&event.player) {
-                player_vel.0.y = -4.0; // Bounce
+                player_vel.0.y = context.game_config.gameplay.stomp_bounce_velocity; // Bounce
             }
-            if let Some(sound_name) = context.game_config.sound_events.get("enemy_stomp") {
-                let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
-            }
+            world.event_bus.publish(event);
         }
 
         // Process damage commands
@@ -87,16 +73,14 @@ impl System<SystemContext<'_>> for InteractionSystem {
             if let Some(health) = world.healths.get_mut(&command.player)
                 && health.current > 0 {
                     health.current -= 1;
-                    world.add_invincibility(command.player, Invincibility { timer: 1.5 });
+                    world.add_invincibility(command.player, Invincibility { timer: context.game_config.gameplay.damage_invincibility_duration });
 
                     if let Some(player_vel) = world.velocities.get_mut(&command.player) {
                         player_vel.0.x = command.knockback_x;
                         player_vel.0.y = -command.knockback_x.abs(); // 45-degree knockback
                     }
 
-                    if let Some(sound_name) = context.game_config.sound_events.get("player_hit") {
-                        let _ = context.audio_sender.send(AudioEvent::PlaySound(sound_name.clone()));
-                    }
+                    world.event_bus.publish(command);
 
                     // Spawn explosion entity
                     let explosion_entity = world.create_entity();

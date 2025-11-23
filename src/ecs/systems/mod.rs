@@ -2,21 +2,25 @@
 
 pub mod animation_update;
 pub mod audio;
+pub mod audio_conductor;
 pub mod coin_collection;
 pub mod death;
+pub mod game_flow;
 pub mod input;
 pub mod interaction;
+pub mod invincibility;
 pub mod kill;
+pub mod level_transition;
+pub mod lifetime;
 pub mod physics;
 pub mod player_animation;
+pub mod player_control;
+pub mod player_death;
+pub mod player_death_transition;
 pub mod respawn;
 pub mod respawn_timer;
 pub mod state_machine;
 pub mod tile_collision;
-pub mod invincibility;
-pub mod player_death;
-pub mod lifetime;
-pub mod level_transition;
 
 use crate::config::{Config, GameConfig};
 use crate::input::InputState;

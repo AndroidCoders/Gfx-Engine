@@ -33,8 +33,8 @@ impl System<RespawnSystemContext<'_>> for RespawnSystem {
                 vel.0.y = 0.0;
             }
 
-            // Add a respawn timer for a grace period (e.g., 2 seconds)
-            world.add_respawn_timer(entity, RespawnTimer { timer: 2.0 });
+            // Add a respawn timer for a grace period
+            world.add_respawn_timer(entity, RespawnTimer { timer: context.game_config.gameplay.respawn_invincibility_duration });
         }
     }
 }

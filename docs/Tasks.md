@@ -40,7 +40,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
         - [x] Implement a respawn animation.
     - [ ] Implement Player Lives and Game Over:
         - [x] Display player lives in the debug text.
-        - [ ] Implement a "Game Over" screen.
+        - [x] Implement a "Game Over" screen.
     - [x] Implement Player Health & Damage:
         - [x] Add a `health` component to the player.
         - [x] Make enemies deal damage on contact.
@@ -62,18 +62,36 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 ### Phase 4: Architectural Improvements & Core Features (Next Sprint)
 
 - [ ] **1. Implement ECSC Type-Based Event Bus:**
-    - [ ] Create `src/ecs/event.rs` with a generic `EventBus` struct.
-    - [ ] Integrate the `EventBus` into the `World` struct.
-    - [ ] Refactor one system (e.g., `CoinCollectionSystem`) to publish a strongly-typed event instead of using the `mpsc::channel`.
-    - [ ] Create a new `AudioConductorSystem` that listens for the event and plays the sound.
-    - [ ] Update the main loop to clear the event bus each frame.
+    - [x] Create `src/ecs/event.rs` with a generic `EventBus` struct.
+    - [x] Integrate the `EventBus` into the `World` struct.
+    - [x] Refactor `CoinCollectionSystem` and `InteractionSystem` to publish strongly-typed events.
+    - [x] Create an `AudioConductorSystem` that listens for audio-related events.
+    - [x] Update the main loop to clear the event bus each frame.
+    - [x] Refactor **Player Death** logic to publish a `PlayerDiedEvent` and have other systems react to it.
+    - [ ] Refactor **Level Transition** logic to publish a `LevelCompleteEvent`.
+    - [ ] Refactor **Enemy Death** logic to publish an `EnemyDefeatedEvent`.
+    - [ ] Refactor **Player Input** to publish `MoveCommand` events.
+    - [ ] Refactor **Player Animation** to be driven by state-change events like `PlayerLandedEvent`.
 - [ ] **2. Refactor `app.rs` into Managers:**
     - [ ] Create a `SystemManager` to hold all ECS systems and orchestrate their execution.
     - [ ] Create a `GameStateManager` to handle level loading, transitions, and entity creation/teardown.
+    - [ ] Create a `PlayerFactory` or similar mechanism to centralize player entity creation and avoid code duplication during level transitions.
     - [ ] Simplify the `App` struct to delegate most of its responsibilities to these new managers.
 - [ ] **3. Externalize Gameplay Values:**
-    - [ ] Move magic numbers for physics (knockback force, bounce height) and gameplay (invincibility duration, coin value) from source code (`interaction.rs`, etc.) to `game_config.toml`.
-    - [ ] Make the "next level" path a data-driven property in the level files (`.tmx`) instead of being hardcoded in `level_transition.rs`.
+    - [x] **`level_transition.rs`**: Make the "next level" path a data-driven property in the level files (`.tmx`) instead of being hardcoded.
+        - [x] Currently hardcoded to `"assets/levels/world_1_level_2.tmx"`.
+    - [ ] **`interaction.rs`**: Move physics and gameplay values to `game_config.toml`.
+        - [x] Player knockback force on damage (currently `5.0`).
+        - [x] Player bounce velocity after stomping an enemy (currently `-4.0`).
+        - [x] Player invincibility duration after damage (currently `1.5` seconds).
+        - [ ] Explosion effect properties (size, offset, z-index).
+        - [ ] Explosion lifetime calculation (currently assumes 60 FPS).
+    - [x] **`respawn.rs`**: Move respawn grace period to `game_config.toml`.
+        - [x] Currently hardcoded to `2.0` seconds.
+    - [x] **`app.rs`**: Move game flow values to `game_config.toml`.
+        - [x] Game over screen duration (currently `3.0` seconds).
+        - [x] Player's starting and maximum health (currently `3`).
+        - [x] Game over texture name (currently `"game_over_3"`).
 - [ ] **4. Implement Robust Text Rendering:**
     - [ ] Research and add the `sdl3_ttf` crate to the project.
     - [ ] Create a `FontManager` to load and manage `.ttf` fonts.
@@ -163,16 +181,22 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [ ] Implement Error Conversions.
     - [ ] Refactor for Robust Error Handling.
 - [ ] **3. Write Comprehensive Tests:**
-    - [ ] Create a Core Integration Test.
-    - [ ] Add a Level Loading Test.
-    - [ ] Implement an Input and Movement Test.
-    - [ ] Add robust testing for file loading.
+    - [ ] **Test: Successful Level Loading:** Ensure valid `.tmx` files are parsed correctly.
+    - [ ] **Test: Player-Tile Vertical Collision:** Verify that players stop when landing on solid ground.
+    - [ ] **Test: Player Input Causes Movement:** Confirm that keyboard input correctly changes player velocity.
+    - [ ] **Test: Player Takes Damage on Enemy Contact:** Ensure the player's health decreases and invincibility is triggered upon collision with an enemy.
+    - [ ] **Test: Player Stomps and Defeats an Enemy:** Verify that jumping on an enemy defeats it and gives the player a bounce.
+    - [ ] **Test: Player State Machine Transition (Idle to Jump):** Check that the player state correctly transitions from `Idle` to `Jumping`.
+    - [ ] **Test: Successful Game Configuration Loading:** Ensure the `game_config.toml` is parsed without errors.
+    - [ ] **Test: Z-Layer Sorting Logic:** Verify that entities are rendered in the correct order based on their `z_index`.
+    - [ ] **Test: Enemy AI Wall Detection:** Ensure patrolling enemies correctly reverse direction when hitting a wall.
+    - [ ] **Test: Event Bus Integration (Stomp -> Sound):** Confirm that a stomp event correctly triggers a sound effect event.
 - [ ] **4. Refactor for Data-Driven Design:**
-    - [ ] **Data-driven Tile Collision:**
-        - [ ] In the Tiled editor, add a custom boolean property (e.g., `solid: true`) to the tiles in the `.tsx` tileset file to mark them as collidable.
-        - [ ] Research and add a Rust crate for parsing XML/TSX files (e.g., `xml-rs` or `quick-xml`).
-        - [ ] Update `level.rs` to parse the `.tsx` file, read the custom properties for each tile, and dynamically build the list of solid tile IDs.
-        - [ ] Remove the hardcoded `solid_tiles` vector.
+    - [x] **Data-driven Tile Collision:**
+        - [x] In the Tiled editor, add a custom boolean property (e.g., `solid: true`) to the tiles in the `.tsx` tileset file to mark them as collidable.
+        - [x] Research and add a Rust crate for parsing XML/TSX files (e.g., `xml-rs` or `quick-xml`).
+        - [x] Update `level.rs` to parse the `.tsx` file, read the custom properties for each tile, and dynamically build the list of solid tile IDs.
+        - [x] Remove the hardcoded `solid_tiles` vector.
     - [ ] **Data-driven Scripting for Complex Logic:**
         - [ ] In Tiled, add a custom string property (e.g., `on_collide_script: "scripts/one_way_platform.rhai"`) to tiles or objects that require complex collision logic.
         - [ ] In the collision system, if this property exists, hand off the event to the scripting engine instead of using the default solid/non-solid check.
@@ -181,8 +205,11 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
 - [ ] **5. Refactor to a 1:1 Pixel Coordinate System:**
     - [ ] Remove the `PIXEL_SCALE` constant.
     - [ ] Edit graphics assets to use prescaling (1:2).
-- [ ] **6. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.
-- [ ] **7. Continue Data-Driven Refactoring:**
+- [ ] **6. Refactor Enemy AI for Generic Behavior:**
+    - [ ] Design and implement reusable AI 'sensor' components (e.g., `WallSensor`, `LedgeSensor`).
+    - [ ] Update `PatrolState` to use sensor components instead of hardcoded detection logic.
+- [ ] **7. Add Multiplayer Support:** Integrate 2-player local co-op or competitive gameplay.
+- [ ] **8. Continue Data-Driven Refactoring:**
     - [x] **Phase 1: Frame-Rate Independence:**
         - [x] Calculate `delta_time` in the main loop.
         - [x] Pass `delta_time` to all systems via the `SystemContext`.

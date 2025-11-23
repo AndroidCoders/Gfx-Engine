@@ -6,5 +6,6 @@
 //! - **world:** Defines the `World`, which is the container for all entities and components.
 
 pub mod component;
+pub mod event;
 pub mod systems;
 pub mod world;

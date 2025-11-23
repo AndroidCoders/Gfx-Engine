@@ -6,6 +6,7 @@
 
 use std::collections::HashMap;
 use crate::ecs::component::*;
+use crate::ecs::event::EventBus;
 
 /// A unique identifier for an entity in the game world.
 pub type Entity = usize;
@@ -19,6 +20,8 @@ pub type Entity = usize;
 pub struct World {
     /// The ID to be assigned to the next created entity.
     next_entity_id: usize,
+    /// The event bus for decoupled system communication.
+    pub event_bus: EventBus,
     /// Storage for all position components.
     pub positions: HashMap<Entity, Position>,
     /// Storage for all velocity components.
@@ -59,12 +62,19 @@ pub struct World {
     pub directions: HashMap<Entity, Directional>,
     /// Storage for all goal tag components.
     pub goals: HashMap<Entity, Goal>,
+    /// Storage for all next level components.
+    pub next_levels: HashMap<Entity, NextLevel>,
 }
 
 impl World {
     /// Creates a new, empty `World`.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Clears all events from the event bus.
+    pub fn clear_events(&mut self) {
+        self.event_bus.clear_events();
     }
 
     /// Creates a new entity with a unique ID.
@@ -183,5 +193,10 @@ impl World {
     /// Adds a `Goal` component to an entity.
     pub fn add_goal(&mut self, entity: Entity, component: Goal) {
         self.goals.insert(entity, component);
+    }
+
+    /// Adds a `NextLevel` component to an entity.
+    pub fn add_next_level(&mut self, entity: Entity, component: NextLevel) {
+        self.next_levels.insert(entity, component);
     }
 }
