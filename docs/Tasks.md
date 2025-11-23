@@ -67,7 +67,7 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [x] Refactor `CoinCollectionSystem` and `InteractionSystem` to publish strongly-typed events.
     - [x] Create an `AudioConductorSystem` that listens for audio-related events.
     - [x] Update the main loop to clear the event bus each frame.
-    - [ ] Refactor **Player Death** logic to publish a `PlayerDiedEvent` and have other systems react to it.
+    - [x] Refactor **Player Death** logic to publish a `PlayerDiedEvent` and have other systems react to it.
     - [ ] Refactor **Level Transition** logic to publish a `LevelCompleteEvent`.
     - [ ] Refactor **Enemy Death** logic to publish an `EnemyDefeatedEvent`.
     - [ ] Refactor **Player Input** to publish `MoveCommand` events.
@@ -78,20 +78,20 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [ ] Create a `PlayerFactory` or similar mechanism to centralize player entity creation and avoid code duplication during level transitions.
     - [ ] Simplify the `App` struct to delegate most of its responsibilities to these new managers.
 - [ ] **3. Externalize Gameplay Values:**
-    - [ ] **`level_transition.rs`**: Make the "next level" path a data-driven property in the level files (`.tmx`) instead of being hardcoded.
-        - [ ] Currently hardcoded to `"assets/levels/world_1_level_2.tmx"`.
+    - [x] **`level_transition.rs`**: Make the "next level" path a data-driven property in the level files (`.tmx`) instead of being hardcoded.
+        - [x] Currently hardcoded to `"assets/levels/world_1_level_2.tmx"`.
     - [ ] **`interaction.rs`**: Move physics and gameplay values to `game_config.toml`.
-        - [ ] Player knockback force on damage (currently `5.0`).
-        - [ ] Player bounce velocity after stomping an enemy (currently `-4.0`).
-        - [ ] Player invincibility duration after damage (currently `1.5` seconds).
+        - [x] Player knockback force on damage (currently `5.0`).
+        - [x] Player bounce velocity after stomping an enemy (currently `-4.0`).
+        - [x] Player invincibility duration after damage (currently `1.5` seconds).
         - [ ] Explosion effect properties (size, offset, z-index).
         - [ ] Explosion lifetime calculation (currently assumes 60 FPS).
-    - [ ] **`respawn.rs`**: Move respawn grace period to `game_config.toml`.
-        - [ ] Currently hardcoded to `2.0` seconds.
-    - [ ] **`app.rs`**: Move game flow values to `game_config.toml`.
-        - [ ] Game over screen duration (currently `3.0` seconds).
-        - [ ] Player's starting and maximum health (currently `3`).
-        - [ ] Game over texture name (currently `"game_over_3"`).
+    - [x] **`respawn.rs`**: Move respawn grace period to `game_config.toml`.
+        - [x] Currently hardcoded to `2.0` seconds.
+    - [x] **`app.rs`**: Move game flow values to `game_config.toml`.
+        - [x] Game over screen duration (currently `3.0` seconds).
+        - [x] Player's starting and maximum health (currently `3`).
+        - [x] Game over texture name (currently `"game_over_3"`).
 - [ ] **4. Implement Robust Text Rendering:**
     - [ ] Research and add the `sdl3_ttf` crate to the project.
     - [ ] Create a `FontManager` to load and manage `.ttf` fonts.
@@ -181,16 +181,22 @@ This document is the **Product Backlog** for the `GfX-Engine` project. It lists 
     - [ ] Implement Error Conversions.
     - [ ] Refactor for Robust Error Handling.
 - [ ] **3. Write Comprehensive Tests:**
-    - [ ] Create a Core Integration Test.
-    - [ ] Add a Level Loading Test.
-    - [ ] Implement an Input and Movement Test.
-    - [ ] Add robust testing for file loading.
+    - [ ] **Test: Successful Level Loading:** Ensure valid `.tmx` files are parsed correctly.
+    - [ ] **Test: Player-Tile Vertical Collision:** Verify that players stop when landing on solid ground.
+    - [ ] **Test: Player Input Causes Movement:** Confirm that keyboard input correctly changes player velocity.
+    - [ ] **Test: Player Takes Damage on Enemy Contact:** Ensure the player's health decreases and invincibility is triggered upon collision with an enemy.
+    - [ ] **Test: Player Stomps and Defeats an Enemy:** Verify that jumping on an enemy defeats it and gives the player a bounce.
+    - [ ] **Test: Player State Machine Transition (Idle to Jump):** Check that the player state correctly transitions from `Idle` to `Jumping`.
+    - [ ] **Test: Successful Game Configuration Loading:** Ensure the `game_config.toml` is parsed without errors.
+    - [ ] **Test: Z-Layer Sorting Logic:** Verify that entities are rendered in the correct order based on their `z_index`.
+    - [ ] **Test: Enemy AI Wall Detection:** Ensure patrolling enemies correctly reverse direction when hitting a wall.
+    - [ ] **Test: Event Bus Integration (Stomp -> Sound):** Confirm that a stomp event correctly triggers a sound effect event.
 - [ ] **4. Refactor for Data-Driven Design:**
-    - [ ] **Data-driven Tile Collision:**
-        - [ ] In the Tiled editor, add a custom boolean property (e.g., `solid: true`) to the tiles in the `.tsx` tileset file to mark them as collidable.
-        - [ ] Research and add a Rust crate for parsing XML/TSX files (e.g., `xml-rs` or `quick-xml`).
-        - [ ] Update `level.rs` to parse the `.tsx` file, read the custom properties for each tile, and dynamically build the list of solid tile IDs.
-        - [ ] Remove the hardcoded `solid_tiles` vector.
+    - [x] **Data-driven Tile Collision:**
+        - [x] In the Tiled editor, add a custom boolean property (e.g., `solid: true`) to the tiles in the `.tsx` tileset file to mark them as collidable.
+        - [x] Research and add a Rust crate for parsing XML/TSX files (e.g., `xml-rs` or `quick-xml`).
+        - [x] Update `level.rs` to parse the `.tsx` file, read the custom properties for each tile, and dynamically build the list of solid tile IDs.
+        - [x] Remove the hardcoded `solid_tiles` vector.
     - [ ] **Data-driven Scripting for Complex Logic:**
         - [ ] In Tiled, add a custom string property (e.g., `on_collide_script: "scripts/one_way_platform.rhai"`) to tiles or objects that require complex collision logic.
         - [ ] In the collision system, if this property exists, hand off the event to the scripting engine instead of using the default solid/non-solid check.
