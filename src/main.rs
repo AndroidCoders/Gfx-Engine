@@ -1,41 +1,20 @@
-//! # Gfx-Engine
+//! # Manager: Application Entry Point
 //! 
-//! A 2D pixel-art game engine built with Rust and SDL3.
-//! 
-//! This crate contains the main entry point and core modules for the Gfx-Engine.
+//! This module is the root of the engine binary. It is responsible for the high-level 
+//! initialization of the SDL hardware abstraction layer and the execution 
+//! of the primary application loop via the `Gfx_Engine` library.
 
-mod app;
-mod animation;
-mod config;
-mod renderer;
-mod state_machine;
-mod audio;
-mod input;
-mod math;
-mod physics;
-mod camera;
-mod level;
-mod texture_manager;
-mod player;
-mod enemy;
-mod ecs;
+use gfx_engine::app::App;
 
-use app::App;
-
-/// The main entry point of the application.
-///
-/// This function loads the application configuration, initializes the `App`
-/// struct, and runs the main application loop.
-///
-/// # Returns
-///
-/// A `Result` indicating success (`()`) or an error (`String`).
+/// Initializes the hardware context and enters the main application loop.
 fn main() -> Result<(), String> {
-    // Initialize SDL and other subsystems
+    // 1. Initialize the SDL core and video subsystems to gain hardware access.
     let sdl_context = sdl3::init().map_err(|e| e.to_string())?;
-    let video_subsystem = sdl_context.video().map_err(|e| e.to_string())?;
+    let _video_subsystem = sdl_context.video().map_err(|e| e.to_string())?;
 
+    // 2. Instantiate the main App controller, which loads configs and assets.
     let mut app = App::new(sdl_context).map_err(|e| e.to_string())?;
+    
+    // 3. Enter the persistent run loop until a quit signal is received.
     app.run()
 }
-

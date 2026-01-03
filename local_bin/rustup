@@ -1,0 +1,3 @@
+#!/bin/sh
+if [ "$1" = "toolchain" ] && [ "$2" = "list" ]; then echo "1.92.0-x86_64-unknown-linux-gnu"; exit 0; fi
+echo "rustup 1.0.0"

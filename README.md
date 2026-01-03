@@ -12,14 +12,16 @@
 **TLDR:**
 *   Gfx-Engine is a 2D pixel-art game engine built with Rust and SDL3.
 *   It features a data-driven architecture and includes a complete demo game.
-*   The demo, "Super Cat Bros," is a platformer inspired by classic 16-bit era games.
+*   The demo, "Super Cat Bros - Episode 1 - The Pirate Gold Adventure," is a high-fidelity platformer.
 
-Gfx-Engine is a modular 2D game engine written in Rust, designed for creating pixel-art platformers.
+Gfx-Engine is a modular 2D game engine written in Rust, designed for creating professional pixel-art platformers.
 
-The project includes a playable "Super Cat Bros" demo game that showcases the engine's capabilities, which include:
-*   A robust physics engine for platforming.
-*   A state machine-driven animation system.
-*   A data-driven design where levels, assets, and game properties are loaded from TOML configuration files.
+The project includes a playable demo that showcases the engine's capabilities:
+*   **120Hz Fixed Timestep:** Deterministic physics and logic with state interpolation.
+*   **Input Replay System:** Built-in recording and playback for "Attract Mode" and debugging.
+*   **Audio Beat Detection:** Runtime FFT analysis for rhythm-synced gameplay.
+*   **Observability:** Real-time hierarchical profiler and performance hotspots HUD.
+*   **Data-Driven Design:** Everything (levels, prefabs, animations, input) is configured in TOML.
 
 ## How to Run
 

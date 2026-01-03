@@ -1,95 +1,100 @@
-# Rust Documentation Best Practices
+# Rust Documentation Best Practices (v2 - WYSIWID Standard)
 
-This document outlines the best practices for documenting Rust code in the Gfx-Engine project. By following these guidelines, we can ensure that our code is easy to understand, use, and maintain.
+This document defines the mandatory documentation standards for the `Gfx-Engine`. These standards are a critical enabler for the **WYSIWID** architecture, ensuring that what you see in the code is exactly what it does.
 
-## Key Principles
+## The 3-Level Documentation Rule
 
-*   **Use Doc Comments:**
-    *   `///` for functions, structs, enums, and other items.
-    *   `//!` for modules and the crate itself (in `main.rs` or `lib.rs`) to provide a general overview.
-*   **Leverage Markdown:** Use Markdown for formatting, including headings (`#`), lists (`*`), and code blocks (```rust).
-*   **Provide Runnable Examples:** The `# Examples` section is crucial. These examples are automatically tested with `cargo test`, ensuring they are always correct.
-*   **Document Potential Issues:** Use dedicated sections to explain potential problems:
-    *   `# Panics`: For situations that will cause the program to crash.
-    *   `# Errors`: For explaining the different kinds of `Result` errors a function can return.
-    *   `# Safety`: For `unsafe` code, to explain the responsibilities of the programmer using the code.
-*   **Generate and Review:** Use `cargo doc --open` to generate the HTML documentation and review it in a browser.
+Every source code module (`.rs` file) must implement these three levels of documentation to ensure maximum legibility for both humans and AI assistants.
 
-## Crate-level Documentation
+### Level 1: Module Identity (`//!`)
+Every file must start with a module-level doc comment explaining its role in the architecture.
 
-Crate-level documentation provides an overview of your library or application. It's typically placed at the top of your `src/lib.rs` (for libraries) or `src/main.rs` (for binaries) file using `//!` comments.
+*   **For Concepts:** State the domain it owns (e.g., Physics, Health) and the specific components it manages.
+*   **For Synchronizations:** State the behavioral rule it implements (e.g., "When a collision occurs, determine if damage should be dealt").
+*   **For Managers:** State the high-level orchestration it performs.
 
+**Example:**
 ```rust
-//! # My Awesome Crate
-//!
-//! `my_awesome_crate` is a library for doing amazing things.
-//!
-//! This crate provides utilities for [briefly describe main features].
-//!
-//! ## Getting Started
-//!
-//! To use `my_awesome_crate`, add the following to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! my_awesome_crate = "0.1.0"
-//! ```
-//!
-//! Then, you can use it in your code:
-//!
-//! ```rust
-//! use my_awesome_crate::some_function;
-//!
-//! fn main() {
-//!     some_function();
-//! }
-//! ```
+//! # Synchronization: Audio
+//! 
+//! This module acts as the "Glue" between gameplay facts and the audio engine.
+//! It listens for events like [crate::ecs::event::EventEntityJumped] 
+//! and triggers the appropriate sound effects.
 ```
 
-## Module-level Documentation
+### Level 2: Function Intent (`///`)
+Every public and internal function must have a doc comment explaining its **Semantic Purpose**.
 
-Module-level documentation describes the purpose of a specific module and how its components interact. Like crate-level docs, it uses `//!` comments, usually at the top of the module file.
+*   Avoid describing *what the code says* (e.g., "increments a counter").
+*   Describe *what the process means* (e.g., "Increments the player's gold count and updates the persistent statistics").
 
+**Example:**
 ```rust
-//! This module handles all rendering operations for the game engine.
-//!
-//! It provides the `Renderer` struct which manages the drawing context,
-//! textures, and sprites.
-pub mod renderer {
-    // ... module content ...
+/// Interprets a raw collision event to determine if a 'Stomp' or 'Injury' fact has occurred.
+fn resolve_collision(&self, world: &mut World, event: EventCollision) { ... }
+```
+
+### Level 3: Logic Implementation (`//`)
+Within the function body, use standard comments to explain the **Logical Steps** and the **Why** behind the code.
+
+*   This acts as a "blueprint" for the implementation.
+*   It is critical for AI assistants to follow these steps to avoid logic errors during refactoring.
+
+**Example:**
+```rust
+fn update_health(&mut self, world: &mut World) {
+    // 1. Consume all incoming 'CommandDamage' intents.
+    // 2. Locate the entity's Health component.
+    // 3. Subtract the damage value, clamping at zero to prevent underflow.
+    // 4. Publish an [crate::ecs::event::EventPlayerDied] if health is zero.
 }
 ```
 
-## Item-level Documentation
+---
 
-For individual items like functions, structs, enums, and traits, use `///` comments directly above the item.
+## Advanced Standards (Mandatory)
 
-```rust
-/// Represents a 2D point in screen coordinates.
-///
-/// # Examples
-///
-/// ```rust
-/// let p = Point { x: 10, y: 20 };
-/// assert_eq!(p.x, 10);
-/// ```
-pub struct Point {
-    pub x: i32,
-    pub y: i32,
-}
+To ensure robustness, performance, and architectural clarity, the following standards are mandatory for all core engine code.
 
-impl Point {
-    /// Creates a new `Point` at the specified coordinates.
+### 1. Intra-Doc Links
+Do not just write the name of a struct, system, or event; link to it using Rust's bracket syntax. This ensures that if the code changes (e.g., a struct is renamed), the documentation breaks (compilation error), ensuring docs remain up-to-date.
+
+*   **Bad:** `// Publishes a collision event.`
+*   **Good:** `// Publishes an [crate::ecs::event::EventCollision].`
+
+### 2. Unit Specifications
+Game engines mix many coordinate systems (Screen vs. World) and time units (Frames vs. Seconds). Every floating-point argument or variable **must** state its unit in the Level 2 (`///`) comment to prevent "floaty" physics bugs.
+
+*   **Example:**
+    ```rust
+    /// * `velocity`: The speed in **World Units per Second** (px/s).
+    /// * `duration`: The effect duration in **Seconds** (s).
+    ```
+
+### 3. The "Hotpath" Marker
+Functions that are executed 120 times per second (in the fixed loop) or inside inner loops must be marked. This serves as a warning to avoid expensive operations like Heap Allocation (`Vec::new`), Cloning, or File I/O.
+
+*   **Syntax:**
+    ```rust
+    /// ⚠️ **Hotpath**: Called 120x per second. Avoid heap allocations.
+    fn update_physics(...)
+    ```
+
+### 4. Event Contracts (Side Effects)
+In our Event-Driven WYSIWID architecture, a function's return signature often hides its true impact. You must list the Events that a function publishes in a specific `# Side Effects` section.
+
+*   **Syntax:**
+    ```rust
+    /// Resolves the interaction between a player and an enemy.
     ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// let p = Point::new(5, 10);
-    /// assert_eq!(p.x, 5);
-    /// assert_eq!(p.y, 10);
-    /// ```
-    pub fn new(x: i32, y: i32) -> Self {
-        Point { x, y }
-    }
-}
-```
+    /// # Side Effects
+    /// * Publishes [crate::ecs::event::EventPlayerDied] if the player touches the enemy's side.
+    /// * Publishes [crate::ecs::event::EventEnemyStomped] if the player touches the enemy's top.
+    fn resolve_interaction(...)
+    ```
+
+---
+
+## Documentation Enforcement
+*   **No Magic Numbers:** All values must be described via configuration or constants.
+*   **Atomic Modules:** Documentation must strictly reflect the Single Responsibility of the module. If you cannot describe the module's identity in one clear sentence, the file is likely too large and must be refactored.

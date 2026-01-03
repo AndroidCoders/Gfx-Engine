@@ -1,29 +1,39 @@
-//! This system applies basic physics rules to entities.
+//! # Concept: Physics Integration
+//! 
+//! This module is the engine's core Euler integrator. 
+//! It is responsible for the pure mathematical task of advancing velocity 
+//! based on forces (Gravity) and intended movement (Acceleration).
 
 use crate::ecs::systems::{System, SystemContext};
-use crate::ecs::world::World;
 
-/// The system responsible for applying gravity and updating entity positions based on velocity.
-pub struct PhysicsSystem;
-impl System<SystemContext<'_>> for PhysicsSystem {
-    /// Applies gravity to entities with a `Gravity` component and updates
-    /// the position of all entities based on their velocity.
-    ///
-    /// Gravity is applied by increasing the vertical velocity (`vel.0.y`)
-    /// up to a maximum fall speed. Positions are then updated by adding
-    /// the current velocity to the position.
-    fn update(&mut self, world: &mut World, context: &mut SystemContext) {
+/// A system that integrates forces and acceleration into entity velocities.
+pub struct SystemPhysics;
+
+impl System<SystemContext<'_>> for SystemPhysics {
+    /// Applies global forces and local acceleration to update entity velocities.
+    fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
+        // 1. Apply Gravity (Global Constant Force) to all affected entities.
         for (entity, _gravity) in world.gravity_tags.iter() {
+            // Skip entities outside the active simulation range.
+            if world.is_dormant(*entity) { continue; }
+
             if let Some(vel) = world.velocities.get_mut(entity) {
-                vel.0.y += context.config.physics.gravity;
+                // Integrate gravity into vertical velocity.
+                vel.0.y += context.config.physics.gravity * context.delta_time;
+                // Enforce terminal velocity to prevent tunneling through thin platforms.
                 vel.0.y = vel.0.y.min(context.config.physics.entity_max_fall_speed);
             }
         }
 
-        for (entity, pos) in world.positions.iter_mut() {
-            if let Some(vel) = world.velocities.get(entity) {
-                pos.0.x += vel.0.x;
-                pos.0.y += vel.0.y;
+        // 2. Integrate the local Acceleration component into Velocity.
+        for (entity, accel) in world.accelerations.iter() {
+            // Skip entities outside the active simulation range.
+            if world.is_dormant(*entity) { continue; }
+
+            if let Some(vel) = world.velocities.get_mut(entity) {
+                // Integrate linear acceleration (scaled by delta time).
+                vel.0.x += accel.0.x * context.delta_time;
+                vel.0.y += accel.0.y * context.delta_time;
             }
         }
     }

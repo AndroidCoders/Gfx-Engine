@@ -1,16 +1,21 @@
-//! This system is responsible for advancing the animation frames for all entities.
+//! # Concept: Animation Advancement
+//! 
+//! This module is responsible for the temporal progression of visuals.
+//! it advances the internal frame counters of all active entity animations
+//! based on the engine's delta time.
 
 use crate::ecs::systems::{System, SystemContext};
-use crate::ecs::world::World;
 
-/// The system that updates all animation controllers.
-pub struct AnimationUpdateSystem;
-impl System<SystemContext<'_>> for AnimationUpdateSystem {
-    /// Iterates through all entities with an `Animation` component and calls
-    /// the `update` method on their `AnimationController`.
-    fn update(&mut self, world: &mut World, _context: &mut SystemContext) {
-        for (_, animation) in world.animations.iter_mut() {
-            animation.controller.update();
+/// A system that increments animation timers and frame indices.
+pub struct SystemAnimationUpdate;
+
+impl System<SystemContext<'_>> for SystemAnimationUpdate {
+    /// Updates the playback position for all active animations.
+    fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
+        // 1. Iterate over every entity currently playing an animation.
+        for animation in world.animations.values_mut() {
+            // 2. Advance the controller by the frame's elapsed time.
+            animation.controller.update(context.delta_time);
         }
     }
 }

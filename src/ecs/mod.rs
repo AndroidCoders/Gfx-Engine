@@ -1,11 +1,15 @@
-//! This module contains all the logic for the Entity-Component-System (ECS)
-//! architecture of the game.
+//! # Manager: ECS Module Root
 //!
-//! - **component:** Defines all the data components that can be attached to entities.
-//! - **system:** Defines all the systems that operate on entities with specific components.
-//! - **world:** Defines the `World`, which is the container for all entities and components.
+//! This module acts as the central hub for the Entity-Component-System logic.
+//! It organizes the codebase into atomic domains:
+//! - **component:** Pure data structures (the 'What').
+//! - **system:** Domain-specific logic processors (the 'How').
+//! - **world:** The central data container and entity manager.
+//! - **event:** The decoupled communication bus.
 
 pub mod component;
 pub mod event;
 pub mod systems;
 pub mod world;
+pub mod system_manager;
+pub mod resources;

@@ -1,0 +1,36 @@
+--- Game Session Ended ---
+Level: assets/levels/world_1_level_1/level.tmx
+  Min FPS: 44
+  Max FPS: 61
+  Avg FPS: 59
+  System Performance Breakdown:
+    System               | Avg (ms) | % Frame
+    ---------------------+----------+--------
+    Wait.VSync           |   14.601 |  87.6%
+    Render.GUI           |    1.067 |   6.4%
+    Update               |    0.764 |   4.6%
+    Render.Level         |    0.158 |   0.9%
+    Interaction          |    0.150 |   0.9%
+    AnimationUpdate      |    0.121 |   0.7%
+    Input                |    0.103 |   0.6%
+    SpatialUpdate        |    0.083 |   0.5%
+    Render.Entities      |    0.067 |   0.4%
+    Dormancy             |    0.067 |   0.4%
+    AnimationSync        |    0.062 |   0.4%
+    TileCollision        |    0.051 |   0.3%
+    StateMachine         |    0.023 |   0.1%
+    Lifecycle            |    0.017 |   0.1%
+    Movement             |    0.017 |   0.1%
+    Synchronization      |    0.012 |   0.1%
+    Render.Clear         |    0.007 |   0.0%
+    Physics              |    0.006 |   0.0%
+    LevelTransition      |    0.006 |   0.0%
+    AudioSync            |    0.004 |   0.0%
+    GameFlow             |    0.002 |   0.0%
+    EnemyRhythm          |    0.001 |   0.0%
+    CameraShake          |    0.001 |   0.0%
+    Transition           |    0.001 |   0.0%
+    -----------------------------------------
+    VSync Headroom:       87.6%
+
+---------------------------------

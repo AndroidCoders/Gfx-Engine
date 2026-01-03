@@ -1,32 +1,21 @@
-// src/math.rs
-
-//! Defines common mathematical structures used throughout the engine.
+//! # Concept: Mathematical Primitives
+//! 
+//! This module defines the common mathematical structures used throughout the engine.
+//! It provides the foundational geometry types (like 2D Vectors) required for 
+//! physics calculations and spatial positioning.
 
 use serde::Deserialize;
 
-/// A 2D vector with `x` and `y` components.
-///
-/// Used for representing positions, velocities, and other 2D quantities.
-#[derive(Deserialize, Clone, Copy, Debug, Default)]
+/// # Concept: 2D Vector
+/// A pair of X and Y coordinates representing a point, velocity, or force.
+#[derive(Deserialize, Clone, Copy, Debug, Default, PartialEq)]
 pub struct Vector2D {
-    /// The x-component of the vector.
     pub x: f32,
-    /// The y-component of the vector.
     pub y: f32,
 }
 
 impl Vector2D {
-    /// Creates a new `Vector2D` with the given `x` and `y` components.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use crate::math::Vector2D;
-    ///
-    /// let vec = Vector2D::new(10.0, 20.0);
-    /// assert_eq!(vec.x, 10.0);
-    /// assert_eq!(vec.y, 20.0);
-    /// ```
+    /// Creates a new vector from concrete coordinate values.
     pub fn new(x: f32, y: f32) -> Self {
         Self { x, y }
     }

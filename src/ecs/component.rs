@@ -1,160 +1,146 @@
+//! # Concept: Component Definitions
+//! 
+//! This module defines the 'C' in ECS—the raw data structures that represent
+//! entity properties. Each component is a pure data struct, designed to be
+//! stored in high-performance Structure of Arrays (SoA) containers.
+
 use crate::animation::AnimationController;
 use crate::math::Vector2D;
 use sdl3::rect::Rect;
+use crate::audio_analysis::DetectedBeat;
 
-// A marker trait for all components.
+/// Marker trait for all data containers in the ECS.
 #[allow(dead_code)]
 pub trait Component {}
 
-/// Represents the position of an entity in the world.
+/// # Concept: Global Music State
+/// Tracks the temporal position and rhythmic facts of the active soundtrack.
+#[derive(Debug, Clone, Default)]
+pub struct MusicState {
+    pub current_time: f64,
+    pub last_beat: Option<DetectedBeat>,
+}
+
+/// # Concept: Position
+/// The authoritative world-space coordinates of an entity.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Position(pub Vector2D);
 impl Component for Position {}
 
-/// Represents the velocity of an entity.
+/// # Concept: Velocity
+/// The rate of change of an entity's position in world units per second.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Velocity(pub Vector2D);
 impl Component for Velocity {}
 
-/// A tag component that identifies the player entity.
-#[derive(Debug, Clone, Copy)]
-pub struct PlayerTag;
-impl Component for PlayerTag {}
-
-/// A tag component that identifies a gold coin entity.
-#[derive(Debug, Clone, Copy)]
-pub struct GoldCoin;
-impl Component for GoldCoin {}
-
-/// Holds the animation state for an entity.
-#[derive(Clone)]
-pub struct Animation {
-    /// The animation controller responsible for updating and managing animations.
-    pub controller: AnimationController,
-}
-impl Component for Animation {}
-
-/// A component that makes an entity renderable.
+/// # Concept: Renderable
+/// Visual metadata required to draw an entity to the screen.
 #[derive(Clone)]
 pub struct Renderable {
-    /// The width of the sprite for rendering, in world units.
     pub width: u32,
-    /// The height of the sprite for rendering, in world units.
     pub height: u32,
-    /// The horizontal rendering offset of the sprite.
     pub horizontal_offset: i32,
-    /// The vertical rendering offset of the sprite.
     pub vertical_offset: i32,
-    /// The z-index for controlling render order (higher is further back).
     pub z_index: u8,
+    pub rotation: f64,
+    pub flip_horizontal: bool,
+    pub flip_vertical: bool,
 }
 impl Component for Renderable {}
 
-/// A tag component that indicates an entity is affected by gravity.
-#[derive(Debug, Clone, Copy)]
-pub struct Gravity;
-impl Component for Gravity {}
-
-/// Represents the collision bounding box for an entity.
+/// # Concept: Collision
+/// The physical bounding box used for environment and entity interactions.
 #[derive(Debug, Clone, Copy)]
 pub struct Collision {
-    /// The rectangular bounds of the collision box.
     pub rect: Rect,
 }
 impl Component for Collision {}
 
-/// A tag component indicating that an entity is currently on the ground.
-#[derive(Debug, Clone, Copy)]
-pub struct Grounded;
-impl Component for Grounded {}
-
-/// Holds the state machine for an entity, controlling its behavior.
-pub struct StateComponent {
-    /// The entity's state machine instance.
-    pub state_machine: crate::state_machine::StateMachine,
-}
-impl Component for StateComponent {}
-
-/// A tag component that marks an entity to be respawned.
-#[derive(Debug, Clone, Copy)]
-pub struct RespawnTag;
-impl Component for RespawnTag {}
-
-/// A component that gives an entity a temporary grace period after respawning.
-#[derive(Debug, Clone, Copy)]
-pub struct RespawnTimer {
-    /// The remaining time in seconds for the respawn grace period.
-    pub timer: f32,
-}
-impl Component for RespawnTimer {}
-
-/// A tag component that identifies an enemy entity.
-#[derive(Debug, Clone, Copy)]
-pub struct EnemyTag;
-impl Component for EnemyTag {}
-
-/// A component for entities that patrol back and forth.
-#[derive(Debug, Clone, Copy)]
-pub struct Patrol {
-    /// The horizontal speed of the patrol movement.
-    pub speed: f32,
-}
-impl Component for Patrol {}
-
-/// A tag component that marks an entity for removal from the world.
-#[derive(Debug, Clone, Copy)]
-pub struct DeadTag;
-impl Component for DeadTag {}
-
-/// Represents the health of an entity.
+/// # Concept: Health
+/// The vitality state of an entity, determining its mortality.
 #[derive(Debug, Clone, Copy)]
 pub struct Health {
-    /// The current health points.
     pub current: u32,
-    /// The maximum health points.
     pub max: u32,
 }
 impl Component for Health {}
 
-/// A component that grants an entity temporary invincibility.
-#[derive(Debug, Clone, Copy)]
-pub struct Invincibility {
-    /// The remaining time in seconds for the invincibility.
-    pub timer: f32,
+/// # Concept: Movement Intention
+/// The abstract horizontal direction (-1.0 to 1.0) an entity intends to move.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct MovementIntention {
+    pub x: f32, 
 }
+impl Component for MovementIntention {}
+
+// --- Tag Components (ZSTs) ---
+#[derive(Debug, Clone, Copy)] pub struct PlayerTag;
+impl Component for PlayerTag {}
+
+#[derive(Debug, Clone, Copy)] pub struct EnemyTag;
+impl Component for EnemyTag {}
+
+#[derive(Debug, Clone, Copy)] pub struct GoldCoin;
+impl Component for GoldCoin {}
+
+#[derive(Debug, Clone, Copy)] pub struct Gravity;
+impl Component for Gravity {}
+
+#[derive(Debug, Clone, Copy)] pub struct Grounded;
+impl Component for Grounded {}
+
+#[derive(Debug, Clone, Copy)] pub struct DeadTag;
+impl Component for DeadTag {}
+
+#[derive(Debug, Clone, Copy, Default)] pub struct DormantTag;
+impl Component for DormantTag {}
+
+// --- Stateful Components ---
+#[derive(Clone)]
+pub struct Animation { pub controller: AnimationController }
+impl Component for Animation {}
+
+pub struct StateComponent { pub state_machine: crate::state_machine::StateMachine }
+impl Component for StateComponent {}
+
+#[derive(Debug, Clone)]
+pub struct Patrol {
+    pub speed: f32,
+    pub anim_prefix: String,
+    pub direction: f32,
+}
+impl Component for Patrol {}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Invincibility { pub timer: f32 }
 impl Component for Invincibility {}
 
-/// A component that gives an entity a limited lifetime before it is removed.
 #[derive(Debug, Clone, Copy)]
-pub struct Lifetime {
-    /// The remaining time in seconds before the entity is destroyed.
-    pub timer: f32,
-}
+pub struct Lifetime { pub timer: f32 }
 impl Component for Lifetime {}
 
-/// Represents the direction an entity is facing.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Direction {
-    /// Facing left.
-    Left,
-    /// Facing right.
-    Right,
-}
-
-/// A component that gives an entity a direction.
 #[derive(Debug, Clone, Copy)]
-pub struct Directional {
-    /// The direction the entity is facing.
-    pub direction: Direction,
-}
-impl Component for Directional {}
+pub struct WallHit { pub normal_x: f32 }
+impl Component for WallHit {}
 
-/// A tag component that identifies the level goal entity.
 #[derive(Debug, Clone, Copy)]
-pub struct Goal;
+pub struct RespawnTimer {
+    pub timer: f32,
+    pub transition_started: bool,
+}
+impl Component for RespawnTimer {}
+
+#[derive(Debug, Clone, Copy)] pub struct RespawnTag;
+impl Component for RespawnTag {}
+
+#[derive(Debug, Clone, Copy)] pub struct Goal;
 impl Component for Goal {}
 
-/// A component that stores the path to the next level.
-#[derive(Debug, Clone)]
-pub struct NextLevel(pub String);
+#[derive(Debug, Clone)] pub struct NextLevel(pub String);
 impl Component for NextLevel {}
+
+#[derive(Debug, Clone, Copy, PartialEq)] pub enum Direction { Left, Right }
+#[derive(Debug, Clone, Copy)] pub struct Directional { pub direction: Direction }
+impl Component for Directional {}
+
+#[derive(Debug, Clone, Copy, PartialEq)] pub struct Acceleration(pub Vector2D);

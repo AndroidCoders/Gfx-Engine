@@ -1,0 +1,329 @@
+# assets/game_config.toml
+
+[player]
+start_pos = { x = 80.0, y = 700.0 }
+width = 24
+height = 26
+draw_width = 80
+draw_height = 64
+horizontal_draw_offset = -28
+vertical_draw_offset = -22
+respawn_pos = { x = 80.0, y = 700.0 }
+lives = 9
+max_health = 2
+
+[world]
+width = 6000.0
+death_plane_y = 1200.0
+
+[textures]
+bg_sky = "assets/graphics/background_blue_sky_with_clouds.png"
+goal = "assets/graphics/tiles_goal.png"
+game_over_3 = "assets/graphics/text_game_over_1.png"
+heart = "assets/graphics/heart_pixel_art_32x32.png"
+enemy_walk_right = "assets/graphics/enemy_1_walk_right.png"
+enemy_walk_left = "assets/graphics/enemy_1_walk_left.png"
+
+[prefabs.GoldCoin]
+components = [
+    { type = "Position" },
+    { type = "Renderable", draw_width = 16, draw_height = 16, z_index = 100 },
+    { type = "Animation", animations = ["gold_coin_spin"], initial_animation = "gold_coin_spin" },
+    { type = "Collision", width = 16, height = 16 },
+    { type = "GoldCoin" }
+]
+
+[prefabs.EnemySpider]
+components = [
+    { type = "Position" },
+    { type = "Velocity", x = 60.0, y = 0.0 },
+    { type = "Renderable", draw_width = 24, draw_height = 12, z_index = 100 },
+    { type = "Animation", animations = ["enemy_spider_walk_right", "enemy_spider_walk_left"], initial_animation = "enemy_spider_walk_right" },
+    { type = "Collision", width = 24, height = 12 },
+    { type = "Gravity" },
+    { type = "Patrol", speed = 60.0, anim_prefix = "enemy_spider" },
+    { type = "EnemyTag" },
+    { type = "StateComponent", initial_state = "PatrolState" }
+]
+
+[animation.enemy_spider_walk_right]
+texture = "assets/graphics/enemy_2_walk_right.png"
+start_x = 0
+start_y = 0
+frame_width = 12
+frame_height = 6
+frame_count = 3
+frame_duration = 10
+loops = true
+frame_padding = 1
+
+[animation.enemy_spider_walk_left]
+texture = "assets/graphics/enemy_2_walk_left.png"
+start_x = 0
+start_y = 0
+frame_width = 12
+frame_height = 6
+frame_count = 3
+frame_duration = 10
+loops = true
+frame_padding = 1
+
+[prefabs.Goal]
+components = [
+    { type = "Position" },
+    { type = "Renderable", draw_width = 64, draw_height = 48, z_index = 100, horizontal_offset = -16, vertical_offset = -16 },
+    { type = "Animation", animations = ["goal_idle"], initial_animation = "goal_idle" },
+    { type = "Collision", width = 32, height = 32 },
+    { type = "Goal" }
+]
+
+[animation.idle_left]
+texture = "assets/graphics/cat_idle_left.png"
+start_x = 0
+start_y = 0
+frame_width = 80
+frame_height = 64
+frame_count = 8
+frame_duration = 8
+loops = true
+
+[animation.idle_right]
+texture = "assets/graphics/cat_idle_right.png"
+start_x = 0
+start_y = 0
+frame_width = 80
+frame_height = 64
+frame_count = 8
+frame_duration = 8
+loops = true
+
+[animation.walk_left]
+texture = "assets/graphics/cat_walk_left.png"
+start_x = 0
+start_y = 0
+frame_width = 80
+frame_height = 64
+frame_count = 12
+frame_duration = 4
+loops = true
+
+[animation.walk_right]
+texture = "assets/graphics/cat_walk_right.png"
+start_x = 0
+start_y = 0
+frame_width = 80
+frame_height = 64
+frame_count = 12
+frame_duration = 4
+loops = true
+reverse = true
+
+[animation.jump_left]
+texture = "assets/graphics/cat_jump_left.png"
+start_x = 0
+start_y = 0
+frame_width = 80
+frame_height = 64
+frame_count = 3
+frame_duration = 6
+loops = false
+
+[animation.jump_right]
+texture = "assets/graphics/cat_jump_right.png"
+start_x = 0
+start_y = 0
+frame_width = 80
+frame_height = 64
+frame_count = 3
+frame_duration = 6
+loops = false
+
+[animation.injured_left]
+texture = "assets/graphics/cat_injured_left.png"
+start_x = 0
+start_y = 0
+frame_width = 80
+frame_height = 64
+frame_count = 3
+frame_duration = 6
+loops = false
+
+[animation.injured_right]
+texture = "assets/graphics/cat_injured_right.png"
+start_x = 0
+start_y = 0
+frame_width = 80
+frame_height = 64
+frame_count = 3
+frame_duration = 6
+loops = false
+
+[animation.enemy_walk_right]
+texture = "assets/graphics/enemy_1_walk_right.png"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 64
+frame_count = 3
+frame_duration = 10
+loops = true
+
+[animation.enemy_walk_left]
+texture = "assets/graphics/enemy_1_walk_left.png"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 64
+frame_count = 3
+frame_duration = 10
+loops = true
+
+[animation.enemy_spider_1]
+texture = "assets/graphics/enemy_1.png"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 64
+frame_count = 1
+frame_duration = 10
+loops = true
+
+[animation.enemy_spider_2]
+texture = "assets/graphics/enemy_2.png"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 64
+frame_count = 1
+frame_duration = 10
+loops = true
+
+[animation.enemy_spider_3]
+texture = "assets/graphics/enemy_3.png"
+start_x = 0
+start_y = 0
+frame_width = 64
+frame_height = 64
+frame_count = 1
+frame_duration = 10
+loops = true
+
+[animation.gold_coin_spin]
+texture = "assets/graphics/tileset_3.png"
+start_x = 210
+start_y = 134
+frame_width = 16
+frame_height = 16
+frame_count = 2
+frame_duration = 10
+loops = true
+frame_padding = 3
+
+[animation.explosion]
+texture = "assets/graphics/explosion.png"
+start_x = 0
+start_y = 0
+frame_width = 96
+frame_height = 96
+frame_count = 12
+frame_duration = 6
+loops = false
+
+[animation.goal_idle]
+texture = "assets/graphics/tiles_goal.png"
+start_x = 0
+start_y = 0
+frame_width = 256
+frame_height = 192
+frame_count = 1
+frame_duration = 1
+loops = false
+
+[audio]
+player_jump = "assets/sounds/sfx_jump_01.wav"
+coin_pickup = "assets/sounds/sfx_coin_01.wav"
+player_hit = "assets/sounds/sfx_hit_01.wav"
+enemy_stomp = "assets/sounds/sfx_stomp_01.wav"
+enemy_jump = "assets/sounds/sfx_clap_01.wav"
+soundtrack_01 = "assets/sounds/soundtrack_01.wav"
+soundtrack_02 = "assets/sounds/soundtrack_02.wav"
+soundtrack_03 = "assets/sounds/soundtrack_03.wav"
+soundtrack_04 = "assets/sounds/soundtrack_04.wav"
+
+[soundtrack_properties.soundtrack_01]
+bpm = 116.0
+
+[soundtrack_properties.soundtrack_02]
+bpm = 105.0
+
+[soundtrack_properties.soundtrack_03]
+bpm = 90.0
+
+[sound_events]
+player_jump = "player_jump"
+player_hit = "player_hit"
+enemy_stomp = "enemy_stomp"
+coin_pickup = "coin_pickup"
+#enemy_jump = "enemy_jump"
+
+[goal]
+draw_width = 256
+draw_height = 192
+vertical_draw_offset = -64
+horizontal_draw_offset = -64
+
+[gameplay]
+stomp_bounce_velocity = -250.0
+damage_knockback_force = 300.0
+damage_invincibility_duration = 1.5
+respawn_invincibility_duration = 4.0
+game_over_duration = 3.0
+game_over_texture = "game_over_3"
+
+[gameplay.explosion]
+width = 96
+height = 96
+horizontal_offset = -48
+vertical_offset = -48
+z_index = 101
+animation_name = "explosion"
+
+[gameplay.audio]
+max_hearing_distance = 1000.0
+volume_falloff_power = 2.0
+
+[enemy_behavior.spider]
+jump_interval = 1.0000
+jump_strength = -400.0
+active_beats = 4
+rest_beats = 0
+jump_sound = "enemy_jump"
+rhythm_offset = 0.0
+beats_per_jump = 2
+
+[menu]
+title_text = "Super Cat Bros"
+title_x = 800
+title_y = 200
+font_size = 48
+item_spacing = 60
+selected_color = [255, 215, 0]
+unselected_color = [255, 255, 255]
+x = 800
+y = 500
+
+[[menu.items]]
+label = "START GAME"
+type = "Action"
+action = "StartGame"
+
+[[menu.items]]
+label = "CHARACTER"
+type = "Selector"
+options = ["Barry White", "Freddy Meowcury", "James Brown"]
+variable = "selected_character"
+
+[[menu.items]]
+label = "QUIT"
+type = "Action"
+action = "Quit"

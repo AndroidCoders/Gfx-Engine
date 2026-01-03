@@ -1,69 +1,59 @@
-//! This system reads player input and updates player components accordingly.
+//! # Concept: Input Mapping
+//! 
+//! This module is responsible for translating raw hardware signals into 
+//! semantic gameplay intentions. It maps keys and buttons to abstract 
+//! commands like 'Jump' or 'Move', decoupling the hardware from game logic.
 
-use crate::ecs::systems::{System, SystemContext};
-use crate::ecs::world::{Entity, World};
-use crate::ecs::event::PlayerJumpEvent;
-use crate::input::PlayerAction;
+use crate::ecs::world::World;
+use crate::ecs::systems::SystemContext;
+use crate::input::InputAction;
+use crate::ecs::event::CommandJump;
+use crate::ecs::component::MovementIntention;
 
-/// The system responsible for processing player input.
-pub struct InputSystem;
+/// A system that maps input state to entity intentions and commands.
+pub struct SystemInput;
 
-impl System<SystemContext<'_>> for InputSystem {
-    /// Reads the current input state and applies it to the player entity.
-    ///
-    /// This includes:
-    /// - Horizontal movement (acceleration and deceleration).
-    /// - Publishing a `PlayerJumpEvent` on the initial jump press.
-    /// - Applying a "jump hold" force if the jump button is held.
-    fn update(&mut self, world: &mut World, context: &mut SystemContext) {
-        let player_entities: Vec<Entity> = world.player_tags.keys().copied().collect();
+impl crate::ecs::systems::System<SystemContext<'_>> for SystemInput {
+    /// Translates hardware input into movement intentions and jump commands for players.
+    fn update(&mut self, world: &mut World, context: &mut SystemContext<'_>) {
+        // 1. Identify all entities controlled by the user.
+        let player_entities: Vec<_> = world.player_tags.keys().copied().collect();
+        
+        for entity in player_entities {
+            // 2. Check for mortality states to disable control for dead or dying players.
+            let is_dead = if let Some(health) = world.healths.get(&entity) {
+                health.current == 0
+            } else {
+                false
+            };
 
-        for &player_entity in &player_entities {
-            // --- Horizontal Movement ---
-            if let Some(velocity) = world.velocities.get_mut(&player_entity) {
-                let acceleration = context.config.physics.acceleration;
-                let deceleration = context.config.physics.deceleration;
-                let max_speed = context.config.physics.max_speed;
+            let is_in_dead_state = if let Some(state_comp) = world.state_components.get(&entity) {
+                state_comp.state_machine.current_state.as_ref().map(|s| s.get_name()) == Some("DeadState")
+            } else {
+                false
+            };
 
-                if context.input_state.is_action_active(PlayerAction::MoveLeft) {
-                    velocity.0.x -= acceleration * context.delta_time;
-                    if velocity.0.x < -max_speed {
-                        velocity.0.x = -max_speed;
-                    }
-                } else if context.input_state.is_action_active(PlayerAction::MoveRight) {
-                    velocity.0.x += acceleration * context.delta_time;
-                    if velocity.0.x > max_speed {
-                        velocity.0.x = max_speed;
-                    }
-                } else {
-                    // Deceleration
-                    if velocity.0.x > 0.0 {
-                        velocity.0.x -= deceleration * context.delta_time;
-                        if velocity.0.x < 0.0 {
-                            velocity.0.x = 0.0;
-                        }
-                    } else if velocity.0.x < 0.0 {
-                        velocity.0.x += deceleration * context.delta_time;
-                        if velocity.0.x > 0.0 {
-                            velocity.0.x = 0.0;
-                        }
-                    }
-                }
+            if is_dead || is_in_dead_state {
+                // Force intention to zero to stop movement upon death.
+                world.add_movement_intention(entity, MovementIntention { x: 0.0 });
+                continue;
             }
 
-            // --- Jump Logic ---
-            // Initial jump event
-            if context.input_state.is_action_just_pressed(PlayerAction::Jump) {
-                world.event_bus.publish(PlayerJumpEvent { player: player_entity });
+            // 3. Resolve horizontal movement intentions from the current input state.
+            let mut move_dir = 0.0;
+            if context.input_state.is_action_pressed(InputAction::MoveLeft) {
+                move_dir -= 1.0;
+            }
+            if context.input_state.is_action_pressed(InputAction::MoveRight) {
+                move_dir += 1.0;
             }
 
-            // Jump hold
-            if context.input_state.is_action_active(PlayerAction::Jump) {
-                let is_grounded = world.is_grounded(player_entity);
-                if !is_grounded
-                    && let Some(velocity) = world.velocities.get_mut(&player_entity) {
-                        velocity.0.y -= context.config.physics.jump_hold_force * context.delta_time;
-                    }
+            // 4. Update the entity's movement intention component.
+            world.add_movement_intention(entity, MovementIntention { x: move_dir });
+
+            // 5. Publish a 'Jump Command' intent if the jump action was triggered this frame.
+            if context.input_state.is_action_just_pressed(InputAction::Jump) {
+                world.event_bus.publish(CommandJump { entity });
             }
         }
     }

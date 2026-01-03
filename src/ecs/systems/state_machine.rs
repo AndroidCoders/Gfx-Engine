@@ -1,32 +1,31 @@
-//! This system is responsible for updating the state machines of entities.
+//! # Concept: Entity State Management
+//! 
+//! This module is the driver for Hierarchical State Machines (HSM). 
+//! It advances the logical state of entities (e.g., switching from Idle to Walk)
+//! by executing their current state's logic and evaluating transition conditions.
 
-use crate::ecs::component::StateComponent;
 use crate::ecs::systems::{System, SystemContext};
-use crate::ecs::world::{Entity, World};
-use crate::state_machine::StateMachine;
 
-/// The system that updates all state machines in the world.
-pub struct StateMachineSystem;
-impl System<SystemContext<'_>> for StateMachineSystem {
-    /// Iterates through all entities with a `StateComponent`, extracts their
-    /// state machines, updates them, and then re-inserts them into the world.
-    ///
-    /// This process ensures that each entity's behavior is managed by its
-    /// state machine, allowing for complex and dynamic behaviors.
-    fn update(&mut self, world: &mut World, context: &mut SystemContext) {
-        let mut updates: Vec<(Entity, StateMachine)> = Vec::new();
+/// A system that advances the state machines for all applicable entities.
+pub struct SystemStateMachine;
 
-        // Extract StateMachines to update
-        // Using `drain()` temporarily removes the components, allowing mutable
-        // access to the world within the state machine's update logic.
-        for (entity, state_component) in world.state_components.drain() {
-            updates.push((entity, state_component.state_machine));
-        }
+impl System<SystemContext<'_>> for SystemStateMachine {
+    /// Updates the internal logical state of entities and handles state transitions.
+    fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
+         // 1. Identify all entities that possess a State Machine.
+         let entity_ids: Vec<_> = world.state_components.keys().copied().collect();
+         
+         for entity in entity_ids {
+             // 2. Skip entities outside the active simulation range.
+             if world.is_dormant(entity) { continue; }
 
-        // Perform updates and re-insert
-        for (entity, mut state_machine) in updates {
-            state_machine.update_with_context(world, context, entity);
-            world.state_components.insert(entity, StateComponent { state_machine });
-        }
+             // 3. Process the state update using a removal pattern to satisfy borrow checker requirements.
+             if let Some(mut state_comp) = world.state_components.remove(&entity) {
+                 // Execute the current state's logic and evaluate potential transitions.
+                 state_comp.state_machine.update_with_context(world, context, entity);
+                 // Restore the updated component to the world.
+                 world.state_components.insert(entity, state_comp);
+             }
+         }
     }
 }

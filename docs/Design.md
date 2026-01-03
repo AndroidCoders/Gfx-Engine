@@ -1,18 +1,165 @@
-File version: 2.03
+# Gfx-Engine
 
 **TLDR:**
-This document outlines the architecture and components of the `GfX-Engine`:
-*   Simple, data-driven game loop architecture, with a future plan for ECS redesign.
-*   Key components are modular files in `src/` (e.g., `renderer`, `audio`, `physics`).
-*   Configurable VSync and fixed-timestep loop.
+*   Gfx-Engine is a 2D pixel-art game engine built with Rust and SDL3.
+*   It features a data-driven architecture and includes a complete demo game.
+*   The demo, "Super Cat Bros - Episode 1 - The Pirate Gold Adventure," is a platformer inspired by classic 16-bit era games.
+
+Gfx-Engine is a modular 2D game engine written in Rust, designed for creating pixel-art platformers.
+
+The project includes a playable demo game that showcases the engine's capabilities, which include:
+*   A robust physics engine for platforming.
+*   A state machine-driven animation system.
+*   A data-driven design where levels, assets, and game properties are loaded from TOML configuration files.
+
+## The Demo Game: "Super Cat Bros - Episode 1 - The Pirate Gold Adventure"
+
+The current demo is a vertical slice of a larger adventure.
+*   **Premise:** Join the courageous Captain Cat as he explores the dangerous "Skull Islands" in search of the legendary Pirate Gold.
+*   **Theme:** Tropical/Pirate. Bright blue skies, palm trees, sandy beaches, and hidden caves.
+*   **Enemies:** Spiders (placeholder for Crabs?), Pirate Parrots (planned), and other island inhabitants.
+*   **Goal:** Collect gold coins and reach the Treasure Chest (Goal) at the end of each level.
+*   **Characters:**
+    *   **Barry White:** (White Cat) - Soundtrack: Smooth Soul/Funk.
+    *   **Freddy Meowcury:** (Yellow/Orange Cat) - Soundtrack: Rock Opera.
+    *   **James Brown:** (Brown Cat) - Soundtrack: Funk/Soul.
+    *   **Dolly Pawton:** (Blonde Cat) - Soundtrack: Country/Pop.
+    *   **Whitney Meowston:** (Grey Cat) - Soundtrack: R&B/Pop.
 
 ## Architecture
 
-The engine's core architecture is built around the **Entity-Component-System (ECS)** pattern. This enhances modularity, reusability, and performance by strictly separating data (Components), logic (Systems), and entities (IDs). The engine follows a data-driven design, where configuration is loaded from external `.toml` files and assets are loaded from the `assets/` directory.
+The `Gfx-Engine` is built on a high-fidelity **WYSIWID (What You See Is What It Does)** architecture. This pattern ensures that the engine's behavior is explicit, legible, and highly modular, making it a perfect environment for collaborative development with **AI coding assistants**.
 
-The long-term vision is to evolve this into a full **ECSC (Entity-Component-System-Concept)** architecture, where systems are fully decoupled and communicate via a central, type-based **Event Bus**. This will make the engine even more modular and easier to maintain.
+For a formal definition of our architectural principles and the roadmap for its implementation, see [**Architecture.md**](Architecture.md).
 
-**Architectural Priority:** The implementation of a **Type-Based Event Bus** is the highest priority architectural improvement. It is the foundational step toward the ECSC model and will provide immediate benefits by decoupling systems, improving code clarity, and simplifying the implementation of new features. The detailed plan for this is outlined in the "ECSC Implementation Plan" section below.
+### The Primary Pillars
+
+1.  **Event-Driven ECS:** The core data structure where **Entities** are IDs, **Components** are raw data, and **Systems** are the logic processors.
+2.  **Concepts vs. Synchronizations:** A strict separation between autonomous services (Concepts) and behavioral rules (Synchronizations).
+3.  **Atomic Modules:** A rigorous enforcement of file structure—modules are limited to **200-300 lines** and must have **Single Responsibility** for exactly one process.
+
+In this model, the codebase is organized into three distinct layers:
+
+1.  **Concepts (ECS Systems & Components):**
+    *   These are fully independent services that own their specific domain logic and data.
+    *   **Examples:** `SystemPhysics` (manages Position/Velocity), `SystemAudio` (manages Sound), `SystemInput` (manages Hardware Input).
+    *   **Rule:** A Concept **never** directly calls another Concept. The Physics System does not know the Audio System exists.
+
+2.  **Synchronizations (Event-Based Rules):**
+    *   These are the "glue" rules that mediate between Concepts. They define *what happens next*.
+    *   **Mechanism:** They listen for **Events (Facts)** published by one Concept and trigger **Commands/Actions** in another.
+    *   **Current Implementation:** Specialized systems (e.g., `SystemAudioSynchronization`) that manually subscribe to events.
+    *   **Future Implementation:** A generic **Synchronization Engine** that reads declarative rules from data files or **Rhai** scripts (e.g., `when PlayerJumped then Audio.play('jump')`).
+
+### 4. Application State (Resource)
+Instead of a monolithic manager, "State" is a first-class citizen in the ECS, stored as a Resource in the `World`. This allows any system to query or request state transitions by publishing events.
+
+```rust
+pub enum GameState {
+    Menu(String), // The string identifies the screen (e.g., "main", "options")
+    Playing,
+    Paused,
+    GameOver,
+    Cinematic,
+}
+```
+
+### 5. The Explicit Scheduler (SystemManager)
+To satisfy **WYSIWID**, the `SystemManager` explicitly defines which systems run in which state using a `match` block. This eliminates "hidden" logic and makes the execution flow of the entire engine legible in a single file.
+
+```rust
+match &world.game_state {
+    GameState::Menu(_) => {
+        self.menu_system.update(world, context);
+    },
+    GameState::Playing => {
+        self.physics_system.update(world, context);
+        self.movement_system.update(world, context);
+        // ... gameplay systems
+    },
+    // ...
+}
+```
+
+## Performance Optimizations
+
+To handle large, complex levels with thousands of entities, the engine implements advanced spatial partitioning and simulation culling.
+
+### 1. Spatial Partitioning (Uniform Grid)
+**Purpose:** Accelerates collision detection and visibility queries.
+*   **Mechanism:** The world is divided into a grid of 256x256 pixel cells.
+*   **Indexing:** `SystemSpatialUpdate` runs every frame, filing every active entity into its corresponding grid cells based on its bounding box.
+*   **Benefit:** Systems like `SystemInteraction` only check for collisions between entities in the same or adjacent cells, reducing complexity from $O(N^2)$ to nearly $O(1)$.
+
+### 2. Simulation Culling (Dormancy)
+**Purpose:** Freezes logic for entities far away from the player to save CPU cycles.
+*   **Active Zone:** A 3840x2160 pixel "Mega-Partition" (2x the size of a 1080p screen) centered on the camera.
+*   **System:** `SystemDormancy` calculates the distance of all entities from the camera. Entities outside the Active Zone are tagged with a `DormantTag`.
+*   **Throttling:** Core systems (Physics, AI, Animation) immediately skip entities with the `DormantTag`.
+*   **Legibility:** This follows the **WYSIWID** pattern—if you can't see it, it isn't doing anything expensive.
+
+### 3. Frustum Culling
+**Purpose:** Only render what is visible.
+*   **Mechanism:** Before drawing, the main loop queries the `SpatialGrid` for only those entities within the camera's `view_rect`. Off-screen tiles are also skipped in `Renderer::draw_level`.
+
+## System Architecture
+
+To improve cohesion and maintainability, the engine consolidates game logic into a few robust, domain-specific systems. This reduces fragmentation and simplifies the data flow.
+
+### 1. `SystemLifecycle` (The Vitality Engine)
+**Purpose:** The single authority on entity existence. It manages the entire pipeline of "Being Alive."
+*   **Responsibilities:**
+    *   **Injury:** Consumes `EntityTookDamageEvent`, deducts Health, and manages Invincibility frames.
+    *   **Mortality:** Detects `Health <= 0` and transitions entities to `Dying` or `Dead` states.
+    *   **Purgatory:** Manages death timers and transition animations (e.g., the Player's "Angel" ascent).
+    *   **Resolution:** Executes the final Respawn (for players) or Despawn/Cleanup (for enemies and particles).
+*   **Consolidates:** `SystemDeath`, `SystemPlayerDeath`, `SystemKill`, `SystemRespawn`, `SystemRespawnTimer`, `SystemInvincibility`, `SystemLifetime`.
+
+### 2. `SystemMovement` (The Motor)
+**Purpose:** Standardizes entity locomotion. It translates "Intent" (User Input or AI Decisions) into "Physics" (Velocity/Acceleration).
+*   **Responsibilities:**
+    *   Applies movement forces (Running, Jumping) based on `MovementCommand` components.
+    *   Ensures physics consistency (Gravity, Friction, Air Control) across all entities (Player and Enemies).
+*   **Consolidates:** `SystemPlayerControl` and specific movement logic currently inside AI States.
+
+### 3. `SystemInteraction` (The Arbiter)
+**Purpose:** The central rule-book for Entity-vs-Entity collisions. It decouples "Detection" from "Consequence."
+*   **Responsibilities:**
+    *   Detects overlaps (e.g., Player vs. Enemy, Player vs. Coin).
+    *   Publishes strictly typed events (`CoinCollectedEvent`, `EntityTookDamageEvent`) instead of modifying entity data directly.
+*   **Consolidates:** The existing `SystemInteraction` and `SystemCoinCollection`.
+
+### 4. `SystemAnimation` (The Visualizer)
+**Purpose:** A unified driver for visual representation.
+*   **Responsibilities:**
+    *   Reads the abstract state of an entity (Velocity, Grounded, State Machine) to select the correct Sprite Animation.
+    *   Updates animation frame counters.
+*   **Consolidates:** `SystemPlayerAnimation` and `SystemAnimationUpdate`.
+
+### 5. `SystemMenu` (The Interface)
+**Purpose:** Manages the application's user interface and menu states.
+*   **Responsibilities:**
+    *   Displays the Title Screen, Main Menu, and Sub-menus (Options, Character Select).
+    *   Handles menu navigation and selection input.
+    *   Manages transitions between game states (e.g., Menu -> Playing).
+*   **Data-Driven Layout:** Menu screens are defined in `game_config.toml`, specifying titles, items, and actions (e.g., `Goto(Options)`, `StartGame`).
+*   **Implementation:** The `SystemMenu` reads the current `MenuScreen` from `GameState::Menu(screen)`, lookups the configuration, and renders the interactive elements.
+
+### User Interface (HUD)
+The Head-Up Display (HUD) provides vital information to the player during gameplay.
+*   **Design:** Minimalist and unobtrusive.
+*   **Elements:**
+    *   **Lives:** displayed as a row of Heart icons.
+    *   **Coins:** Displayed as a Coin icon followed by the count (e.g., `x 10`).
+*   **Configuration:** Layout positions and assets are defined in the `[ui]` section of `game_config.toml`.
+*   **Implementation:** Rendered by `SystemGUIRender` on top of the game world.
+
+### Foundation Systems
+These systems remain distinct as they handle low-level simulation or hardware interfaces:
+*   **`SystemInput`**: Maps raw hardware inputs to abstract Input State.
+*   **`SystemPhysics`**: The core integrator (`Pos += Vel * dt`).
+*   **`SystemTileCollision`**: Resolves collisions between entities and the static level geometry.
+*   **`SystemAudioSynchronization`**: Bridges Gameplay Events to the Audio Engine.
 
 ## Components
 
@@ -30,13 +177,31 @@ The engine is composed of several modules within the `src/` directory:
 -   `physics.rs`: Handles the physics simulation.
 -   `config.rs`: Loads and parses all configuration files.
 
-## Game Loop
+## Game Loop: Fixed Timestep & Determinism
 
-To ensure frame-rate independent movement and logic, the engine uses a **variable timestep loop**.
+The engine utilizes a **Fixed Timestep Loop** with the **Accumulator Pattern** to decouple gameplay logic from rendering, ensuring deterministic physics across different hardware.
 
--   **Delta Time:** On each iteration of the main loop, the time elapsed since the last frame (`delta_time`) is calculated.
--   **System Updates:** This `delta_time` value is passed to all relevant systems (e.g., `PhysicsSystem`, `InvincibilitySystem`), allowing them to scale their updates accordingly. For example, movement is calculated as `velocity * delta_time`.
--   **VSync:** VSync can be enabled in `config.toml` to synchronize rendering with the display's refresh rate, which helps to prevent screen tearing.
+1.  **Physics & Logic (The "Heartbeat"):**
+    *   Runs at a strict **120 Hz** (approx. 8.33ms per tick).
+    *   **Accumulator:** Frame time is added to an accumulator. Logic steps are executed in fixed increments until the accumulator is depleted. This guarantees consistent results regardless of the variable frame rate.
+    *   **Determinism:** This architecture enables the **Replay System** by recording inputs at each fixed tick.
+
+2.  **Rendering (The "Skin"):**
+    *   Runs as fast as the monitor allows (VSync).
+    *   **Interpolation (lerp):** To prevent visual jitter, the renderer calculates an `alpha` factor (`accumulator / fixed_dt`). It draws entities at an interpolated position between their previous and current physics state: `pos = prev * (1 - alpha) + curr * alpha`.
+
+### Deterministic Replay System
+The engine features a built-in replay system enabled by its fixed timestep architecture.
+*   **Mechanism:** At every 120Hz tick, the `InputState` (pressed actions) is recorded into a `Replay` struct.
+*   **Determinism:** Because physics and logic advance in discrete, fixed steps, playing back the exact same sequence of inputs from the same starting seed guarantees an identical outcome.
+*   **Modes:** Supports **Recording** (saving sessions to `.replay` files) and **Playback** (driving the game from a file, used for the "Attract Mode" in the main menu).
+
+### Runtime Audio Analysis & Beat Detection
+To enable rhythm-synced gameplay (e.g., enemies jumping on the beat), the engine performs runtime analysis of `.wav` soundtracks.
+*   **Spectral Flux:** The engine uses Fast Fourier Transform (FFT) via the `spectrum-analyzer` crate to calculate the energy difference between frames.
+*   **Auto-Tuning:** A custom algorithm iteratively adjusts the detection threshold to match a target BPM (e.g., 116 BPM).
+*   **Caching:** Detected beats are serialized to a sidecar `.beats` file to ensure instant loading on subsequent runs.
+*   **Event Integration:** The `SystemManager` acts as a conductor, publishing `EventMusicBeat` whenever a rhythmic onset is detected.
 
 ## Rendering Pipeline
 
@@ -57,6 +222,17 @@ To control the draw order of sprites and enable effects like parallax scrolling,
     *   **Backgrounds:** High `z_index` values (e.g., 200-255).
     *   **Gameplay Layer:** Mid-range `z_index` values. The Player and Enemies are at `100`. Effects like explosions are slightly behind at `101`.
     *   **Foregrounds/UI:** Low `z_index` values (e.g., 1-50).
+
+### Texture Upscaling Strategies
+
+To achieve a retro pixel-art aesthetic on modern high-resolution displays, the engine uses **Load-Time Upscaling**.
+
+*   **Load-Time Upscaling (In-Memory Scaling):**
+    *   **Concept:** Small source assets (e.g., 32x32 sprites) are loaded from disk but immediately upscaled in memory (e.g., 4x to 128x128) by the `TextureManager` using nearest-neighbor interpolation.
+    *   **Pros:** Allows for "sub-pixel" smooth movement (sprites can move 1/4 of a "retro pixel"); allows mixing with high-res UI natively; removes the need for a global `PIXEL_SCALE` multiplier in rendering code.
+    *   **Coordinate System:** The engine uses a 1:1 mapping between world units and the Virtual Resolution (e.g., 1920x1080).
+
+**Implementation:** The engine upscales all textures and configuration values (positions, speeds, sizes) by a `DATA_SCALE_FACTOR` (currently 4.0) during the loading phase. This ensures that the gameplay logic and rendering operate in a consistent, high-resolution 1:1 pixel space while preserving the pixel-art aesthetic.
 
 ## Gameplay Mechanics
 
@@ -107,6 +283,18 @@ To create a more engaging and challenging experience, the game will feature a he
 *   **Climbing Gloves:** Gloves that allow the player to cling to and climb up walls, opening up new vertical paths in the levels.
 *   **Dash Boots:** Boots that grant the player a permanent dash ability, allowing them to cross large gaps or break through certain barriers.
 *   **Goggles of Seeing:** Special goggles that, when activated, reveal hidden platforms, secret passages, or invisible treasures in the level.
+
+### Unified Life & Death System
+
+To ensure consistency and reduce code duplication, the engine uses a unified, event-driven system for managing the lifecycle of all entities (Players, Enemies, etc.).
+
+1.  **Data:** Entities are assigned a `Health` component and, optionally, a `Lives` component (typically for players).
+2.  **Input:** Interactions (e.g., getting hit, falling) do not directly modify data. Instead, they publish an `EntityTookDamageEvent`.
+3.  **Processing (HealthSystem):** A central `HealthSystem` listens for damage events. It deducts health and, if `Health <= 0`, publishes an `EntityDiedEvent`.
+4.  **Consequences:** Specialized systems listen for the `EntityDiedEvent` to trigger specific reactions:
+    *   **Player:** The `GameFlowSystem` decrements the `Lives` component. If lives remain, a respawn is triggered; otherwise, the "Game Over" state is activated.
+    *   **Enemy:** The `DeathSystem` triggers a death animation, drops loot, and removes the entity.
+    *   **Audio/UI:** Synchronization systems play sound effects and update the HUD independent of the core logic.
 
 ### Camera Design
 
@@ -246,25 +434,25 @@ As much as possible, the *definition* of game objects should live in data files 
 By adhering to these principles, we create a codebase that is not only clean and maintainable for human developers but is also perfectly structured for the small, iterative, and test-verified workflow used by AI coding assistants.
 
 ---
-# ECSC Architecture: A Practical Guide (v4)
+# Event-Driven ECS Architecture: A Practical Guide (v4)
 
-This guide outlines the architecture and implementation of a topic-based Event Bus, which is the cornerstone of our **ECSC (Entity-Component-System-Concept)** model.
+This guide outlines the architecture and implementation of a topic-based Event Bus, which is the cornerstone of our **Event-Driven ECS** model.
 
 ## 1. The Core Data Flow
 
-The ECSC architecture establishes a clear, one-way flow of information:
+The Event-Driven ECS architecture establishes a clear, one-way flow of information:
 
-**Input** -> **Command** -> **System (Concept)** -> **Event** -> **EventConductor**
+**Input** -> **Command** -> **System (Concept)** -> **Event** -> **Synchronization**
 
 1.  **Input:** A raw hardware signal (e.g., a key press).
 2.  **Command:** The input is translated into a semantic `Command` representing intent (e.g., `PlayerCommand::Jump`).
 3.  **System (Concept):** A System processes the `Command`, updates the core world state (e.g., changes an entity's velocity), and publishes an `Event`.
 4.  **Event:** An `Event` is a data struct published to the **Event Bus** with a specific **Topic** string, announcing a fact (e.g., topic: `"player.movement.jump"`, data: `PlayerJumpedEvent { ... }`).
-5.  **EventConductor:** An `EventConductor` subscribes to topic patterns (e.g., `"player.movement.*"`) and executes reactive, secondary logic (e.g., playing sounds, updating UI).
+5.  **Synchronization:** A `SynchronizationSystem` subscribes to topic patterns (e.g., `"player.movement.*"`) and executes reactive, secondary logic (e.g., playing sounds, updating UI).
 
 ## 2. The Topic-Based Event Bus
 
-Instead of subscribing to a specific *type*, conductors subscribe to string-based **topic patterns**. This provides a highly flexible and efficient routing system.
+Instead of subscribing to a specific *type*, synchronizations subscribe to string-based **topic patterns**. This provides a highly flexible and efficient routing system.
 
 ### Topic Naming Convention
 
@@ -284,7 +472,7 @@ To maintain order, we will adopt a consistent naming convention for topics:
 
 ### Wildcard Subscriptions
 
-EventConductors can subscribe to patterns using two wildcards:
+Synchronization Systems can subscribe to patterns using two wildcards:
 
 *   `*` (asterisk): Matches exactly one word in a topic.
     *   *Example:* `physics.collision.*` matches `physics.collision.started` but **not** `physics.collision.player.wall`.
@@ -295,14 +483,14 @@ EventConductors can subscribe to patterns using two wildcards:
 
 Here is a practical look at how the Event Bus can be implemented.
 
-#### The `EventConductor` Trait
+#### The `EventSynchronization` Trait
 
-First, we define a trait that all our conductors will implement.
+First, we define a trait that all our synchronizations will implement.
 
 ```rust
 use std::any::Any;
 
-pub trait EventConductor {
+pub trait EventSynchronization {
     /// Called by the EventBus when a subscribed topic is matched.
     fn on_event(&mut self, topic: &str, event_data: &dyn Any);
 }
@@ -317,7 +505,7 @@ use std::collections::HashMap;
 
 pub struct EventBus {
     // The key is the subscription pattern, e.g., "player.*"
-    subscribers: HashMap<String, Vec<Box<dyn EventConductor>>>,
+    subscribers: HashMap<String, Vec<Box<dyn EventSynchronization>>>,
 }
 
 impl EventBus {
@@ -325,16 +513,16 @@ impl EventBus {
         EventBus { subscribers: HashMap::new() }
     }
 
-    pub fn subscribe(&mut self, pattern: String, conductor: Box<dyn EventConductor>) {
-        self.subscribers.entry(pattern).or_default().push(conductor);
+    pub fn subscribe(&mut self, pattern: String, synchronization: Box<dyn EventSynchronization>) {
+        self.subscribers.entry(pattern).or_default().push(synchronization);
     }
 
     pub fn publish(&mut self, topic: &str, event_data: &dyn Any) {
         // Iterate over all registered patterns
-        for (pattern, conductors) in &mut self.subscribers {
+        for (pattern, synchronizations) in &mut self.subscribers {
             if topic_matches(pattern, topic) {
-                for conductor in conductors {
-                    conductor.on_event(topic, event_data);
+                for synchronization in synchronizations {
+                    synchronization.on_event(topic, event_data);
                 }
             }
         }
@@ -358,21 +546,21 @@ fn topic_matches(pattern: &str, topic: &str) -> bool {
 }
 ```
 
-#### Example: An `AudioConductor`
+#### Example: An `AudioSynchronizationSystem`
 
-This conductor plays a sound whenever any player event occurs.
+This synchronization plays a sound whenever any player event occurs.
 
 ```rust
 // Define the event data struct
 struct PlayerJumpedEvent { pub player_id: usize }
 
-// The conductor implementation
-struct AudioConductor;
-impl EventConductor for AudioConductor {
+// The synchronization implementation
+struct AudioSynchronizationSystem;
+impl EventSynchronization for AudioSynchronizationSystem {
     fn on_event(&mut self, topic: &str, event_data: &dyn Any) {
         // Use downcast_ref to safely cast the event data to the expected type.
         if let Some(_event) = event_data.downcast_ref::<PlayerJumpedEvent>() {
-            println!("AudioConductor heard topic '{}': Playing jump sound!", topic);
+            println!("AudioSynchronizationSystem heard topic '{}': Playing jump sound!", topic);
             // self.audio_manager.play("jump_sound");
         }
     }
@@ -380,7 +568,7 @@ impl EventConductor for AudioConductor {
 
 // How it would be used:
 // let mut bus = EventBus::new();
-// bus.subscribe("player.movement.jump".to_string(), Box::new(AudioConductor));
+// bus.subscribe("player.movement.jump".to_string(), Box::new(AudioSynchronizationSystem));
 // bus.publish("player.movement.jump", &PlayerJumpedEvent { player_id: 0 });
 ```
 
@@ -405,10 +593,11 @@ The engine currently has the following core features implemented:
 
 ## Debugging and Profiling
 
-To facilitate robust testing and optimization, the following systems are planned:
-*   **In-Game Benchmarking:** A real-time, in-game profiler (`Benchmarker.rs`) will be created to monitor and display key performance metrics such as frame time, FPS, and time spent in the update and render loops.
-*   **On-Screen Display and Logging:** A comprehensive debug system (`debug.rs`) will be implemented. It will render key data (e.g., player coordinates, state) on-screen for video analysis and simultaneously record verbose, high-resolution data to a log file. A shared timestamp or frame number will link the video frames to the log entries.
-*   **Programmatic Video Capture:** To enable automated analysis and capture hard-to-reproduce bugs, the engine will integrate programmatic video recording. This will be achieved by using a Rust wrapper for the `ffmpeg` library (such as `ffmpeg-next`), allowing the engine to start and stop video capture from within the code.
+### Hierarchical Stack-Based Profiler
+The engine includes a low-overhead instrumentation system (`Benchmarker.rs`) to identify CPU bottlenecks in real-time.
+*   **Mechanism:** Systems use `push("Name")` and `pop()` to track execution duration.
+*   **Hotspots HUD:** A debug overlay (toggled with F1) displays a list of systems sorted by their impact on the frame budget. Values are smoothed using a 100-frame rolling average.
+*   **Session Reporting:** Aggregated performance data (Min/Max/Avg FPS and system breakdown) is written to `benchmark.log` upon application exit.
 
 ## Architectural Roadmap
 
@@ -422,10 +611,19 @@ The following sections outline the high-level direction for future engine and ga
 *   **Spatial Partitioning:** To support large levels efficiently, a uniform grid or similar spatial partitioning system is planned.
 *   **1:1 Pixel Coordinate System:** The engine will be refactored to use a 1:1 pixel-based coordinate system, removing the `PIXEL_SCALE` constant to simplify logic.
 *   **Parallax Scrolling:** The renderer will be extended to support multi-layered parallax backgrounds for a greater sense of depth. This can be achieved by assigning different `z_index` values to background layers and applying a scroll factor based on that `z_index` when calculating the draw position relative to the camera. Layers with a higher `z_index` (further away) will scroll slower than layers with a lower `z_index`.
-*   **Interactive Audio:** The audio system will be enhanced to support dynamic soundtracks and sound effects that respond to gameplay events. The plan includes a zone-based music system that will trigger crossfades between tracks as the player moves between different areas of the world map.
+    *   **Interactive Audio:** The audio system will be enhanced to support dynamic soundtracks and sound effects that respond to gameplay events. The plan includes a zone-based music system that will trigger crossfades between tracks as the player moves between different areas of the world map.
+        *   **Dynamic Soundtrack Management:** The `SystemAudioSynchronization` will be responsible for managing the music state based on high-level game flow events.
+            *   **Level Start:** Automatically start the specific track defined for the level.
+            *   **Respawn:** Restart the current track (or seek to a specific loop point) when the player respawns, to sync the music energy with the new attempt.
+            *   **Character Selection:** Change the active soundtrack theme based on the selected character (e.g., "Funk" for one cat, "Rock" for another).
+    *   **Audio Synchronization & Beat Detection:** To achieve precise synchronization between gameplay events (like enemy movements) and the music, we have implemented a runtime analysis system.
+        *   **Runtime FFT Analysis:** The engine uses the `spectrum-analyzer` crate to perform Fast Fourier Transform (FFT) on the audio waveform at runtime.
+        *   **Flux-Based Onset Detection:** A beat detector calculates the "Spectral Flux" (energy difference) to identify rhythmic onsets (beats). It features an **Auto-Tuning** algorithm that iteratively adjusts sensitivity to match a target BPM range (e.g., 110-130 BPM).
+        *   **Caching:** Detected beats are serialized to a sidecar file (`.beats`) to ensure instant loading times on subsequent runs.
+        *   **Loop Detection:** The `SystemManager` monitors the audio playback position and detects loop points (backward jumps in time), automatically resetting the beat tracker to maintain sync indefinitely.
+        *   **Event Integration:** A `MusicBeatEvent` is published to the central Event Bus whenever a beat occurs, allowing any system (e.g., `EnemyRhythmSystem`) to react to the music without tight coupling.
 
-### Gameplay Features
-*   **Advanced Physics and Terrain:** The physics engine will be enhanced to handle more complex terrain, such as sloped surfaces.
+### Gameplay Features*   **Advanced Physics and Terrain:** The physics engine will be enhanced to handle more complex terrain, such as sloped surfaces.
 *   **Interactive World Elements:** The engine will support a variety of interactive blocks, such as power-up blocks and breakable blocks.
 *   **Flexible Power-Up System:** A system will be designed to allow for power-ups that modify player state and grant new abilities.
 *   **Companions/Sidekicks:** The engine will support companion characters with their own unique abilities.
@@ -436,84 +634,40 @@ The following sections outline the high-level direction for future engine and ga
 To ensure consistency and prevent bugs, the engine uses a strict separation between different coordinate systems.
 
 *   **World Units:** All game logic, physics, and configuration files operate in **World Units**.
-    *   **Definition:** 1 World Unit corresponds to 1 pixel of the source art assets (e.g., a sprite that is 32x32 pixels in its PNG file has a size of 32x32 World Units).
-    *   **Usage:** Used for entity positions, sizes, physics calculations, and all values specified in configuration files like `game_config.toml`.
+    *   **Definition:** 1 World Unit corresponds to 1 pixel on the **Virtual Resolution** canvas (e.g., 1920x1080).
+    *   **Scale at Load-Time:** Assets designed at a lower "retro" resolution (e.g., 32x32) are upscaled by a **`DATA_SCALE_FACTOR`** (e.g., 4.0) upon loading. Their positions and sizes in configuration files are also upscaled by this factor.
+    *   **Benefit:** This allows for sub-pixel precision relative to the retro art (e.g., moving by 1/4 of a "retro pixel").
 
 *   **Virtual Resolution:** The game is rendered internally to a fixed-size canvas, known as the **Virtual Resolution**.
     *   **Definition:** This is the ideal resolution the game is designed for, such as `1920x1080`. It is set in `config.toml`.
     *   **Purpose:** It provides a consistent rendering target, independent of the player's actual screen resolution.
 
-*   **`PIXEL_SCALE`:** This is a global scaling factor used by the renderer.
-    *   **Definition:** A constant value (e.g., `4.0`) that determines how many screen pixels are used to draw a single World Unit onto the Virtual Resolution canvas.
-    *   **Example:** With a `PIXEL_SCALE` of `4.0`, a 32x32 World Unit sprite is rendered as a 128x128 pixel image on the internal virtual canvas.
-
 *   **Screen Pixels (Final Resolution):** This is the actual resolution of the player's monitor.
     *   **Behavior:** The engine takes the rendered `1920x1080` Virtual Resolution canvas and scales it to fit the player's screen.
     *   **Aspect Ratio:** The 16:9 aspect ratio is always preserved. If the screen's aspect ratio is different, black bars will be added (pillarboxing or letterboxing). This guarantees that the game's appearance and gameplay are identical on all displays.
 
----
-# ECSC Implementation Plan: Type-Based Event Bus
+## Offline Rendering & Replay System
 
-This section outlines a concrete plan for implementing a type-based event bus as a pragmatic first step towards the full ECSC architecture.
+The engine features a high-fidelity "Offline Rendering Pipeline" designed for creating professional-quality gameplay trailers and content for platforms like YouTube. This system allows the engine to render perfect, lag-free 60 FPS video regardless of the host machine's performance by decoupling the simulation and rendering from real-time constraints.
 
-### Summary: Improving ECS with a Type-Based Event Bus
+### 1. Input Recording (The "Score")
+The foundation of this system is the deterministic **Replay System**. By leveraging the engine's Fixed Timestep loop (120Hz), we record the `InputState` (buttons pressed) at every physics tick into a `Replay` struct. Because the game logic is deterministic, feeding these same inputs back into the engine from the initial state guarantees the exact same gameplay outcome every time. This allows us to "simulate" the game for video rendering without needing to capture heavy video data in real-time.
 
-**Goal:** To better align with the ECSC (Entity-Component-System-Concept) architecture by implementing a type-based event bus. This will decouple systems from each other, making the code more modular, easier to maintain, and more performant.
+### 2. Offline Video Rendering (The "Camera")
+Instead of running the standard game loop which waits for VSync, we implement a special "Render Mode".
+*   **Pipeline:**
+    1.  **Step Physics:** The engine advances the game state by a fixed amount (e.g., 2 ticks for 60 FPS video).
+    2.  **Draw:** The frame is rendered to the SDL Canvas.
+    3.  **Capture:** `canvas.read_pixels` is used to copy the raw pixel buffer from the GPU to system RAM.
+    4.  **Pipe:** These raw bytes are written directly to the standard input (`stdin`) of an `ffmpeg` subprocess.
+*   **Benefit:** This guarantees a solid 60 FPS output with zero lag, regardless of how complex the scene is or how slow the computer is.
 
-**What It Is:** Instead of systems calling each other directly or using low-level channels, they will communicate through high-level, strongly-typed events.
-1.  A **System** (e.g., `CoinCollectionSystem`) will detect a game event and *publish* a corresponding event struct (e.g., `CoinCollectedEvent`) to a central `EventBus` resource in the `World`.
-2.  A **Conductor** (which is just another system, e.g., `AudioConductorSystem`) will *read* those events from the `EventBus` each frame and perform reactive, secondary logic (like playing a sound or updating the score).
-3.  At the end of the frame, all events are cleared from the bus.
+### 3. Audio Integration (The "Mixer")
+*   **Soundtrack:** Since the soundtrack is usually a single continuous file, we pass it as an input to FFmpeg (`-i soundtrack.wav`). FFmpeg automatically mixes ("muxes") it with the generated video stream.
+*   **Sound Effects (SFX):** Because the render loop is not real-time, we cannot record the system audio. Instead, we implement a **Software Mixer**. When a game event triggers a sound (e.g., "Jump"), the engine mathematically adds the sound's waveform data to a memory buffer. This raw PCM audio buffer is then piped to FFmpeg alongside the video frames, ensuring frame-perfect synchronization.
 
-**Why It's an Improvement:**
-*   **Decoupling:** The `CoinCollectionSystem` no longer needs to know about the audio system or the UI. It simply announces that a coin was collected by publishing a `CoinCollectedEvent`. Any number of other systems can then react to that event without the original system's knowledge. For example, an `AudioConductor` can listen for the event to play a sound, and a `ScoreSystem` can listen for it to update the player's score.
-*   **Clarity:** This creates a clear, one-way data flow (`System` -> `Event` -> `Conductor`) that is easy to follow and debug.
-*   **Performance:** It's faster than the topic-based bus described in `docs/Design.md` because it uses Rust's type system for event routing, avoiding runtime string matching and dynamic type casting.
-*   **Pragmatism:** It's a significant and practical step towards the ideal ECSC architecture that can be implemented incrementally.
-
----
-
-### Action Plan for Implementation
-
-Here is a step-by-step guide for how we can implement this feature in a future session.
-
-**Step 1: Create the Core Event Bus Module**
-1.  Create a new file: `src/ecs/event.rs`.
-2.  Inside this file, define a generic `EventBus` struct that can store and retrieve events based on their type. A good approach is to use a `HashMap` that maps a `TypeId` to a `Vec<Box<dyn Any>>`.
-3.  Implement two key methods on the `EventBus`:
-    *   `publish<T: 'static>(&mut self, event: T)`: Adds an event to the correct queue.
-    *   `read<T: 'static>(&self) -> impl Iterator<Item = &T>`: Allows a system to read all events of a specific type for the current frame.
-
-**Step 2: Integrate the Event Bus into the `World`**
-1.  In `src/ecs/world.rs`, add the `EventBus` as a public field to the `World` struct: `pub event_bus: EventBus`.
-2.  Initialize it in `World::new()`.
-3.  Add a `clear_events()` method to `World` that clears all event queues in the `event_bus`.
-
-**Step 3: Define and Publish the First Event**
-1.  In `src/ecs/event.rs`, define our first event struct: `pub struct CoinCollectedEvent;`.
-2.  In `src/ecs/systems/coin_collection.rs`, modify the `CoinCollectionSystem`. Instead of sending a message to the `audio_sender`, it will now publish the new event: `world.event_bus.publish(CoinCollectedEvent);`.
-
-**Step 4: Create a "Conductor" System to Consume the Event**
-1.  Create a new system file: `src/ecs/systems/audio_conductor.rs`.
-2.  Define a new `AudioConductorSystem` struct.
-3.  In its `update` method, it will read events from the bus:
-    ```rust
-    for _event in world.event_bus.read::<CoinCollectedEvent>() {
-        // Send the sound command to the audio manager via the context
-        let _ = context.audio_sender.send(AudioEvent::PlaySound("coin_pickup".to_string()));
-    }
-    ```
-
-**Step 5: Update the Main Application Loop**
-1.  In `app.rs`, remove the direct call to the `AudioSystem`.
-2.  Add the new `AudioConductorSystem` to the list of systems that are run each frame.
-3.  At the end of the main update phase (after all systems have run), call `self.world.clear_events()` to prepare the bus for the next frame.
-
-### Future Refactoring Candidates
-Beyond the initial implementation, the following systems are prime candidates for being refactored to use the event bus, further decoupling the engine architecture:
-
-*   **Player Death:** A `PlayerDeathSystem` can publish a `PlayerDiedEvent`. This allows multiple, unrelated systems (audio, game state, UI, effects) to react to the player's death without being tightly coupled.
-*   **Level Transition:** A `LevelTransitionSystem` can publish a `LevelCompleteEvent`. The core `App` or a `GameFlowSystem` can then listen for this event to handle the complex logic of loading the next level.
-*   **Enemy Death:** Similar to player death, an `InteractionSystem` can publish an `EnemyDefeatedEvent`, allowing `ScoreSystem`, `AudioConductorSystem`, and `EffectsSystem` to react independently.
-*   **Player Movement Input:** The `InputSystem` can translate raw key presses into `MoveCommand` events. This decouples the input hardware from the player physics and allows other systems (like AI or networking) to control characters by publishing the same events.
-*   **Player Animation State:** The `PlayerAnimationSystem` can become a pure listener that reacts to state-change events like `PlayerLandedEvent` or `PlayerJumpedEvent`, rather than polling the player's components every frame. This simplifies the animation logic significantly.
+### 4. Output Format
+The system targets high-quality output suitable for archiving and uploading.
+*   **Codec:** **H.264** (x264) inside an **MP4** or **MKV** container.
+*   **Lossless Mode:** We use `-crf 0` (Constant Rate Factor 0) to tell the encoder to discard *no* data. The file size is larger than standard video but reasonable, and the image is mathematically identical to the raw pixels.
+*   **Pixel Format:** We use `-pix_fmt yuv444p` (or `rgb24`) to preserve sharp colored edges, which is critical for pixel art (standard `yuv420p` blurs color information).

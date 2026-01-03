@@ -1,81 +1,82 @@
-//! This module defines the common traits and context structs for all ECS systems.
+//! # Manager: System Infrastructure
+//! 
+//! This module defines the architectural backbone for the ECS Systems. 
+//! It provides the 'System' trait and the shared 'Context' structs that 
+//! grant systems safe, scoped access to global engine resources.
 
-pub mod animation_update;
-pub mod audio;
-pub mod audio_conductor;
-pub mod coin_collection;
-pub mod death;
-pub mod game_flow;
-pub mod input;
-pub mod interaction;
-pub mod invincibility;
-pub mod kill;
-pub mod level_transition;
-pub mod lifetime;
+pub mod movement;
 pub mod physics;
-pub mod player_animation;
-pub mod player_control;
-pub mod player_death;
-pub mod player_death_transition;
-pub mod respawn;
-pub mod respawn_timer;
-pub mod state_machine;
+pub mod animation_update;
+pub mod input;
 pub mod tile_collision;
+pub mod gui_render;
+pub mod debug_render;
+pub mod game_flow;
+pub mod transition;
+pub mod interaction;
+pub mod concept_health;
+pub mod concept_vitality;
+pub mod rule_player_death;
+pub mod rule_respawn;
+pub mod game_resolution;
+pub mod audio_synchronization;
+pub mod level_transition;
+pub mod spatial_update;
+pub mod enemy_rhythm;
+pub mod state_machine;
+pub mod audio;
+pub mod camera_shake;
+pub mod animation_synchronization;
+pub mod dormancy;
+pub mod menu;
+pub mod synchronization;
 
-use crate::config::{Config, GameConfig};
-use crate::input::InputState;
-use crate::level::Level;
 use crate::ecs::world::World;
+use crate::config::{Config, GameConfig};
+use crate::camera::Camera;
+use crate::level::Level;
+use crate::input::InputState;
 use std::sync::mpsc::Sender;
 use crate::audio::AudioEvent;
-use crate::camera::Camera;
+use crate::benchmarker::Benchmarker;
 
-/// A generic trait for all systems in the ECS.
-///
-/// Each system is responsible for a specific piece of game logic and operates
-/// on entities that have a certain set of components.
-pub trait System<T> {
-    /// Updates the system's logic for the current frame.
-    ///
-    /// # Arguments
-    ///
-    /// * `world` - A mutable reference to the `World` containing all entities and components.
-    /// * `context` - A mutable reference to a context struct providing access to shared resources.
-    fn update(&mut self, world: &mut World, context: &mut T);
-}
-
-/// A context struct that provides shared resources to most systems.
-///
-/// This allows systems to access global state like configuration, input,
-/// and level data without needing to own them.
 pub struct SystemContext<'a> {
-    /// A reference to the current level data.
-    pub level: &'a Level,
-    /// The current state of user input.
-    pub input_state: &'a InputState,
-    /// The global application configuration.
     pub config: &'a Config,
-    /// The game-specific configuration.
     pub game_config: &'a GameConfig,
-    /// A sender for dispatching audio events.
-    pub audio_sender: &'a Sender<AudioEvent>,
-    /// A mutable reference to the player's gold coin count.
-    pub gold_coin_count: &'a mut u32,
-    /// A mutable reference that can be set to trigger a level transition.
-    pub next_level: &'a mut Option<String>,
-    /// A mutable reference to the player's lives count.
-    pub lives: &'a mut u32,
-    /// The time elapsed since the last frame, in seconds.
     pub delta_time: f32,
+    pub camera: &'a mut Camera,
+    pub audio_sender: &'a Sender<AudioEvent>,
+    pub is_paused: bool,
+    pub is_attract_mode: bool,
+    pub benchmarker: &'a mut Benchmarker,
+    pub level: &'a Level,
+    pub input_state: &'a InputState,
+    pub next_level: &'a mut Option<String>,
+    pub current_soundtrack: Option<String>,
 }
 
-/// A specialized context struct for the `RespawnSystem`.
-///
-/// This provides the `RespawnSystem` with the specific resources it needs,
-/// namely mutable access to the camera.
-pub struct RespawnSystemContext<'a> {
-    /// A mutable reference to the game camera.
-    pub camera: &'a mut Camera,
-    /// The game-specific configuration.
+pub trait System<Context> {
+    fn update(&mut self, world: &mut World, context: &mut Context);
+}
+
+/// # Concept: Rhythm Context
+/// 
+/// A specialized resource bundle for the Enemy Rhythm system, focusing 
+/// exclusively on temporal and spatial data required for AI orchestration.
+#[allow(dead_code)]
+pub struct EnemyRhythmContext<'a> {
     pub game_config: &'a GameConfig,
+    pub delta_time: f32,
+    pub camera: &'a Camera,
+}
+
+/// # Concept: Render Context
+/// 
+/// A read-only resource bundle provided to visualization systems during 
+/// the draw phase. It prevents logic updates during rendering.
+pub struct RenderContext<'a> {
+    pub config: &'a Config,
+    pub game_config: &'a GameConfig,
+    pub player_entity: Option<crate::ecs::world::Entity>,
+    pub benchmarker: &'a crate::benchmarker::Benchmarker,
 }

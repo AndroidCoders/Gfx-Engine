@@ -21,29 +21,26 @@ This document outlines the agreed-upon coding conventions and design principles 
 ## Code Style
 
 - **Descriptive Naming**: All items, including variables, functions, structs, enums, and file names, must have clear and self-documenting names. Avoid short, cryptic names (e.g., `i`, `n`, `mgr`). Prefer longer, more descriptive names that make the code's purpose immediately obvious (e.g., `player_index`, `font_manager`).
+- **Systems Naming**: Systems should use a prefix-based PascalCase naming convention `System<Name>` or `System<Domain><Name>`.
+  - **Good:** `SystemPhysics`, `SystemInteraction`, `SystemAudioSynchronization`.
+  - **Bad:** `PhysicsSystem`, `InteractionSystem`, `AudioSynchronizationSystem`.
+- **Events Naming**: Events should use a prefix-based PascalCase naming convention `Event<Subject><Action>` or `Event<Category><Subject><Action>`.
+  - **Good:** `EventEntityDamaged`, `EventWorldLevelComplete`, `EventCoinCollected`.
+  - **Bad:** `EntityTookDamageEvent`, `LevelCompleteEvent`, `Event_Coin_Collected`.
 - **Standard Formatting (`rustfmt`)**: All code will be formatted using the standard `rustfmt` tool to ensure a consistent style.
 - **Linter Suggestions (`clippy`)**: Code should adhere to the recommendations of the `clippy` linter to follow idiomatic Rust practices.
 
 ## Documentation and Commenting
 
-We adhere to a "comment-first" philosophy. Good comments are crucial for maintainability and collaboration.
+We adhere to a mandatory **3-Level Documentation Standard** to support our WYSIWID architecture. Every module must provide a clear Identity, Intent, and Logical explanation.
 
-- **High-Level Documentation (`///`)**: All public items (functions, structs, enums, etc.) must have high-level doc-comments that explain their purpose and the "why" behind their existence. Follow the best practices outlined in `docs/Documentation.md`.
+See [**Documentation.md**](Documentation.md) for the detailed standard and examples.
 
-- **Implementation Comments (`//`)**: Use standard comments to clarify complex, non-obvious, or important parts of an implementation.
+- **Level 1: Module Identity (`//!`)**: Define the file's role (Concept or Synchronization).
+- **Level 2: Function Intent (`///`)**: Define the semantic purpose of every function.
+- **Level 3: Logic Implementation (`//`)**: Step-by-step logic blueprints within functions.
 
-- **Placeholder-Driven Development**: Before writing the implementation for a complex function, write out the high-level logic as a series of comments. This "plan" serves as a placeholder, clarifies your thinking, and makes the code easier for others to review and understand.
-
-  ```rust
-  // Example of placeholder-driven development
-  fn process_complex_data(&mut self, data: &Data) {
-      // 1. Validate the incoming data structure.
-      // 2. Find the corresponding entity in the world.
-      // 3. If found, update its state based on the data.
-      // 4. If not found, create a new entity.
-      // 5. Trigger a sound effect for feedback.
-  }
-  ```
+- **Placeholder-Driven Development**: Before writing the implementation for a complex function, write out the high-level logic as a series of Level 3 comments. This "plan" serves as a placeholder, clarifies your thinking, and makes the code easier for others (and AI assistants) to review and understand.
 
 ## Error Handling
 
@@ -92,6 +89,12 @@ We also follow these principles for development:
 To ensure the project remains robust, maintainable, and easy to contribute to, we adhere to the following principles of incremental and modular development:
 
 *   **One Feature at a Time:** Each new feature should be developed in a dedicated branch and be self-contained. This practice, often referred to as "atomic changes", ensures that we can test each feature in isolation and merge it with confidence. Before starting a new feature, the current one must be 100% complete and tested.
+
+*   **Module Atomicity and Size Limits:**
+    *   **Size Limit:** All source code modules (`.rs` files) should ideally be between **200-300 lines of code**. This ensures they are easy to comprehend at a glance.
+    *   **Maximum Limit:** Any module exceeding **500 lines** is considered a "Broken Window" and must be refactored into smaller, more focused modules.
+    *   **Single Responsibility:** Each module must have responsibility for **exactly one process**. Combining multiple domains (e.g., Physics and UI) in a single file is strictly prohibited.
+    *   **Atomic Logic:** Systems and Rules should be "Atomic"—they should perform one discrete task well.
 
 *   **Modularity and Decoupling:** The codebase is designed to be highly modular. When adding or modifying a feature, changes should be confined to a single module whenever possible. This reduces the risk of unintended side effects in other parts of theapplication and makes the code easier to understand, test, and refactor.
 

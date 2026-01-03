@@ -1,15 +1,18 @@
-//! This system is responsible for processing all pending audio events.
+//! # Concept: Audio Processing
+//! 
+//! This module acts as the hardware bridge for the global audio engine. 
+//! It is responsible for flushing the internal audio request queues and 
+//! ensuring that sounds and music are physically processed by the backend.
 
 use crate::ecs::systems::System;
-use crate::ecs::world::World;
-use crate::audio::GameAudioManager;
 
-/// The system that processes the audio event queue.
-pub struct AudioSystem;
-impl System<GameAudioManager> for AudioSystem {
-    /// Calls the `process_events` method on the `GameAudioManager` to play
-    /// any sounds that have been queued by other systems in the current frame.
-    fn update(&mut self, _world: &mut World, context: &mut GameAudioManager) {
-        context.process_events();
+/// A system that triggers the physical playback of all queued audio events.
+pub struct SystemAudio;
+
+impl System<crate::audio::GameAudioManager> for SystemAudio {
+    /// Commands the global audio manager to execute pending playback and loading tasks.
+    fn update(&mut self, _world: &mut crate::ecs::world::World, audio_manager: &mut crate::audio::GameAudioManager) {
+        // 1. Process the entire queue of pending audio events (sounds, music, fades).
+        audio_manager.process_events();
     }
 }

@@ -5,8 +5,8 @@ height = 1080
 fullscreen = true
 vsync = true
 scaling_quality = "pixelart"
-virtual_width = 1920
-virtual_height = 1080
+virtual_width = 480
+virtual_height = 270
 background_color = [0, 0, 0]
 camera_tightness = 0.5
 camera_slow_zone = 0.05
@@ -16,6 +16,7 @@ camera_vertical_tightness = 0.1
 camera_falling_tightness = 0.9
 camera_falling_velocity_threshold = 1.0
 camera_lookahead_distance = 100.0
+camera_smoothing_speed = 0.1
 
 [input]
 left = "Left"
@@ -25,18 +26,24 @@ quit = "Escape"
 debug_toggle = "F1"
 
 [debug]
-show_debug_info = true
+show_debug_info = false
 debug_draw_collision_boxes = true
+text_start_x = 10
+text_start_y = 100
+text_line_spacing = 30
 
 [physics]
-gravity = 0.9
-max_speed = 4.0
-entity_max_fall_speed = 10.0
-acceleration = 0.5
-deceleration = 0.5
-jump_strength = -9.0
-jump_hold_force = 0.45
+gravity = 3200.0
+max_speed = 220.0
+entity_max_fall_speed = 600.0
+acceleration = 800.0
+deceleration = 1000.0
+jump_strength = -550.0
+jump_hold_force = 1700.0
 max_jump_time = 15
+air_control_factor = 0.3
+velocity_threshold = 1.0
+air_control_damping = 2.0
 
 [game]
 start_level = "assets/levels/world_1_level_1/level.tmx"

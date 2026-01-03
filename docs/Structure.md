@@ -1,4 +1,4 @@
-File version: 1.06
+File version: 1.07
 
 **TLDR:**
 This document provides an overview of the `GfX-Engine` project's file structure:
@@ -11,6 +11,7 @@ docs/: Folder for The Guiding Documents.
 docs/Home.md: Project Homepage.
 docs/Structure.md: File Structure Overview.
 docs/Product.md: Product Description.
+docs/Architecture.md: Engine Architecture (WYSIWID).
 docs/Tech.md: Technology Stack.
 docs/Tasks.md: Project Tasks (Product Backlog).
 docs/Design.md: Design & Architecture.
@@ -29,7 +30,8 @@ src/ecs/mod.rs: Declares the sub-modules of the `ecs` crate.
 src/ecs/world.rs: Defines the `World` that holds all entities and components.
 src/ecs/component.rs: Defines all components used in the ECS.
 src/ecs/event.rs: Defines the type-based event bus and event structs.
-src/ecs/systems/: Contains all the systems that operate on entities.
+src/ecs/systems/: Contains modular systems (e.g., `lifecycle.rs`, `physics.rs`, `interaction.rs`).
+src/ecs/systems/mod.rs: Defines common system traits and context structs.
 src/renderer.rs: Handles all drawing operations.
 src/physics.rs: Contains generic physics and collision detection logic.
 src/level.rs: Manages loading and representing game levels from Tiled `.tmx` files.

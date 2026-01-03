@@ -1,104 +1,129 @@
-// src/enemy/states.rs
-
-//! Defines the enemy's specific states and the logic for each state.
+//! # Concept: Enemy Behavior (Patrol)
+//! 
+//! This module defines the logical states for automated enemies. 
+//! It provides the 'Patrol' behavior, where an entity moves horizontally 
+//! and automatically reverses direction when it detects physical obstacles 
+//! or upcoming platform ledges.
 
 use crate::state_machine::State;
 use crate::ecs::world::{World, Entity};
 use crate::ecs::systems::SystemContext;
+use crate::ecs::component::MovementIntention;
 
-/// Represents the patrolling state for an enemy.
-///
-/// In this state, the enemy moves horizontally until it encounters a wall
-/// or the edge of a platform, at which point it reverses direction.
+/// The primary state for ground-based automated enemies.
 pub struct PatrolState;
 
+impl PatrolState {
+    pub fn new() -> Self { Self }
+}
+
+impl Default for PatrolState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl State for PatrolState {
-    /// Called when the enemy enters the `PatrolState`.
-    fn enter(&mut self) {
-        // println!("Entering PatrolState"); // Debug print
-    }
+    fn enter(&mut self) {}
+    fn exit(&mut self) {}
 
-    /// Called when the enemy exits the `PatrolState`.
-    fn exit(&mut self) {
-        // println!("Exiting PatrolState"); // Debug print
-    }
-
-    /// Updates the enemy's velocity based on its patrol speed.
-    ///
-    /// If the enemy's horizontal velocity is zero, it is set to the configured
-    /// patrol speed. The actual movement is handled by the `PhysicsSystem`.
+    /// Applies the current patrol intention based on the entity's movement direction.
     fn update_with_context(&mut self, world: &mut World, _context: &mut SystemContext, entity: Entity) {
-        if let Some(patrol) = world.patrols.get(&entity)
-            && let Some(vel) = world.velocities.get_mut(&entity)
-                && vel.0.x == 0.0 {
-                    vel.0.x = patrol.speed;
-                }
+        // 1. Retrieve the entity's current intended movement direction.
+        let dir = if let Some(patrol) = world.patrols.get(&entity) {
+            patrol.direction
+        } else {
+            1.0
+        };
+        
+        // 2. Publish a movement intention to the motor system.
+        world.add_movement_intention(entity, MovementIntention { x: dir });
     }
 
-    /// Checks for conditions that would cause the enemy to change its patrol direction.
-    ///
-    /// This includes detecting walls and the edges of platforms. If a wall or
-    /// edge is detected, the enemy's horizontal velocity is reversed.
-    /// Currently, enemies always remain in the `PatrolState`.
+    /// Evaluates environmental constraints to determine when to reverse movement direction.
     fn transition_with_context(&mut self, world: &mut World, context: &mut SystemContext, entity: Entity) -> Option<Box<dyn State>> {
         let is_grounded = world.is_grounded(entity);
+        
+        let mut should_reverse = false;
+        let mut current_dir = 1.0;
+        let mut enemy_width = 32.0;
+        let mut enemy_height = 32.0;
+        let mut pos_x = 0.0;
+        let mut pos_y = 0.0;
+        
+        // 1. Gather the physical state required for environmental probing.
+        if let Some(pos) = world.positions.get(&entity) {
+            pos_x = pos.0.x;
+            pos_y = pos.0.y;
+        }
+        
+        if let Some(collision) = world.collisions.get(&entity) {
+            enemy_width = collision.rect.width() as f32;
+            enemy_height = collision.rect.height() as f32;
+        }
+        
+        if let Some(patrol) = world.patrols.get(&entity) {
+            current_dir = patrol.direction;
+        }
 
-        if let Some(vel) = world.velocities.get_mut(&entity)
-            && let Some(pos) = world.positions.get(&entity)
-            && let Some(collision) = world.collisions.get(&entity) {
-                let tile_width = context.level.tileset.tile_width as f32;
-                let tile_height = context.level.tileset.tile_height as f32;
-                let enemy_width = collision.rect.width() as f32;
-                let enemy_height = collision.rect.height() as f32;
+        let tile_width = context.level.tileset.tile_width as f32;
+        let tile_height = context.level.tileset.tile_height as f32;
 
-                let mut should_reverse = false;
+        // 2. Check for authoritative wall hits reported by the physics engine (Priority 1).
+        if let Some(wall_hit) = world.wall_hits.get(&entity) {
+            should_reverse = true;
+            if let Some(patrol) = world.patrols.get_mut(&entity) {
+                patrol.direction = wall_hit.normal_x;
+            }
+        } 
+        else {
+            // 3. No wall hit. Check environmental triggers (Priority 2).
+            
+            // A. Map Boundaries (Predictive)
+            let wall_check_x = if current_dir > 0.0 {
+                pos_x + enemy_width + 4.0
+            } else {
+                pos_x - 4.0
+            };
 
-                // Check for platform edges if grounded
-                if is_grounded {
-                    let check_x = if vel.0.x > 0.0 {
-                        // Probe is at the front-right corner
-                        pos.0.x + enemy_width
-                    } else {
-                        // Probe is at the front-left corner
-                        pos.0.x
-                    };
+            let map_width = context.level.map.tiles[0].len() as f32 * tile_width;
+            
+            if wall_check_x < 0.0 || wall_check_x > map_width {
+                should_reverse = true;
+            } 
+            else if is_grounded {
+                // B. Ledges (Only if grounded and not at map edge)
+                let check_x = if current_dir > 0.0 {
+                    pos_x + enemy_width + 1.0
+                } else {
+                    pos_x - 1.0
+                };
 
-                    // Check one pixel below the enemy's feet to detect platform edge
-                    let ground_check_y = pos.0.y + enemy_height + 1.0;
+                // Check one pixel below feet to detect upcoming ledges.
+                let ground_check_y = pos_y + enemy_height + 1.0;
+                let ground_tile_x = (check_x / tile_width).floor() as usize;
+                let ground_tile_y = (ground_check_y / tile_height).floor() as usize;
 
-                    let ground_tile_x = (check_x / tile_width).floor() as usize;
-                    let ground_tile_y = (ground_check_y / tile_height).floor() as usize;
-
-                    if !context.level.is_solid(ground_tile_x, ground_tile_y) {
-                        should_reverse = true;
-                    }
-                }
-
-                // --- Wall Detection ---
-                if !should_reverse {
-                    let next_x = pos.0.x + vel.0.x;
-                    let wall_check_x = if vel.0.x > 0.0 {
-                        next_x + enemy_width
-                    } else {
-                        next_x
-                    };
-                    let wall_tile_x = (wall_check_x / tile_width).floor() as usize;
-                    let wall_tile_y = (pos.0.y / tile_height).floor() as usize; // Check at head height
-
-                    if context.level.is_solid(wall_tile_x, wall_tile_y) {
-                        should_reverse = true;
-                    }
-                }
-
-                if should_reverse {
-                    vel.0.x *= -1.0;
+                if !context.level.is_solid(ground_tile_x, ground_tile_y) {
+                    should_reverse = true;
                 }
             }
-        None // Always stay in PatrolState for now
+        }
+
+        // 4. Apply reversal logic: zero velocity and flip direction.
+        if should_reverse {
+            if let Some(vel) = world.velocities.get_mut(&entity) {
+                vel.0.x = 0.0; 
+            }
+            
+            // Only flip blindly if we didn't already set the direction via WallHit.
+            if !world.wall_hits.contains_key(&entity) && let Some(patrol) = world.patrols.get_mut(&entity) {
+                patrol.direction *= -1.0;
+            }
+        }
+        
+        None 
     }
 
-    /// Returns the name of this state for debugging purposes.
-    fn get_name(&self) -> &str {
-        "PatrolState"
-    }
+    fn get_name(&self) -> &str { "PatrolState" }
 }

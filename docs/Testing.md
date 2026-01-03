@@ -1,76 +1,75 @@
-# Testing Strategy
+# Testing Strategy (v2 - Blast Radius Standard)
 
-**TLDR:**
-* This document outlines the testing philosophy and strategy for the `GfX-Engine` project.
-* We follow the "Test Ruthlessly" principle from The Pragmatic Programmer.
-* Our strategy is based on the Testing Pyramid: a foundation of **Unit Tests**, a smaller number of **Integration Tests**, and manual **Playtesting**.
-* All new features must be accompanied by tests.
+This document defines the testing philosophy and mandatory requirements for the `Gfx-Engine`. Our goal is to ensure that the engine is stable, predictable, and highly resistant to "destructive edits" during refactoring.
 
-## Philosophy
+## 1. Philosophy: Blast Radius Reduction
 
-Testing is not an afterthought; it is an integral part of our development process. Our goal is to catch bugs as early as possible and to build a robust, reliable engine. Every developer is responsible for writing tests for the code they create.
+In a WYSIWID architecture, we want the "blast radius" of any change to be as small as possible. Testing is the primary tool for verifying this. 
 
-We embrace the "Shift-Left" approach, where testing happens continuously throughout the development cycle, not as a final phase.
+*   **Small Changes, Immediate Verification:** Every refactor or feature must be verified by a test before it is merged.
+*   **Identify Destructive Edits:** Tests must be sensitive enough to identify if a change in one system (e.g., Physics) has unintended consequences in another (e.g., Interaction).
+*   **Reversion Safety:** If a test fails, we can confidently revert to the last known good state, knowing exactly what broke.
 
-## The Testing Pyramid
+---
 
-Our testing strategy is structured like a pyramid:
+## 2. Mandatory Testing Requirements
 
-### 1. Unit Tests (The Foundation)
+To achieve our stability goals, the `Gfx-Engine` enforces the following rules:
 
-These are small, fast tests that verify a single piece of code (like a function or method) in isolation. They form the base of our testing pyramid, and we should have a large number of them.
+### A. The "One Test Per Module" Rule
+Every source code module (`.rs` file) must contain **at least one** automated test.
+*   **Purpose:** Acts as a "Smoke Test" to ensure the module compiles and its basic logic is sound.
+*   **Location:** Placed in a `#[cfg(test)] mod tests` block at the bottom of the file.
 
-*   **Purpose:** To test individual algorithms, logic, and boundary conditions.
-*   **Example:** Testing a physics calculation, a state transition, or a configuration parsing function.
+### B. The "System Contract" Rule
+Main gameplay systems (Physics, Interaction, Health, etc.) must have **1-2 specific contract tests**.
+*   **Purpose:** Verifies the "Main Responsibility" of the system. 
+*   **Example:** A physics test must verify that an entity with a downward velocity actually changes its Y-position after an update.
 
-#### System Unit Tests
+### C. Doc Tests
+All public functions must include a documentation example (`/// # Examples`). These are automatically verified by `cargo test`.
 
-For our ECSC architecture, every ECS System should have a corresponding unit test. The methodology is as follows:
-1.  **Setup:** Create a mock `World` and a mock `SystemContext`.
-2.  **Arrange:** Populate the `World` with the specific entities and components required for the test case.
-3.  **Act:** Create an instance of the system under test and call its `update()` method, passing in the mock `World` and `SystemContext`.
-4.  **Assert:** Inspect the state of the `World` after the system has run and assert that the components were modified as expected.
+---
 
-This approach provides a perfect, isolated sandbox for verifying a system's logic, which is ideal for an AI-assisted, test-driven workflow.
+## 3. The ECS System Test Pattern
 
-### 2. Integration Tests (The Middle)
+For our Event-Driven ECS, we use a standardized pattern for testing systems in isolation (Headless Mode):
 
-These tests verify that different modules of the engine work together correctly. They are larger than unit tests and test a complete "slice" of functionality.
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ecs::world::World;
+    use crate::ecs::systems::SystemContext;
 
-*   **Purpose:** To find bugs at the boundaries between components (e.g., does the `InputSystem` correctly cause a state change in the `Player` that the `AnimationSystem` then uses to play the right animation?).
-*   **Example:** A test that creates a `World`, adds entities, runs the systems for a few frames, and then asserts that the state of the `World` is correct.
+    #[test]
+    fn test_system_contract() {
+        // 1. Setup: Create a minimal World and Context.
+        let mut world = World::new();
+        // 2. Arrange: Add the target entity and its components.
+        let entity = world.create_entity();
+        world.add_health(entity, Health { current: 10, max: 10 });
+        
+        // 3. Act: Execute the system's update logic.
+        let mut system = ConceptHealth;
+        system.update(&mut world, &mut mock_context);
 
-#### Event Integration Tests
+        // 4. Assert: Verify the outcome.
+        assert_eq!(world.healths.get(&entity).unwrap().current, 9);
+    }
+}
+```
 
-To verify our event-driven architecture, we create integration tests that confirm the entire chain of cause and effect for a given event.
+---
 
-1.  **Setup:** Create a `World` with an `EventBus`.
-2.  **Arrange:** Populate the `World` with the necessary entities and publish a specific event to the `EventBus` (e.g., `PlayerStompedEnemyEvent`).
-3.  **Act:** Run the relevant "conductor" systems (e.g., `AudioConductorSystem`, `ScoreSystem`).
-4.  **Assert:** Check that the correct downstream effects have occurred. For example, assert that the `AudioSystem` received a `PlaySound` command or that the player's score component was incremented.
+## 4. Industry Best Practice: Regression Replays
 
-This ensures that when a new event or listener is added, it integrates correctly with the rest of the engine without causing unintended side effects.
+To ensure high-fidelity stability, we utilize our **Deterministic Replay System**:
+*   **Golden Masters:** We maintain a set of "Golden Replay" files.
+*   **Verification:** A test can run a replay headlessly and compare the final `World` state against a known baseline. Any deviation in physics or logic will be immediately flagged.
 
-### 3. End-to-End & Playtesting (The Peak)
-
-This level involves testing the game as a whole, from the user's perspective.
-
-*   **Purpose:** To ensure the game is fun, the difficulty is balanced, and to find bugs that only emerge from complex, unscripted interactions.
-*   **Manual Playtesting:** This is the most important part of E2E testing for a game. We must regularly play the game to test the "feel" and perform **Exploratory Testing** (creatively trying to break the game).
-*   **Soak Testing:** For finding long-term issues like memory leaks, the game should be left running for extended periods.
-
-## Testing in Rust
-
-We leverage Rust's excellent built-in testing framework.
-
-*   **Unit Tests:** Are placed in a `#[cfg(test)] mod tests { ... }` block within the same file as the code they are testing. This allows them to access private functions if necessary.
-*   **Integration Tests:** Are placed in the `tests/` directory at the root of the project. Each file is a separate test crate that uses the engine's public API, just like a real consumer of the engine would.
-*   **Documentation Tests:** All public functions should have documentation examples (`/// # Examples`). These examples are run as tests by `cargo test`, ensuring our documentation is always correct.
-
-## Our Gfx-Engine Testing Strategy
-
-1.  **Doc Tests are Mandatory:** All new public functions and methods must have at least one documentation test example.
-2.  **Unit Test Critical Logic:** Any complex or critical logic (especially in physics, state machines, and data parsing) must be covered by unit tests.
-3.  **Integration Tests for Core Gameplay:** We will build integration tests in the `tests/` directory to verify core gameplay loops and system interactions.
-4.  **Playtest Every Sprint:** As part of the "Sprint Review," we will manually playtest the new features to ensure they work as expected and "feel right."
-5.  **Follow the Definition of Done:** No task is considered "Done" until its corresponding tests are written and passing, as per our `Workflow.md`.
+## 5. Definition of Done
+A task is only **"Done"** when:
+1.  Logic is implemented and blueprinted (Level 3 comments).
+2.  The "One Test Per Module" rule is satisfied.
+3.  All existing project tests pass (`cargo test`).

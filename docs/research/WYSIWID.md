@@ -12,58 +12,18 @@ This document summarizes the key concepts from the "What You See Is What It Does
 
 3.  **Legibility and Modularity:** The result is a highly "legible" architecture. To understand what the software *does*, you simply read the list of `Synchronizations` (events). To understand *how* it does it, you look inside the implementation of a specific `Concept` (system). This makes the entire application much easier to reason about, modify, and extend.
 
-### How to Apply This to `Gfx-Engine`
+### How This is Applied in `Gfx-Engine`
 
-The `Gfx-Engine` is already partially aligned with this pattern, but we can take it much further. The `app.rs` file currently acts as a central orchestrator that has direct dependencies on almost every other module. We can improve this by treating our core modules as true, independent services.
+The engine successfully implements the WYSIWID pattern using a modular ECS structure:
 
-Here is a proposed plan to refactor the engine towards the WYSIWID pattern:
+**1. Concepts as Modular Systems:**
+Core logic is encapsulated in modular systems (e.g., `SystemPhysics`, `SystemAudio`, `SystemLifecycle`) implementing a unified `System<T>` trait.
 
-**1. Formalize "Concepts" with a `Service` Trait:**
+**2. The Explicit Scheduler (`SystemManager`):**
+Instead of a generic `ServiceManager`, the engine uses an explicit `SystemManager`. This manager defines the exact execution order using a `match` block on the `GameState` resource, making the engine's behavior legible at a glance.
 
-We can introduce a generic `Service` trait that all our major modules will implement.
-
-```rust
-// In a new file, e.g., src/service.rs
-use crate::ecs::world::World;
-
-pub trait Service {
-    fn initialize(&mut self, world: &mut World);
-    fn update(&mut self, world: &mut World, context: &mut SystemContext);
-    // Potentially add shutdown(), etc. later
-}
-```
-
-**2. Create a `ServiceManager`:**
-
-We can create a `ServiceManager` that is responsible for holding all the services and running them in the correct order. This would dramatically simplify the main loop in `app.rs`.
-
-```rust
-// In a new file, e.g., src/service_manager.rs
-pub struct ServiceManager {
-    services: Vec<Box<dyn Service>>,
-}
-
-impl ServiceManager {
-    pub fn add(&mut self, service: Box<dyn Service>) { ... }
-    pub fn update_all(&mut self, world: &mut World, context: &mut SystemContext) {
-        for service in &mut self.services {
-            service.update(world, context);
-        }
-    }
-}
-```
-
-**3. Refactor `app.rs` to Use the `ServiceManager`:**
-
-The main loop in `app.rs` would become much cleaner. It would simply initialize the `ServiceManager`, add all the services (Physics, Rendering, Audio, etc.), and then call `service_manager.update_all()` each frame.
-
-**4. Fully Implement the Event Bus (The "Synchronization" Layer):**
-
-This is the most critical piece. By implementing the type-based event bus we designed, we provide the "Synchronization" layer that allows the independent services to communicate without being coupled to each other.
-
-*   The `PhysicsSystem` (part of the `PhysicsService`) would publish a `CollisionEvent`.
-*   The `AudioService` would contain the `AudioConductorSystem`, which would listen for `CollisionEvent`s and play a sound.
-*   The `PhysicsService` would have no knowledge of the `AudioService`, and vice-versa.
+**3. The Synchronization Layer:**
+The `SystemSynchronization` and `SystemAudioSynchronization` acts as the "glue" layer, listening for strongly-typed events from the `EventBus` and triggering secondary actions in other systems.
 
 ### The End Result
 
