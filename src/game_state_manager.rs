@@ -122,6 +122,10 @@ impl GameStateManager {
         let _ = audio_manager.event_sender().send(crate::audio::AudioEvent::PlayMusic(name.to_string(), crate::audio::PlaySoundParams::default()));
     }
 
+    /// Advances the game logic by one fixed timestep.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second during the physics/logic phase.
+    /// Manages replay recording/playback, system updates, and level transitions.
     #[allow(clippy::too_many_arguments)]
     pub fn update(&mut self, delta_time: f32, config: &Config, game_config: &GameConfig, input_state: &InputState, audio_manager: &mut GameAudioManager, texture_manager: &mut TextureManager, texture_creator: &TextureCreator<WindowContext>) -> Result<(), String> {
         if self.world.game_state == GameState::GameOver {
@@ -271,6 +275,10 @@ impl GameStateManager {
         Ok(())
     }
 
+    /// Renders the visual state of the game world and UI.
+    ///
+    /// ⚠️ **Hotpath**: Called every frame at monitor refresh rate.
+    /// Delegates to specific render systems based on the current `GameState`.
     #[allow(clippy::too_many_arguments)]
     pub fn draw(&mut self, renderer: &mut crate::renderer::Renderer, texture_manager: &TextureManager, config: &Config, game_config: &GameConfig, _input_state: &InputState, frame_count: u64, fps: u32, show_debug_info: bool, _alpha: f32) -> Result<(), String> {
         if let GameState::Menu(_) = self.world.game_state { self.menu_system.draw(renderer, &self.menu_state, &self.font_manager)?; return Ok(()); }

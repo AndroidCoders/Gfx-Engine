@@ -28,6 +28,13 @@ impl Default for SystemWorldLevelTransition {
 
 impl System<SystemContext<'_>> for SystemWorldLevelTransition {
     /// Monitors goal proximity and coordinates the visual/auditory transition sequence.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
+    ///
+    /// # Side Effects
+    /// * Modifies `context.next_level` to trigger a scene load.
+    /// * Publishes [crate::ecs::event::EventStartTransition].
+    /// * Triggers audio fade via [crate::audio::AudioEvent::FadeOutMusic].
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
         // 1. Check if a previously triggered visual transition has completed.
         if world.transition_finished

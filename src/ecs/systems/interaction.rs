@@ -12,7 +12,12 @@ use crate::ecs::systems::{System, SystemContext};
 pub struct SystemInteraction;
 
 impl System<SystemContext<'_>> for SystemInteraction {
-    /// Detects physical intersections between collidable entities and publishes EventCollision.
+    /// Detects physical intersections between collidable entities.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second. Performs spatial queries.
+    ///
+    /// # Side Effects
+    /// * Publishes [crate::ecs::event::EventCollision] when two active entities intersect.
     fn update(&mut self, world: &mut crate::ecs::world::World, _context: &mut SystemContext<'_>) {
         // 1. Collect all entities that have a physical presence (Collision component).
         let entities: Vec<_> = world.collisions.keys().copied().collect();

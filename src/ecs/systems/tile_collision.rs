@@ -13,6 +13,8 @@ pub struct SystemTileCollision;
 
 impl System<SystemContext<'_>> for SystemTileCollision {
     /// Resolves entity positions against geometry and updates grounded/wall-hit facts.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second. Contains tight physics loops.
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext) {
         // 1. Reset state tags from the previous frame.
         world.grounded_tags.clear();

@@ -35,6 +35,11 @@ impl SystemTransition {
     }
 
     /// Advances transition timers and publishes completion facts when finished.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
+    ///
+    /// # Side Effects
+    /// * Publishes [crate::ecs::event::EventTransitionComplete] when duration is reached.
     pub fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
         // 1. Monitor the event bus for new transition requests.
         for event in world.event_bus.read::<EventStartTransition>() {
@@ -67,6 +72,8 @@ impl SystemTransition {
     }
 
     /// Renders the black shutter rectangles based on the current transition progress.
+    ///
+    /// ⚠️ **Hotpath**: Called every frame.
     pub fn draw(&self, renderer: &mut Renderer, _context: &RenderContext<'_>) -> Result<(), String> {
         let (screen_w, screen_h) = renderer.output_size();
 

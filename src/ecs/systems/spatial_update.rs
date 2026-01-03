@@ -10,26 +10,17 @@ use crate::ecs::systems::{System, SystemContext};
 pub struct SystemSpatialUpdate;
 
 impl System<SystemContext<'_>> for SystemSpatialUpdate {
-    /// Clears and repopulates the spatial grid with active entity collision boxes.
+    /// Re-indexes all collidable entities into the spatial grid based on their current bounds.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second. Iterates over all physical entities.
     fn update(&mut self, world: &mut crate::ecs::world::World, _context: &mut SystemContext<'_>) {
-        // 1. Clear the grid from the previous frame's data.
+        // 1. Clear the previous frame's spatial index.
         world.spatial_grid.clear();
 
-        // 2. Collect all entities that have both physical presence (Collision) and Position.
-        let entities: Vec<_> = world.collisions.keys().copied().collect();
-
-        for entity in entities {
-            // 3. Skip dormant entities to save CPU cycles; they are excluded from current partitioning.
-            if world.is_dormant(entity) { continue; }
-
-            if let (Some(pos), Some(collision)) = (world.positions.get(&entity), world.collisions.get_mut(&entity)) {
-                // 4. Synchronize the abstract collision rectangle with the authoritative world position.
-                collision.rect.set_x(pos.0.x as i32);
-                collision.rect.set_y(pos.0.y as i32);
-
-                // 5. Re-file the entity into the grid cells overlapped by its updated bounding box.
-                world.spatial_grid.insert(entity, collision.rect);
-            }
+        // 2. Iterate over all entities with a collision component.
+        for (entity, collision) in &world.collisions {
+            // 3. Insert them into the grid based on their current bounding box.
+            world.spatial_grid.insert(*entity, collision.rect);
         }
     }
 }

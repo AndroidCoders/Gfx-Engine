@@ -30,6 +30,11 @@ impl Default for SystemEnemyRhythm {
 
 impl System<EnemyRhythmContext<'_>> for SystemEnemyRhythm {
     /// Orchestrates enemy rhythmic behavior based on incoming music beat facts.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
+    ///
+    /// # Side Effects
+    /// * Publishes [crate::ecs::event::EventEntityJumped] for the chosen enemy.
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut EnemyRhythmContext<'_>) {
         // 1. Listen for the Music Beat fact published by the Audio Conductor.
         if world.event_bus.read::<EventMusicBeat>().next().is_some() {

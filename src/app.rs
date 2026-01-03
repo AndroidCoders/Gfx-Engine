@@ -91,6 +91,9 @@ impl App {
     }
 
     /// Executes the persistent run loop using a Fixed Timestep Accumulator.
+    ///
+    /// ⚠️ **Hotpath**: The main loop runs continuously. The `update` phase runs at 120Hz, 
+    /// and the `render` phase runs at the monitor's refresh rate.
     pub fn run(&mut self) -> Result<(), String> {
         const FIXED_TIMESTEP: f32 = 1.0 / 120.0;
         let mut accumulator: f32 = 0.0;

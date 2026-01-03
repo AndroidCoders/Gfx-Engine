@@ -11,39 +11,21 @@ use crate::ecs::component::Direction;
 pub struct SystemAnimationSynchronization;
 
 impl System<SystemContext<'_>> for SystemAnimationSynchronization {
-    /// Evaluates entity state and updates animation controllers with the resolved clip names.
+    /// Synchronizes entity animation state with its physical and logical state.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
     fn update(&mut self, world: &mut crate::ecs::world::World, _context: &mut SystemContext<'_>) {
-        let entities: Vec<_> = world.animations.keys().copied().collect();
-
-        for entity in entities {
-            // Skip entities outside the active simulation range.
-            if world.is_dormant(entity) { continue; }
-
-            let mut next_anim = None;
-
-            // --- Rule Sets ---
-
-            // Rule Set 1: Resolve animations for the Player character.
-            if world.player_tags.contains_key(&entity) {
-                next_anim = self.resolve_player_animation(world, entity);
-            } 
-            // Rule Set 2: Resolve animations for Patrolling enemies.
-            else if let Some(patrol) = world.patrols.get(&entity) {
-                next_anim = self.resolve_patrol_animation(world, entity, &patrol.anim_prefix);
+        // 1. Synchronize Player Animation
+        let player_entities: Vec<_> = world.player_tags.keys().copied().collect();
+        for entity in player_entities {
+            // Priority 1: High-priority states (Damage/Death) override everything.
+            if let Some(state_comp) = world.state_components.get(&entity) {
+                let state_name = state_comp.state_machine.current_state.as_ref().map(|s| s.get_name()).unwrap_or("");
+                if state_name == "DyingState" || state_name == "DeadState" {
+                    // Animation is handled by the state machine entry/exit logic for these states.
+                    continue; 
+                }
             }
-
-            // --- Application ---
-            if let Some(anim_name) = next_anim
-                && let Some(animation) = world.animations.get_mut(&entity) {
-                    // Only update the controller if the animation has changed to avoid resetting frames.
-                    if animation.controller.current_animation_name() != Some(&anim_name)
-                        && animation.controller.has_animation(&anim_name) {
-                        animation.controller.set_animation(&anim_name);
-                    }
-            }
-        }
-    }
-}
 
 impl SystemAnimationSynchronization {
     /// Maps player physical state (grounded, velocity, direction) to animation clip names.

@@ -13,6 +13,8 @@ pub struct SystemDebugRender;
 
 impl SystemDebugRender {
     /// Renders collision boxes and performance overlays to the current frame.
+    ///
+    /// ⚠️ **Hotpath**: Called every frame when debug mode is active.
     #[allow(clippy::too_many_arguments)]
     pub fn update(
         &mut self,

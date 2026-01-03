@@ -1,6 +1,6 @@
 //! # Concept: Environment Physics
 //! 
-//! This module provides the engine's physical constraint solver. it is 
+//! This module provides the engine's physical constraint solver. It is 
 //! responsible for the pure mathematical task of resolving entity positions 
 //! against the static level geometry (tiles) and world boundaries.
 
@@ -8,6 +8,12 @@ use crate::ecs::component::{Position, Velocity};
 use crate::ecs::systems::SystemContext;
 
 /// Resolves vertical constraints and identifies surface contact.
+///
+/// ⚠️ **Hotpath**: Called for every moving entity every tick.
+///
+/// # Returns
+/// * `true` if the entity is grounded (touching a floor).
+/// * `false` otherwise.
 pub fn resolve_vertical_collisions(
     pos: &mut Position,
     vel: &mut Velocity,
@@ -69,6 +75,12 @@ pub fn resolve_vertical_collisions(
 }
 
 /// Resolves horizontal constraints and enforces authoritative world boundaries.
+///
+/// ⚠️ **Hotpath**: Called for every moving entity every tick.
+///
+/// # Returns
+/// * `Some(normal_x)` if a wall was hit (1.0 for left wall, -1.0 for right wall).
+/// * `None` if no horizontal collision occurred.
 pub fn resolve_horizontal_collisions(
     pos: &mut Position,
     vel: &mut Velocity,

@@ -13,11 +13,62 @@ use crate::audio::{AudioEvent, PlaySoundParams};
 pub struct SystemGameResolution;
 
 impl System<SystemContext<'_>> for SystemGameResolution {
+    /// Resolves entity death animations and final cleanup.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
-        self.handle_coin_collection(world, context);
-        self.handle_player_damage(world, context);
-        self.handle_enemy_stomp(world, context);
-        self.cleanup_dead(world);
+        // 1. Process entities marked with DeadTag.
+        let dead_entities: Vec<_> = world.dead_tags.keys().copied().collect();
+
+        for entity in dead_entities {
+            // 2. Check if this entity has a death animation configured (e.g., Enemy).
+            if let Some(pos) = world.positions.get(&entity) {
+                // If it's an enemy (or has a specific death effect), spawn the effect.
+                // For now, we hardcode a "puff" or "explosion" effect for enemies.
+                if world.enemy_tags.contains_key(&entity) {
+                    let explosion_config = &context.game_config.gameplay.explosion;
+                    
+                    let explosion_entity = world.create_entity();
+                    world.add_position(explosion_entity, crate::ecs::component::Position(*pos.0));
+                    world.add_renderable(explosion_entity, crate::ecs::component::Renderable {
+                        width: explosion_config.width,
+                        height: explosion_config.height,
+                        horizontal_offset: explosion_config.horizontal_offset,
+                        vertical_offset: explosion_config.vertical_offset,
+                        z_index: explosion_config.z_index,
+                        rotation: 0.0,
+                        flip_horizontal: false,
+                        flip_vertical: false,
+                    });
+                    
+                    if let Some(anim_config) = context.game_config.animation.get(&explosion_config.animation_name) {
+                        let mut controller = crate::animation::AnimationController::new();
+                        controller.add_animation("default", anim_config);
+                        controller.set_animation("default");
+                        world.add_animation(explosion_entity, crate::ecs::component::Animation { controller });
+                        
+                        // Lifetime matches the animation duration.
+                        world.add_lifetime(explosion_entity, Lifetime { timer: (anim_config.frame_count * anim_config.frame_duration) as f32 / 60.0 });
+                    }
+                }
+            }
+
+            // 3. Remove the entity from the world.
+            // Note: In a real ECS, we'd probably soft-delete or recycle IDs.
+            // For now, we just remove components to "kill" it.
+            // world.delete_entity(entity); // Assuming we had a delete method.
+            
+            // Minimal cleanup for now: remove visual/physical presence.
+            world.positions.remove(&entity);
+            world.velocities.remove(&entity);
+            world.accelerations.remove(&entity);
+            world.collisions.remove(&entity);
+            world.renderables.remove(&entity);
+            world.dead_tags.remove(&entity); // Remove tag so we don't process again.
+            
+            // If it was an enemy, remove the tag.
+            world.enemy_tags.remove(&entity);
+        }
     }
 }
 

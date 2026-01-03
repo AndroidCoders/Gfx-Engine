@@ -24,6 +24,8 @@ impl SystemCameraShake {
     }
 
     /// Updates trauma levels and calculates the current frame's camera offset.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
     pub fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
         // 1. Process explicit ScreenShake facts to increase trauma levels.
         for event in world.event_bus.read::<EventScreenShake>() {

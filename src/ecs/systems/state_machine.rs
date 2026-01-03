@@ -10,22 +10,26 @@ use crate::ecs::systems::{System, SystemContext};
 pub struct SystemStateMachine;
 
 impl System<SystemContext<'_>> for SystemStateMachine {
-    /// Updates the internal logical state of entities and handles state transitions.
+    /// Advances the logic of all active Hierarchical State Machines (HSMs).
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
-         // 1. Identify all entities that possess a State Machine.
-         let entity_ids: Vec<_> = world.state_components.keys().copied().collect();
-         
-         for entity in entity_ids {
-             // 2. Skip entities outside the active simulation range.
-             if world.is_dormant(entity) { continue; }
+        let entities: Vec<_> = world.state_components.keys().copied().collect();
 
-             // 3. Process the state update using a removal pattern to satisfy borrow checker requirements.
-             if let Some(mut state_comp) = world.state_components.remove(&entity) {
-                 // Execute the current state's logic and evaluate potential transitions.
-                 state_comp.state_machine.update_with_context(world, context, entity);
-                 // Restore the updated component to the world.
-                 world.state_components.insert(entity, state_comp);
-             }
-         }
+        for entity in entities {
+            // 1. Temporarily extract the state machine to avoid mutable borrow conflicts.
+            if let Some(mut state_comp) = world.state_components.remove(&entity) {
+                // 2. Execute the `update()` logic of the current state.
+                let next_state = state_comp.state_machine.update(entity, world, context);
+                
+                // 3. If a state transition occurred, handle exit/enter logic.
+                if next_state.is_some() {
+                    state_comp.state_machine.change_state(next_state, entity, world, context);
+                }
+
+                // 4. Return the state machine component to the world.
+                world.state_components.insert(entity, state_comp);
+            }
+        }
     }
 }

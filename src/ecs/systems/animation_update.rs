@@ -11,6 +11,8 @@ pub struct SystemAnimationUpdate;
 
 impl System<SystemContext<'_>> for SystemAnimationUpdate {
     /// Updates the playback position for all active animations.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
         // 1. Iterate over every entity currently playing an animation.
         for animation in world.animations.values_mut() {

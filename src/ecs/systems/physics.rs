@@ -11,6 +11,8 @@ pub struct SystemPhysics;
 
 impl System<SystemContext<'_>> for SystemPhysics {
     /// Applies global forces and local acceleration to update entity velocities.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second. Contains tight loops over entity components.
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
         // 1. Apply Gravity (Global Constant Force) to all affected entities.
         for (entity, _gravity) in world.gravity_tags.iter() {

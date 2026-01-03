@@ -12,6 +12,8 @@ pub struct SystemGameFlow;
 
 impl System<SystemContext<'_>> for SystemGameFlow {
     /// Responds to player death facts by decrementing lives and scheduling respawns.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second.
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
         // 1. Process all 'PlayerDied' facts published in the current frame.
         let events: Vec<EventPlayerDied> = world.event_bus.read::<EventPlayerDied>().cloned().collect();

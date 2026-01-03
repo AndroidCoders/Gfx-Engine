@@ -17,6 +17,13 @@ pub struct SystemSynchronization;
 
 impl System<SystemContext<'_>> for SystemSynchronization {
     /// Orchestrates the engine's response to disparate gameplay facts.
+    ///
+    /// ⚠️ **Hotpath**: Called 120x per second. Contains high-level rule logic.
+    ///
+    /// # Side Effects
+    /// * Publishes [EventStartTransition] during respawn.
+    /// * Publishes [EventCoinCollected] on collision with coins.
+    /// * Publishes [EventPlayerEnemyStomped] or [EventPlayerDamaged] on collision with enemies.
     fn update(&mut self, world: &mut crate::ecs::world::World, context: &mut SystemContext<'_>) {
         
         // --- 1. Rule: Orchestrate Respawn Sequence ---

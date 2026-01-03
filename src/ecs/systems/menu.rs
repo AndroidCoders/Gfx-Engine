@@ -15,6 +15,8 @@ pub struct SystemMenu;
 
 impl SystemMenu {
     /// Interprets input state to navigate menu indices and modify selector values.
+    ///
+    /// ⚠️ **Hotpath**: Called every frame when in Menu state.
     pub fn update(
         &mut self,
         menu_state: &mut MenuState,

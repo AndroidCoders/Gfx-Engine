@@ -55,6 +55,7 @@ impl Renderer {
         ).map_err(|e| e.to_string())
     }
 
+    /// Fills a rectangle with the specified color.
     pub fn fill_rect(&mut self, rect: &sdl3::rect::Rect, color: Color) -> Result<(), String> {
         self.canvas.set_blend_mode(sdl3::render::BlendMode::Blend);
         self.canvas.set_draw_color(color);
@@ -64,6 +65,7 @@ impl Renderer {
         Ok(())
     }
 
+    /// Draws the outline of a rectangle with the specified color.
     pub fn draw_rect(&mut self, rect: &sdl3::rect::Rect, color: Color) -> Result<(), String> {
         self.canvas.set_draw_color(color);
         self.canvas.draw_rect((*rect).into()).map_err(|e| e.to_string())?;
@@ -84,6 +86,8 @@ impl Renderer {
     }
 
     /// Renders the static environment and parallax background layers.
+    ///
+    /// ⚠️ **Hotpath**: Called every frame. Loops over all map tiles within the view.
     pub fn draw_level(&mut self, level: &Level, texture_manager: &TextureManager, camera: &Camera, parallax_config: &crate::config::ParallaxConfig) -> Result<(), String> {
         let scale = crate::config::RENDER_SCALE_FACTOR;
         let mut layers = parallax_config.layers.clone();
@@ -151,6 +155,9 @@ impl Renderer {
         Ok(())
     }
 
+    /// Renders a single sprite with support for rotation, scaling, and color modulation.
+    ///
+    /// ⚠️ **Hotpath**: Called many times per frame.
     pub fn draw_sprite(&mut self, params: SpriteDrawParams, texture_manager: &mut TextureManager, camera: &Camera) -> Result<(), String> {
         let scale = crate::config::RENDER_SCALE_FACTOR;
         if let Some(texture) = texture_manager.get_mut(params.texture_name) {

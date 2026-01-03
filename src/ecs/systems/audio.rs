@@ -10,9 +10,19 @@ use crate::ecs::systems::System;
 pub struct SystemAudio;
 
 impl System<crate::audio::GameAudioManager> for SystemAudio {
+
     /// Commands the global audio manager to execute pending playback and loading tasks.
+
+    ///
+
+    /// ⚠️ **Hotpath**: Called 120x per second.
+
     fn update(&mut self, _world: &mut crate::ecs::world::World, audio_manager: &mut crate::audio::GameAudioManager) {
+
         // 1. Process the entire queue of pending audio events (sounds, music, fades).
+
         audio_manager.process_events();
+
     }
+
 }
